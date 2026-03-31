@@ -1,0 +1,63 @@
+# Skill Box 配置
+
+toolbox:
+  name: "Skill Box"
+  version: "0.1.0"
+  description: "社交人格工具箱"
+
+# 内置工具
+skills:
+  legacy-audit:
+    name: "遗产清算"
+    icon: "🪦"
+    description: "扫描全平台数字足迹，生成一份你不敢看的报告"
+    enabled: true
+    module: "skills/legacy-audit.md"
+
+  cringe-archaeology:
+    name: "社死考古"
+    icon: "💀"
+    description: "挖出你十年前的QQ空间/人人网黑历史"
+    enabled: true
+    module: "skills/cringe-archaeology.md"
+
+  ai-clone:
+    name: "AI替身"
+    icon: "🤖"
+    description: "学会你说话方式，帮你自动回消息"
+    enabled: true
+    module: "skills/ai-clone.md"
+
+  past-life:
+    name: "前世"
+    icon: "👻"
+    description: "根据你的行为数据推演你的前世是什么"
+    enabled: true
+    module: "skills/past-life.md"
+
+  epitaph:
+    name: "墓志铭"
+    icon: "🪦"
+    description: "根据你的人生轨迹自动生成墓志铭"
+    enabled: true
+    module: "skills/epitaph.md"
+
+# 外部引用
+external:
+  colleague-skill:
+    name: "同事.skill"
+    source: "community"
+    description: "翻译同事的职场暗语"
+    status: "available"
+
+  ex-skill:
+    name: "前任.skill"
+    source: "community"
+    description: "用聊天记录复刻前任人格"
+    status: "available"
+
+# 扩展设置
+extension:
+  custom_dir: "skills/"
+  auto_discover: true
+  max_skills: 50
