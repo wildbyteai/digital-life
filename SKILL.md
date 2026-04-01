@@ -19,10 +19,10 @@ allowed-tools: Read, Write, Edit, Bash
 
 | Skill | 触发词 | Prompt 文件 |
 |-------|--------|------------|
-| 遗产清算 | 遗产清算、数字遗产 | prompts/legacy_audit.md |
+| 前世 | 前世、上辈子 | prompts/past_life.md |
 | 社死考古 | 社死考古、黑历史 | prompts/cringe_archaeology.md |
 | AI替身 | AI替身、克隆我 | prompts/ai_clone.md |
-| 前世 | 前世、上辈子 | prompts/past_life.md |
+| 遗产清算 | 遗产清算、数字遗产 | prompts/legacy_audit.md |
 | 墓志铭 | 墓志铭、墓碑 | prompts/epitaph.md |
 
 用户说"digital-persona"或"考古工具箱"时，列出全部 skill 供选择。
