@@ -1,0 +1,48 @@
+{
+  "skill": "past-life",
+  "version": "1.0.0",
+  "output_format": {
+    "past_identity": {
+      "era": { "type": "string", "description": "前世的时代" },
+      "location": { "type": "string", "description": "前世的地点" },
+      "occupation": { "type": "string", "description": "前世的职业/身份" },
+      "death_cause": { "type": "string", "description": "前世的死因" },
+      "summary": { "type": "string", "description": "前世身份的一句话描述" }
+    },
+    "evidence_chain": {
+      "type": "array",
+      "description": "因果链——这辈子的行为 ← 前世的对应",
+      "items": {
+        "this_life_trait": { "type": "string", "description": "这辈子的特征/行为" },
+        "past_life_origin": { "type": "string", "description": "前世的对应/来源" },
+        "evidence": { "type": "string", "description": "具体证据" }
+      }
+    },
+    "causal_summary": {
+      "type": "string",
+      "description": "因果分析一句话总结"
+    },
+    "karmic_debt": {
+      "type": "array",
+      "description": "业力债务清单",
+      "items": {
+        "habit": { "type": "string", "description": "这辈子的坏习惯" },
+        "debt_level": { "type": "string", "description": "业力等级（轻/中/重）" },
+        "karmic_origin": { "type": "string", "description": "业力来源" },
+        "cost": { "type": "string", "description": "这个习惯的实际生命成本" }
+      }
+    },
+    "cycle_breaking_advice": {
+      "type": "array",
+      "description": "打破循环的建议",
+      "items": {
+        "cycle": { "type": "string", "description": "需要打破的循环" },
+        "advice": { "type": "string", "description": "具体建议（必须可操作）" }
+      }
+    },
+    "final_question": {
+      "type": "string",
+      "description": "结尾的存在追问"
+    }
+  }
+}

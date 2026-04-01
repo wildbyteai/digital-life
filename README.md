@@ -1,96 +1,76 @@
 # Skill Box — 数字人格考古工具箱
 
-> 你发了 3 万条朋友圈，收获 2 个真心朋友。
-> 你十年前在QQ空间写的"莪の丗堺伱卜懂"，至今还在。
-> 你的支付宝年度账单告诉你：你花了 47% 的钱在吃上面。
+> 用数字痕迹照见真实的自己。
 
-![License](https://img.shields.io/badge/License-MIT-green)
+## 5 个考古工具
 
----
-
-## 这是什么
-
-一组给 OpenClaw agent 使用的 skill。用你的数字痕迹照见真实的自己。
-
-每一个 skill 都是一面镜子：你不想看的，才是你最需要看的。
-
-## 内置工具
-
-| # | 工具 | 一句话 | 哲学维度 |
-|---|------|--------|----------|
-| 1 | 🪦 遗产清算 | 扫描全平台数字足迹 | 海德格尔：向死而生 |
-| 2 | 💀 社死考古 | 挖出十年前的黑历史 | 阿伦特：公共/私人的边界 |
-| 3 | 🤖 AI替身 | 学会你说话方式 | 图灵测试：什么是"你" |
-| 4 | 👻 前世 | 推演你的前世 | 佛教轮回：业力与因果 |
-| 5 | 🪦 墓志铭 | 自动生成数字墓碑 | 塞涅卡：论生命的短促 |
+| Skill | 触发词 | 核心问题 |
+|-------|--------|----------|
+| 🪦 遗产清算 | 遗产清算、数字遗产 | 你留下了什么？ |
+| 💀 社死考古 | 社死考古、黑历史 | 你从什么时候开始学会表演体面的？ |
+| 🤖 AI替身 | AI替身、克隆我 | 公开的你和私密的你，是同一个人吗？ |
+| 👻 前世 | 前世、上辈子 | 你以为是性格的东西，只是惯性吗？ |
+| 🪦 墓志铭 | 墓志铭、墓碑 | 你想被记住的方式，和你正在过的生活，一致吗？ |
 
 ## 安装
 
-对话安装：
-
-```
-安装 skill-box
+```bash
+clawhub install skill-box
 ```
 
-CLI 安装：
+或克隆到本地：
 
 ```bash
-npx clawhub install skill-box
+git clone https://github.com/wildbyteai/skill-box.git
 ```
 
-## 使用
+## 触发方式
 
-安装后，当用户对 agent 说出以下关键词时，agent 自动触发对应 skill：
+直接说触发词，或说 `skill box` / `考古工具箱` 查看全部工具列表。
 
-- "遗产清算"、"数字遗产"
-- "社死考古"、"黑历史"
-- "AI替身"、"克隆我"
-- "前世"、"上辈子"
-- "墓志铭"、"死后写什么"
+## 核心设计
 
-说 "skill box" 或 "考古工具箱" 列出全部工具。
+- **5 层 Persona 结构**：Layer 0 硬规则 → Layer 1 身份锚定 → Layer 2 表达风格 → Layer 3 思维模式 → Layer 4 边界雷区
+- **可迭代 Profile**：每次分析生成结构化 JSON Profile，可追加、可纠正、可回滚
+- **进化机制**：用户可以追加新信息或纠正错误，Profile 增量更新
+- **隐私优先**：所有数据本地分析，不上传任何服务器
 
-## 外部 Skill
-
-以下 skill 由社区维护，需单独安装：
-
-| Skill | 安装方式 | 哲学维度 |
-|-------|----------|----------|
-| 同事.skill | `clawhub install 同事.skill` | 维特根斯坦：语言游戏 |
-| 前任.skill | `clawhub install 前任.skill` | 弗洛伊德：哀悼与忧郁 |
-
-## 设计哲学
-
-### "考古"而非"分析"
-
-你十年前在 QQ 空间写的"莪の丗堺伱卜懂"不是错误数据，是你某个时刻的真实。我们不应该用"黑历史"三个字抹杀过去的自己。
-
-### "镜子"而非"报告"
-
-报告告诉你数字。镜子让你看见自己。数字可以造假，镜子不能。
-
-### "向死而生"而非"活得更好"
-
-海德格尔说，人只有直面死亡，才能真正活着。这些 skill 帮你预演死亡——不是为了恐惧，是为了重新理解活着这件事值多少钱。
-
-## 项目结构
+## 目录结构
 
 ```
 skill-box/
-├── SKILL.md           # Agent 指令 + 5 个 skill prompt 模板
-├── references/        # 各 skill 详细文档
-│   ├── legacy-audit.md
-│   ├── cringe-archaeology.md
-│   ├── ai-clone.md
-│   ├── past-life.md
-│   └── epitaph.md
+├── SKILL.md                  # 主入口，包含所有触发规则和执行流程
 ├── README.md
-└── LICENSE
+├── LICENSE
+├── .gitignore
+├── prompts/
+│   ├── persona_builder.md    # 通用 5 层 Persona 生成模板
+│   └── evolution.md          # 追加/纠正流程模板
+├── profiles/                  # 生成的 Profile 文件（JSON）
+│   └── {user_slug}_{skill}.json
+├── layer0/                    # 各 skill 的 Layer 0 硬规则
+│   ├── legacy_audit.md
+│   ├── cringe_archaeology.md
+│   ├── ai_clone.md
+│   ├── past_life.md
+│   └── epitaph.md
+└── references/                # 各 skill 的方法论文档
+    ├── legacy-audit.md
+    ├── cringe-archaeology.md
+    ├── ai-clone.md
+    ├── past-life.md
+    └── epitaph.md
 ```
 
-## License
+## 哲学锚点
 
-MIT
+- 遗产清算：海德格尔 — 向死而生
+- 社死考古：汉娜·阿伦特 — 公共领域与私人领域
+- AI替身：图灵测试 — 什么是"你"
+- 前世：佛教 — 业力与因果
+- 墓志铭：塞涅卡 — 论生命的短促
 
-*你的数字生活是一部连续剧。这些 skill 帮你回看、预演、解构。*
-*但最终，只有你自己能决定：这部剧的结局，值不值得。*
+## 版本
+
+- v1.0.0：完全重构，5 层 Persona + 结构化 Profile + 进化机制
+- v0.3.0：初始版本，基于 prompt 模板

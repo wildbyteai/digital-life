@@ -1,0 +1,54 @@
+{
+  "skill": "legacy-audit",
+  "version": "1.0.0",
+  "output_format": {
+    "life_in_numbers": {
+      "total_posts": { "type": "integer", "description": "所有平台的总发言数" },
+      "total_platforms": { "type": "integer", "description": "活跃平台数" },
+      "years_active": { "type": "integer", "description": "数字生活总年数" },
+      "wasted_hours": { "type": "number", "description": "估算的浪费时间（小时）" },
+      "wasted_as_books": { "type": "integer", "description": "换算成可读完的书" },
+      "wasted_as_trips": { "type": "integer", "description": "换算成可完成的环球旅行次数" },
+      "wasted_as_skills": { "type": "string", "description": "换算成可掌握的技能（如'3门编程语言'）" }
+    },
+    "platforms": {
+      "type": "object",
+      "description": "按平台细分的统计",
+      "properties": {
+        "{platform_name}": {
+          "total": { "type": "integer" },
+          "earliest": { "type": "string", "format": "date" },
+          "deleted_ratio": { "type": "number", "min": 0, "max": 1 },
+          "most_liked": { "type": "string" },
+          "regret_posts": { "type": "array", "items": { "type": "string" } },
+          "silence_periods": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "regret_patterns": {
+      "most_deleted_period": { "type": "string", "description": "删除最多的时期" },
+      "regret_themes": { "type": "array", "items": { "type": "string" }, "description": "后悔内容的主题分类" },
+      "regret_frequency": { "type": "string", "description": "后悔的频率描述" },
+      "biggest_lie": { "type": "string", "description": "你在网上说过的最大的谎言" },
+      "recurring_regret": { "type": "string", "description": "反复出现的后悔模式" }
+    },
+    "highlights": {
+      "cringe_peak_year": { "type": "integer" },
+      "most_active_day": { "type": "string" },
+      "longest_silence": { "type": "string" },
+      "most_active_platform": { "type": "string" },
+      "first_post": { "type": "string" }
+    },
+    "existential_audit": {
+      "best_post": { "type": "string", "description": "最值得被记住的一条" },
+      "worst_post": { "type": "string", "description": "最想删除的一条" },
+      "what_remains": { "type": "string", "description": "如果明天消失，最想留下什么" },
+      "legacy_quality": { "type": "string", "description": "你留下的，是遗产还是垃圾" }
+    },
+    "existential_questions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "3 个存在论追问"
+    }
+  }
+}
