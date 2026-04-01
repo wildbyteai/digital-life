@@ -16,6 +16,8 @@ $requiredRootFiles = @(
     "README.md",
     "SKILL.md",
     "LICENSE",
+    "VERSION",
+    "CHANGELOG.md",
     ".gitignore",
     ".gitattributes",
     "profiles/README.md",

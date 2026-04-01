@@ -18,6 +18,8 @@ REQUIRED_ROOT_FILES = [
     "README.md",
     "SKILL.md",
     "LICENSE",
+    "VERSION",
+    "CHANGELOG.md",
     ".gitignore",
     ".gitattributes",
     "agents/openai.yaml",

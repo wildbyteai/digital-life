@@ -11,6 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-Skill-blueviolet)](https://docs.openclaw.ai)
 [![clawhub](https://img.shields.io/badge/clawhub-published-green)](https://clawhub.com)
+[![Version](https://img.shields.io/badge/version-1.2.0-1E6B5B)](CHANGELOG.md)
 
 ![数字人生标志](assets/digital-life-large.svg)
 
@@ -234,6 +235,8 @@ digital-life/
 ├── SKILL.md                  # Agent 指令（执行流程 + 安全边界）
 ├── README.md
 ├── LICENSE
+├── VERSION
+├── CHANGELOG.md
 ├── agents/
 │   └── openai.yaml           # UI 元数据（显示名、图标、默认提示词）
 ├── assets/
