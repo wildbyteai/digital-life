@@ -26,15 +26,16 @@
 
 ## 安装
 
-```bash
-clawhub install skill-box
+对话安装：
+
+```
+安装 skill-box
 ```
 
-或手动安装：
+CLI 安装：
 
 ```bash
-# 克隆到 OpenClaw skill 目录
-git clone https://github.com/wildbyteai/skill-box.git ~/.openclaw/skills/skill-box
+npx clawhub install skill-box
 ```
 
 ## 使用
