@@ -1,0 +1,43 @@
+{
+  "skill": "ai_clone",
+  "version": 1,
+  "slug": "{slug}",
+  "updated_at": "{ISO8601}",
+  "confidence": "high|medium|low",
+  "source_summary": {
+    "input_modes": [
+      "file|text|browser"
+    ],
+    "scenes_compared": [
+      "public",
+      "private"
+    ],
+    "evidence_count": 0,
+    "notes": "仅保留语言模式摘要，不保留原始聊天全文"
+  },
+  "persona": {
+    "layer0_rules": [],
+    "layer1_identity": {
+      "alias": "",
+      "primary_context": ""
+    },
+    "layer2_expression": {
+      "public_style": "",
+      "private_style": "",
+      "style_gap": ""
+    },
+    "layer3_decision_model": {
+      "trust_threshold": "",
+      "switch_conditions": []
+    },
+    "layer4_boundaries": {
+      "topics_avoided_in_public": [],
+      "people_allowed_in_private": []
+    }
+  },
+  "similarity_score": 0,
+  "public_persona": {},
+  "private_persona": {},
+  "existential_question": "",
+  "corrections": []
+}

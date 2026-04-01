@@ -77,7 +77,9 @@
 
 ### 输出文件
 
-`profiles/legacy_{timestamp}.json`：
+先读取 `profiles/templates/legacy_audit.json` 作为结构化输出模板。
+
+`profiles/legacy_audit_{slug}.json`：
 ```json
 {
   "skill": "legacy_audit",
@@ -110,7 +112,7 @@
 }
 ```
 
-`profiles/legacy_{timestamp}.md`：可读报告。
+`profiles/legacy_audit_{slug}.md`：可读报告。
 
 ### 报告结构
 

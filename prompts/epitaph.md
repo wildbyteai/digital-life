@@ -76,7 +76,9 @@
 
 ### 输出文件
 
-`profiles/epitaph_{timestamp}.json`：
+先读取 `profiles/templates/epitaph.json` 作为结构化输出模板。
+
+`profiles/epitaph_{slug}.json`：
 ```json
 {
   "skill": "epitaph",
@@ -102,7 +104,7 @@
 }
 ```
 
-`profiles/epitaph_{timestamp}.md`：可读报告。
+`profiles/epitaph_{slug}.md`：可读报告。
 
 ### 报告结构
 

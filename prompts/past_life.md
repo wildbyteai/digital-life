@@ -100,6 +100,7 @@
 ## Step 6：生成 Persona + 落地
 
 读取 `layer0/past_life.md` 作为 Layer 0 硬规则。
+读取 `profiles/templates/past_life.json` 作为结构化输出模板。
 按 `prompts/persona_builder.md` 5 层结构生成 profile。
 写入 `profiles/past_life_{slug}.json` + `.md`。
 

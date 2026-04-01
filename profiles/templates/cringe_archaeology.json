@@ -1,0 +1,40 @@
+{
+  "skill": "cringe_archaeology",
+  "version": 1,
+  "slug": "{slug}",
+  "updated_at": "{ISO8601}",
+  "confidence": "high|medium|low",
+  "source_summary": {
+    "input_modes": [
+      "browser|file|text|url"
+    ],
+    "platforms_scanned": [],
+    "evidence_count": 0,
+    "notes": "保留脱敏摘要，不保留整段原始内容"
+  },
+  "persona": {
+    "layer0_rules": [],
+    "layer1_identity": {
+      "alias": "",
+      "primary_platform": "",
+      "years_active": 0
+    },
+    "layer2_expression": {
+      "before_mask": "",
+      "after_mask": "",
+      "style_shift": ""
+    },
+    "layer3_decision_model": {
+      "mask_turning_point": "",
+      "social_pressure_sources": []
+    },
+    "layer4_boundaries": {
+      "taboos": [],
+      "emotion_triggers": []
+    }
+  },
+  "top_cringe": [],
+  "lost_things": [],
+  "existential_question": "",
+  "corrections": []
+}

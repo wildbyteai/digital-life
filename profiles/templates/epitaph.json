@@ -1,0 +1,48 @@
+{
+  "skill": "epitaph",
+  "version": 1,
+  "slug": "{slug}",
+  "updated_at": "{ISO8601}",
+  "confidence": "high|medium|low",
+  "source_summary": {
+    "input_modes": [
+      "text|browser|file|url"
+    ],
+    "evidence_count": 0,
+    "notes": "侧重人生总结与数字墓碑摘要"
+  },
+  "persona": {
+    "layer0_rules": [],
+    "layer1_identity": {
+      "alias": "",
+      "life_status": ""
+    },
+    "layer2_expression": {
+      "how_the_user_describes_themself": "",
+      "how_others_might_describe_them": ""
+    },
+    "layer3_decision_model": {
+      "proudest_choice": "",
+      "biggest_regret": ""
+    },
+    "layer4_boundaries": {
+      "unlived_desires": [],
+      "remember_me_as": []
+    }
+  },
+  "digital_tombstone": {
+    "posts": 0,
+    "likes": 0,
+    "longest_silence_days": 0,
+    "most_remembered_quote": ""
+  },
+  "versions": {
+    "serious": "",
+    "sarcastic": "",
+    "literary": "",
+    "worker": "",
+    "philosophical": ""
+  },
+  "existential_questions": [],
+  "corrections": []
+}

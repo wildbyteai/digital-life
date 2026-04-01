@@ -1,0 +1,10 @@
+interface:
+  display_name: "数字人生"
+  short_description: "用数字痕迹生成五种残酷但温暖的自我考古报告"
+  icon_small: "./assets/digital-life-small.svg"
+  icon_large: "./assets/digital-life-large.svg"
+  brand_color: "#1E6B5B"
+  default_prompt: "Use $digital-life to analyze my digital traces with one of the five archaeology modes and generate a structured profile plus a readable report."
+
+policy:
+  allow_implicit_invocation: true

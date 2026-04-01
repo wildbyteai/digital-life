@@ -77,7 +77,9 @@
 
 ### 输出文件
 
-`profiles/clone_{timestamp}.json`：
+先读取 `profiles/templates/ai_clone.json` 作为结构化输出模板。
+
+`profiles/ai_clone_{slug}.json`：
 ```json
 {
   "skill": "ai_clone",
@@ -101,7 +103,7 @@
 }
 ```
 
-`profiles/clone_{timestamp}.md`：可读报告。
+`profiles/ai_clone_{slug}.md`：可读报告。
 
 ### 报告结构
 

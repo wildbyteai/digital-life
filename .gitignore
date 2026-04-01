@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+profiles/*.json
+profiles/*.md
+!profiles/README.md
+profiles/history/*
+!profiles/history/.gitkeep

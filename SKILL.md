@@ -4,7 +4,11 @@ description: >
   数字人生.skills — 5 个考古工具，用数字痕迹照见真实的自己。
   触发词：遗产清算、社死考古、AI替身、前世、墓志铭、数字人生、考古工具箱、digital life
 argument-hint: "[skill-name-or-slug]"
-version: 1.0.4
+version: 1.2.0
+license: MIT
+metadata:
+  openclaw:
+    homepage: https://github.com/wildbyteai/digital-life
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash
 ---
@@ -104,7 +108,7 @@ allowed-tools: Read, Write, Edit, Bash
 读取以下文件：
 - `layer0/{skill}.md` — 硬规则，不可违背
 - `references/{skill}.md` — 方法论和分析框架
-- `profiles/{skill}.json` — 输出模板
+- `profiles/templates/{skill}.json` — 输出模板
 
 ### Step 4：分析生成
 
@@ -121,8 +125,10 @@ allowed-tools: Read, Write, Edit, Bash
 输出到本地文件系统：
 
 ```
-profiles/{skill}_{timestamp}.json   # 结构化数据
-profiles/{skill}_{timestamp}.md     # 可读报告
+profiles/{skill}_{slug}.json                    # 当前生效的结构化数据
+profiles/{skill}_{slug}.md                      # 当前生效的可读报告
+profiles/history/{skill}_{slug}_{timestamp}.json  # 追加/纠正前的历史快照
+profiles/history/{skill}_{slug}_{timestamp}.md    # 追加/纠正前的历史快照
 ```
 
 最后以一个**存在追问**结束——必须具体到行为，不要鸡汤。
@@ -133,7 +139,7 @@ profiles/{skill}_{timestamp}.md     # 可读报告
 
 - **追加**：用户说"补充""追加"→ 增量合并到已有 profile
 - **纠正**：用户说"不对""应该是"→ 生成 correction 记录，更新 profile
-- **版本管理**：每次更新保留旧版，文件名带时间戳，可回滚
+- **版本管理**：每次更新先把旧版保存到 `profiles/history/`，文件名带时间戳，可回滚
 
 ---
 
@@ -141,8 +147,8 @@ profiles/{skill}_{timestamp}.md     # 可读报告
 
 | 命令 | 说明 |
 |------|------|
-| `列出 profile` | 扫描 profiles/ 目录，列出所有已生成的 profile |
-| `回滚 profile {slug}` | 将 profile 回滚到指定版本 |
+| `列出 profile` | 扫描 `profiles/` 根目录，列出当前生效的 profile |
+| `回滚 profile {slug}` | 从 `profiles/history/` 选择一个快照恢复为当前版本 |
 | `删除 profile {slug}` | 确认后删除指定 profile |
 
 ---

@@ -1,0 +1,74 @@
+{
+  "skill": "ai_clone",
+  "version": 1,
+  "slug": "demo-qiao",
+  "updated_at": "2026-04-01T13:20:00+08:00",
+  "confidence": "high",
+  "source_summary": {
+    "input_modes": [
+      "file",
+      "text"
+    ],
+    "scenes_compared": [
+      "public",
+      "private"
+    ],
+    "evidence_count": 12,
+    "notes": "演示样例，仅保留语言模式摘要"
+  },
+  "persona": {
+    "layer0_rules": [
+      "必须拿到公开和私密两个场景，缺一不下结论",
+      "对比重点是切换成本，不是判断真伪人格",
+      "允许两种人格都真实，但要解释切换条件",
+      "公开人格的克制不等于虚伪，私密人格的袒露也不等于成熟"
+    ],
+    "layer1_identity": {
+      "alias": "阿乔",
+      "primary_context": "工作协作与深夜私聊的反差"
+    },
+    "layer2_expression": {
+      "public_style": "短句、确认型、低情绪波动",
+      "private_style": "长句、反思型、情绪和细节明显增多",
+      "style_gap": "同一个问题，在公开场景里像执行者，在私密场景里像解释自己的人"
+    },
+    "layer3_decision_model": {
+      "trust_threshold": "对方先展示具体脆弱，且对话环境足够封闭",
+      "switch_conditions": [
+        "深夜一对一聊天",
+        "对方不是来评估而是来理解"
+      ]
+    },
+    "layer4_boundaries": {
+      "topics_avoided_in_public": [
+        "失败感",
+        "对工作的真实厌倦"
+      ],
+      "people_allowed_in_private": [
+        "长期朋友",
+        "少数理解自己表达节奏的人"
+      ]
+    }
+  },
+  "similarity_score": 62,
+  "public_persona": {
+    "speech_style": "简短、确认型、去情绪化",
+    "core_strategy": "不给别人添麻烦，也不给别人留下把柄",
+    "typical_phrases": [
+      "收到",
+      "我来跟进",
+      "这个先这样"
+    ]
+  },
+  "private_persona": {
+    "speech_style": "大段展开、补上下文、会自我追问",
+    "core_need": "被真正理解，而不是被快速归类",
+    "typical_phrases": [
+      "我其实不是在忙，我是在躲",
+      "你别急着给建议，我先说完",
+      "我知道这听起来很拧巴"
+    ]
+  },
+  "existential_question": "你现在最常使用的那种语气，到底是在保护你，还是在慢慢抹平你？",
+  "corrections": []
+}

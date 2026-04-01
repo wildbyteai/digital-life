@@ -71,7 +71,9 @@
 
 **写入两个文件：**
 
-`profiles/cringe_{timestamp}.json`：
+先读取 `profiles/templates/cringe_archaeology.json` 作为结构化输出模板。
+
+`profiles/cringe_archaeology_{slug}.json`：
 ```json
 {
   "skill": "cringe_archaeology",
@@ -102,7 +104,7 @@
 }
 ```
 
-`profiles/cringe_{timestamp}.md`：可读报告，语气轻松带毒舌但不恶意。
+`profiles/cringe_archaeology_{slug}.md`：可读报告，语气轻松带毒舌但不恶意。
 
 ### 报告结构
 

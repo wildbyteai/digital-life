@@ -1,0 +1,45 @@
+{
+  "skill": "legacy_audit",
+  "version": 1,
+  "slug": "{slug}",
+  "updated_at": "{ISO8601}",
+  "confidence": "high|medium|low",
+  "source_summary": {
+    "input_modes": [
+      "browser|file|text|url"
+    ],
+    "platforms_scanned": [],
+    "evidence_count": 0,
+    "notes": "保留统计结果，不保留可回溯到原始账号内容的大段文本"
+  },
+  "persona": {
+    "layer0_rules": [],
+    "layer1_identity": {
+      "alias": "",
+      "primary_platform": "",
+      "years_active": 0
+    },
+    "layer2_expression": {
+      "most_visible_platform": "",
+      "most_valuable_content_type": ""
+    },
+    "layer3_decision_model": {
+      "time_allocation_priority": [],
+      "regret_patterns": []
+    },
+    "layer4_boundaries": {
+      "things_worth_keeping": [],
+      "things_ready_to_let_go": []
+    }
+  },
+  "life_in_numbers": {
+    "total_hours": 0,
+    "total_days": 0,
+    "equivalent_books": 0,
+    "equivalent_trips": 0
+  },
+  "platforms": [],
+  "regret_patterns": {},
+  "existential_questions": [],
+  "corrections": []
+}

@@ -5,7 +5,7 @@
 ### 流程
 
 1. 读取用户提供的新内容（文件/文本/截图）
-2. 读取现有的 profile 文件（`profiles/{skill}_{slug}.json`）
+2. 读取现有的 profile 文件（`profiles/{skill}_{slug}.json` 和 `.md`）
 3. 分析新内容与现有 profile 的关系：
    - **新增**：是否有之前没覆盖的维度？
    - **修正**：是否有与现有结论矛盾的证据？
@@ -23,12 +23,13 @@
    - 新增 → 追加到对应字段
    - 修正 → 覆盖旧值，记录修正原因
    - 深化 → 扩充已有字段
-6. 更新 `meta.json` 中的 `updated_at` 和 `version`
+6. 在写入新版本前，把旧版本快照保存到 `profiles/history/{skill}_{slug}_{timestamp}.json` 和 `.md`
+7. 更新当前 profile 中的 `updated_at` 和 `version`
 
 ### 版本管理
 
 每次追加自动递增版本号（v1 → v2 → v3）。
-保留历史版本的备份，路径：`profiles/{skill}_{slug}_v{n}.json.bak`
+保留历史版本的快照，路径：`profiles/history/{skill}_{slug}_{timestamp}.json`
 
 ---
 

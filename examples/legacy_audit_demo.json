@@ -1,0 +1,98 @@
+{
+  "skill": "legacy_audit",
+  "version": 2,
+  "slug": "demo-lin",
+  "updated_at": "2026-04-01T13:20:00+08:00",
+  "confidence": "medium",
+  "source_summary": {
+    "input_modes": [
+      "text",
+      "browser"
+    ],
+    "platforms_scanned": [
+      "wechat",
+      "weibo",
+      "zhihu"
+    ],
+    "evidence_count": 9,
+    "notes": "演示样例，仅展示聚合后的行为模式与统计信息"
+  },
+  "persona": {
+    "layer0_rules": [
+      "盘点任何平台时，先算时间成本，再看留下了什么",
+      "不把高互动等同于高价值，会单独追问真正值得保留的内容",
+      "输出时优先给用户可感知的换算，而不是抽象比例",
+      "结论允许刺痛，但不能演成审判"
+    ],
+    "layer1_identity": {
+      "alias": "阿林",
+      "primary_platform": "wechat",
+      "years_active": 11
+    },
+    "layer2_expression": {
+      "most_visible_platform": "朋友圈",
+      "most_valuable_content_type": "和家人、老朋友有关的真实记录"
+    },
+    "layer3_decision_model": {
+      "time_allocation_priority": [
+        "缓解焦虑",
+        "维持联系",
+        "表达存在感"
+      ],
+      "regret_patterns": [
+        "碎片时间被短内容吞掉",
+        "真正重要的记录反而不多"
+      ]
+    },
+    "layer4_boundaries": {
+      "things_worth_keeping": [
+        "能证明自己认真活过的内容",
+        "和具体的人有关的对话或照片"
+      ],
+      "things_ready_to_let_go": [
+        "重复表达同一种焦虑的动态",
+        "只为回应外界期待而发的内容"
+      ]
+    }
+  },
+  "life_in_numbers": {
+    "total_hours": 2316,
+    "total_days": 96,
+    "equivalent_books": 23,
+    "equivalent_trips": 3
+  },
+  "platforms": [
+    {
+      "name": "wechat",
+      "years_active": 11,
+      "posts": 860,
+      "delete_rate": 0.13,
+      "most_valuable": "旅行和家人相聚的照片记录"
+    },
+    {
+      "name": "weibo",
+      "years_active": 8,
+      "posts": 1740,
+      "delete_rate": 0.28,
+      "most_valuable": "写给未来自己的阶段性总结"
+    },
+    {
+      "name": "zhihu",
+      "years_active": 5,
+      "posts": 94,
+      "delete_rate": 0.02,
+      "most_valuable": "真正帮助别人解决问题的长回答"
+    }
+  ],
+  "regret_patterns": {
+    "instant_regret": 0.11,
+    "accumulated_regret": "越焦虑越刷，越刷越觉得一天被吞掉",
+    "social_regret": "留下了很多存在感，留下来的真实关系却不多"
+  },
+  "existential_questions": [
+    "如果明天只能保留 10 条内容，你会先删掉哪 100 条？",
+    "你最想留下的那部分自己，为什么平时发得最少？",
+    "你每天刷掉的 2 小时，究竟是在休息，还是在逃避开始？"
+  ],
+  "corrections": []
+}
