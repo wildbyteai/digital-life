@@ -4,7 +4,7 @@ description: >
   数字人生.skills — 5 个考古工具，用数字痕迹照见真实的自己。
   触发词：遗产清算、社死考古、AI替身、前世、墓志铭、数字人生、考古工具箱、digital life
 argument-hint: "[skill-name-or-slug]"
-version: "1.0.3"
+version: 1.0.4
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash
 ---
