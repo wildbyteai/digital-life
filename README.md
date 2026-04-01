@@ -12,9 +12,6 @@
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-Skill-blueviolet)](https://docs.openclaw.ai)
 [![clawhub](https://img.shields.io/badge/clawhub-published-green)](https://clawhub.com)
 [![Version](https://img.shields.io/badge/version-1.2.0-1E6B5B)](CHANGELOG.md)
-
-![数字人生标志](assets/digital-life-large.svg)
-
 &nbsp;
 
 用你的数字痕迹照见真实的自己  
