@@ -1,4 +1,4 @@
-# 数字人生.skill
+# 数字人生.skills
 
 > *"你发了 3 万条朋友圈，收获 2 个真心朋友。"*
 >
@@ -143,6 +143,7 @@ digital-life/
 
 ## 版本
 
+- v1.0.3：改名 数字人生.skills，补全 4 个 prompt，SKILL.md 重写执行流程
 - v1.0.2：改名 digital-life，README 重构
 - v1.0.0：完全重构，5 层 Persona + 结构化 Profile + 进化机制
 - v0.3.0：初始版本，基于 prompt 模板
