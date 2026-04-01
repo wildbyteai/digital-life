@@ -15,9 +15,9 @@
 &nbsp;
 
 用你的数字痕迹照见真实的自己  
-每个 skill 生成一个 **结构化 Profile**——可迭代、可纠错、可回滚
+每个 skill 生成**结构化 Profile + 人话解读**——可迭代、可纠错、可回滚
 
-[安装](#安装) · [5 个工具](#5-个考古工具) · [使用](#使用) · [效果示例](#效果示例)
+[安装](#安装) · [5 个工具](#5-个考古工具) · [使用](#使用) · [数据获取](#数据获取) · [效果示例](#效果示例)
 
 ---
 
@@ -53,26 +53,64 @@ npx clawhub install digital-life
 
 ## 使用
 
-在对话中说出触发词即可：
+说出触发词，agent 确认后进入引导模式：
 
 ```
 我想做遗产清算
 ```
 
-Agent 确认后进入对话模式，你提供数字生活的描述，agent 生成结构化 Profile。
+每个 skill 的执行流程：
 
-每个 profile 存储在 `profiles/` 目录下：
+```
+① 引导语（告诉你这个 skill 要干什么）
+② 问你要什么（2-4 个关键问题，不过度追问）
+③ 拿数据（browser 代操作 / 口述 / 文件上传）
+④ 分析 + 落地
+⑤ 存在追问（逼你面对一个真实的问题）
+```
+
+**严酷但温暖**：不说鸡汤，不说"加油"。用你自己的数字痕迹，讲一个你不敢对自己讲的故事。
+
+---
+
+## 数据获取
+
+三级优先级：
+
+| 优先级 | 方式 | 说明 |
+|--------|------|------|
+| 🥇 最高 | **Browser 代操作** | 你登录社交平台，agent 直接抓你的个人页面（最准确） |
+| 🥈 备选 | 你口述 / 上传文件 | 粘贴聊天记录、截图、年度报告 |
+| 🥉 降级 | 公开 URL | ⚠️ 有同名风险，必须先确认是本人 |
+
+Agent 会根据你提供的信息类型，自动选择最高效的数据获取路径。
+
+---
+
+## 产出
+
+每次分析生成两个文件：
 
 ```
 profiles/
-├── past_life_{slug}.json          # 前世 profile
-├── cringe_archaeology_{slug}.json # 社死考古 profile
-├── ai_clone_{slug}.json           # AI替身 profile
-├── legacy_audit_{slug}.json       # 遗产清算 profile
-└── epitaph_{slug}.json            # 墓志铭 profile
+├── past_life_{slug}.json          # 结构化数据（可迭代、可回滚）
+├── past_life_{slug}.md            # 人话解读（给你看的）
+├── cringe_archaeology_{slug}.json
+├── cringe_archaeology_{slug}.md
+├── ai_clone_{slug}.json
+├── ai_clone_{slug}.md
+├── legacy_audit_{slug}.json
+├── legacy_audit_{slug}.md
+├── epitaph_{slug}.json
+└── epitaph_{slug}.md
 ```
 
-### 管理命令
+- **JSON** — 结构化 Profile，供后续追加/纠正/版本管理
+- **Markdown** — 人话解读，包含完整分析、关键洞察、数字墓碑（如果适用）
+
+---
+
+## 管理命令
 
 | 命令 | 说明 |
 |------|------|
@@ -113,9 +151,23 @@ profiles/
 ## 核心设计
 
 - **Persona 5 层结构**：Layer 0 硬规则 → Layer 1 身份 → Layer 2 表达 → Layer 3 思维 → Layer 4 边界
-- **可迭代 Profile**：每次分析生成结构化 JSON，可追加、可纠正、可回滚
-- **进化机制**：用户追加新信息或纠正错误时，Profile 增量更新
+- **结构化 Profile**：JSON 存数据，Markdown 讲故事，可追加、可纠正、可回滚
+- **Browser 代操作**：用户已登录时，agent 直接抓个人页面数据（最准确）
 - **隐私优先**：所有分析本地进行，不上传任何服务器
+- **安全边界**：agent 确认触发，不会泛激活；数据获取分级降级
+- **进化机制**：用户追加新信息或纠正错误时，Profile 增量更新
+
+---
+
+## 哲学背景
+
+5 个 skill 的设计灵感，来自三个永恒的自我认知问题：
+
+1. **我是谁？** → 前世（习惯=业力）+ AI替身（表演=面具）
+2. **我留下了什么？** → 社死考古（黑历史=真相）+ 遗产清算（时间=生命）
+3. **我想成为谁？** → 墓志铭（终点=起点）
+
+参考：佛教业力论、阿伦特公共/私人理论、图灵测试、海德格尔向死而生、塞涅卡论生命短促。
 
 ---
 
@@ -123,18 +175,18 @@ profiles/
 
 ```
 digital-life/
-├── SKILL.md                  # Agent 指令
+├── SKILL.md                  # Agent 指令（执行流程 + 安全边界）
 ├── README.md
 ├── LICENSE
 ├── prompts/
 │   ├── persona_builder.md    # 通用 5 层 Persona 生成模板
 │   ├── evolution.md          # 追加/纠正流程模板
-│   ├── past_life.md          # 前世 prompt
-│   ├── cringe_archaeology.md # 社死考古 prompt
-│   ├── ai_clone.md           # AI替身 prompt
-│   ├── legacy_audit.md       # 遗产清算 prompt
-│   └── epitaph.md            # 墓志铭 prompt
-├── profiles/                 # Profile JSON 模板
+│   ├── past_life.md          # 👻 前世 prompt
+│   ├── cringe_archaeology.md # 💀 社死考古 prompt
+│   ├── ai_clone.md           # 🤖 AI替身 prompt
+│   ├── legacy_audit.md       # 🪦 遗产清算 prompt
+│   └── epitaph.md            # 🪦 墓志铭 prompt
+├── profiles/                 # 输出目录（JSON + Markdown）
 ├── layer0/                   # 各 skill 的 Layer 0 硬规则
 └── references/               # 各 skill 的方法论文档
 ```
@@ -143,7 +195,7 @@ digital-life/
 
 ## 版本
 
-- v1.0.3：改名 数字人生.skills，补全 4 个 prompt，SKILL.md 重写执行流程
+- v1.0.3：改名「数字人生.skills」，补全 5 个 prompt（引导语 + 数据获取 + 落地输出），SKILL.md 重写执行流程
 - v1.0.2：改名 digital-life，README 重构
 - v1.0.0：完全重构，5 层 Persona + 结构化 Profile + 进化机制
 - v0.3.0：初始版本，基于 prompt 模板
