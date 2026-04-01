@@ -50,12 +50,14 @@ npx clawhub install skill-box
 
 说 "skill box" 或 "考古工具箱" 列出全部工具。
 
-## 外部 Skill 引用
+## 外部 Skill
 
-| Skill | 来源 | 哲学维度 |
-|-------|------|----------|
-| 同事.skill | 社区 | 维特根斯坦：语言游戏 |
-| 前任.skill | 社区 | 弗洛伊德：哀悼与忧郁 |
+以下 skill 由社区维护，需单独安装：
+
+| Skill | 安装方式 | 哲学维度 |
+|-------|----------|----------|
+| 同事.skill | `clawhub install 同事.skill` | 维特根斯坦：语言游戏 |
+| 前任.skill | `clawhub install 前任.skill` | 弗洛伊德：哀悼与忧郁 |
 
 ## 设计哲学
 
