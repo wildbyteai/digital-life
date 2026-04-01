@@ -1,0 +1,26 @@
+# Skill Box API 配置
+# 支持 OpenAI 兼容格式的任何 API（OpenAI / DeepSeek / Ollama / 本地部署等）
+
+api:
+  # 提供商：openai | ollama | coze
+  provider: openai
+
+  # API 地址（替换为你自己的）
+  base_url: "https://api.openai.com/v1"
+
+  # API 密钥
+  api_key: ""
+
+  # 模型名称
+  model: "gpt-4o"
+
+  # 生成参数
+  temperature: 0.9
+  max_tokens: 4096
+
+# 如果使用 Ollama 本地部署，取消注释以下配置：
+# api:
+#   provider: ollama
+#   base_url: "http://localhost:11434/v1"
+#   api_key: "ollama"
+#   model: "qwen2.5:14b"
