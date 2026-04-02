@@ -1,0 +1,140 @@
+{
+  "version": "1.0.0",
+  "profile_root": "profiles",
+  "history_root": "profiles/history",
+  "templates_root": "profiles/templates",
+  "naming": {
+    "current_json": "{skill}_{slug}.json",
+    "current_md": "{skill}_{slug}.md",
+    "history_json": "{skill}_{slug}_{timestamp}.json",
+    "history_md": "{skill}_{slug}_{timestamp}.md"
+  },
+  "skills": [
+    {
+      "slug": "past_life",
+      "display_name": "前世",
+      "triggers": [
+        "前世",
+        "上辈子"
+      ],
+      "prompt_path": "prompts/past_life.md",
+      "layer0_path": "layer0/past_life.md",
+      "reference_path": "references/past-life.md",
+      "template_path": "profiles/templates/past_life.json",
+      "required_top_level_keys": [
+        "skill",
+        "version",
+        "slug",
+        "updated_at",
+        "confidence",
+        "source_summary",
+        "persona",
+        "past_life",
+        "existential_question",
+        "corrections"
+      ]
+    },
+    {
+      "slug": "cringe_archaeology",
+      "display_name": "社死考古",
+      "triggers": [
+        "社死考古",
+        "黑历史"
+      ],
+      "prompt_path": "prompts/cringe_archaeology.md",
+      "layer0_path": "layer0/cringe_archaeology.md",
+      "reference_path": "references/cringe-archaeology.md",
+      "template_path": "profiles/templates/cringe_archaeology.json",
+      "required_top_level_keys": [
+        "skill",
+        "version",
+        "slug",
+        "updated_at",
+        "confidence",
+        "source_summary",
+        "persona",
+        "top_cringe",
+        "lost_things",
+        "existential_question",
+        "corrections"
+      ]
+    },
+    {
+      "slug": "ai_clone",
+      "display_name": "AI替身",
+      "triggers": [
+        "AI替身",
+        "克隆我"
+      ],
+      "prompt_path": "prompts/ai_clone.md",
+      "layer0_path": "layer0/ai_clone.md",
+      "reference_path": "references/ai-clone.md",
+      "template_path": "profiles/templates/ai_clone.json",
+      "required_top_level_keys": [
+        "skill",
+        "version",
+        "slug",
+        "updated_at",
+        "confidence",
+        "source_summary",
+        "persona",
+        "similarity_score",
+        "public_persona",
+        "private_persona",
+        "existential_question",
+        "corrections"
+      ]
+    },
+    {
+      "slug": "legacy_audit",
+      "display_name": "遗产清算",
+      "triggers": [
+        "遗产清算",
+        "数字遗产"
+      ],
+      "prompt_path": "prompts/legacy_audit.md",
+      "layer0_path": "layer0/legacy_audit.md",
+      "reference_path": "references/legacy-audit.md",
+      "template_path": "profiles/templates/legacy_audit.json",
+      "required_top_level_keys": [
+        "skill",
+        "version",
+        "slug",
+        "updated_at",
+        "confidence",
+        "source_summary",
+        "persona",
+        "life_in_numbers",
+        "platforms",
+        "regret_patterns",
+        "existential_questions",
+        "corrections"
+      ]
+    },
+    {
+      "slug": "epitaph",
+      "display_name": "墓志铭",
+      "triggers": [
+        "墓志铭",
+        "墓碑"
+      ],
+      "prompt_path": "prompts/epitaph.md",
+      "layer0_path": "layer0/epitaph.md",
+      "reference_path": "references/epitaph.md",
+      "template_path": "profiles/templates/epitaph.json",
+      "required_top_level_keys": [
+        "skill",
+        "version",
+        "slug",
+        "updated_at",
+        "confidence",
+        "source_summary",
+        "persona",
+        "digital_tombstone",
+        "versions",
+        "existential_questions",
+        "corrections"
+      ]
+    }
+  ]
+}

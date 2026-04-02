@@ -2,17 +2,12 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
-
-SKILL_MAP = [
-    {"slug": "past_life", "reference": "past-life"},
-    {"slug": "cringe_archaeology", "reference": "cringe-archaeology"},
-    {"slug": "ai_clone", "reference": "ai-clone"},
-    {"slug": "legacy_audit", "reference": "legacy-audit"},
-    {"slug": "epitaph", "reference": "epitaph"},
-]
+SLUG_RE = re.compile(r"^[a-z0-9_]+$")
+CONTRACT_PATH = "profiles/contracts/skill-contract.json"
 
 REQUIRED_ROOT_FILES = [
     "README.md",
@@ -27,11 +22,13 @@ REQUIRED_ROOT_FILES = [
     "assets/digital-life-large.svg",
     "profiles/README.md",
     "profiles/history/.gitkeep",
+    CONTRACT_PATH,
     "examples/README.md",
     "examples/legacy_audit_demo.json",
     "examples/legacy_audit_demo.md",
     "examples/ai_clone_demo.json",
     "examples/ai_clone_demo.md",
+    "scripts/profile-manager.py",
 ]
 
 EXAMPLE_JSON_FILES = [
@@ -56,27 +53,80 @@ def main() -> int:
         if not (root / relative_path).exists():
             errors.append(f"Missing file or directory: {relative_path}")
 
-    for entry in SKILL_MAP:
-        for relative_path in (
-            f"layer0/{entry['slug']}.md",
-            f"prompts/{entry['slug']}.md",
-            f"profiles/templates/{entry['slug']}.json",
-            f"references/{entry['reference']}.md",
-        ):
+    contract: dict = {}
+    contract_file = root / CONTRACT_PATH
+    if contract_file.exists():
+        try:
+            contract = json.loads(contract_file.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            errors.append(f"Invalid JSON contract: {CONTRACT_PATH}")
+
+    skills = contract.get("skills") if isinstance(contract, dict) else None
+    if not isinstance(skills, list) or not skills:
+        errors.append("Contract must contain a non-empty 'skills' list")
+        skills = []
+
+    seen_slugs: set[str] = set()
+    required_contract_keys = {
+        "slug",
+        "display_name",
+        "triggers",
+        "prompt_path",
+        "layer0_path",
+        "reference_path",
+        "template_path",
+        "required_top_level_keys",
+    }
+
+    for item in skills:
+        if not isinstance(item, dict):
+            errors.append("Contract skill item must be an object")
+            continue
+
+        missing_keys = sorted(k for k in required_contract_keys if k not in item)
+        if missing_keys:
+            errors.append(f"Contract skill item missing keys: {', '.join(missing_keys)}")
+            continue
+
+        slug = str(item["slug"])
+        if not SLUG_RE.match(slug):
+            errors.append(f"Invalid skill slug: {slug}")
+            continue
+        if slug in seen_slugs:
+            errors.append(f"Duplicate skill slug in contract: {slug}")
+            continue
+        seen_slugs.add(slug)
+
+        triggers = item.get("triggers")
+        if not isinstance(triggers, list) or not triggers:
+            errors.append(f"Skill '{slug}' must define non-empty triggers list")
+
+        required_keys = item.get("required_top_level_keys")
+        if not isinstance(required_keys, list) or not required_keys:
+            errors.append(f"Skill '{slug}' must define required_top_level_keys list")
+
+        for path_key in ("prompt_path", "layer0_path", "reference_path", "template_path"):
+            relative_path = str(item[path_key])
             if not (root / relative_path).exists():
                 errors.append(f"Missing file or directory: {relative_path}")
 
-        template_path = root / f"profiles/templates/{entry['slug']}.json"
+        template_path = root / str(item["template_path"])
         if template_path.exists():
             try:
                 template = json.loads(template_path.read_text(encoding="utf-8"))
             except json.JSONDecodeError:
                 errors.append(f"Invalid JSON template: {template_path.as_posix()}")
-            else:
-                if template.get("skill") != entry["slug"]:
-                    errors.append(
-                        f"Template skill field mismatch: {template_path.as_posix()} -> {template.get('skill')}"
-                    )
+                continue
+
+            if template.get("skill") != slug:
+                errors.append(f"Template skill field mismatch: {template_path.as_posix()} -> {template.get('skill')}")
+
+            if isinstance(required_keys, list):
+                for key in required_keys:
+                    if key not in template:
+                        errors.append(
+                            f"Required key '{key}' missing in template: {template_path.as_posix()}"
+                        )
 
     for relative_path in EXAMPLE_JSON_FILES:
         full_path = root / relative_path
@@ -100,10 +150,11 @@ def main() -> int:
         return 1
 
     print("Validation passed:")
-    print(f"- skills: {len(SKILL_MAP)}")
+    print(f"- skills: {len(skills)}")
+    print("- skill contract is valid and paths are consistent")
     print("- prompts / layer0 / references / templates are present")
     print("- profiles layout and privacy ignore rules are in place")
-    print("- agents metadata, icon assets, and example outputs are present")
+    print("- agents metadata, icon assets, example outputs, and scripts are present")
     return 0
 
 
