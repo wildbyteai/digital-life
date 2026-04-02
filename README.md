@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-Skill-blueviolet)](https://docs.openclaw.ai)
 [![clawhub](https://img.shields.io/badge/clawhub-published-green)](https://clawhub.com)
-[![Version](https://img.shields.io/badge/version-1.3.2-1E6B5B)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.2--beta-1E6B5B)](CHANGELOG.md)
 
 ![数字人生标志](assets/digital-life-large.svg)
 &nbsp;
@@ -300,15 +300,8 @@ digital-life/
 
 ## 版本
 
-- v1.3.2：强化人文与哲思表达层，为主文档、共享 Persona 模板和 5 个 prompts 增加“先证据、后张力、再追问”的统一写作原则
-- v1.3.1：切换到单人极简模式，保留 `contract + profile-manager + validate-skill.py`，移除双校验与重型架构文档
-- v1.3.0：新增契约驱动架构（`skill-contract.json`）、profile 运维脚本（`profile-manager.py`）和生产架构文档，升级为可执行、可回滚、可巡检的生产级 skill 包
-- v1.2.0：补齐 `agents/openai.yaml`、SVG 图标、脱敏示例输出与双端校验脚本，仓库从“可读”提升到“可展示、可调用、可校验”
-- v1.1.0：统一 profile 命名规范，补齐 `profiles/templates` 与 `profiles/history`，默认忽略真实用户输出，避免私人数据误提交
-- v1.0.3：改名「数字人生.skills」，补全 5 个 prompt（引导语 + 数据获取 + 落地输出），SKILL.md 重写执行流程
-- v1.0.2：改名 digital-life，README 重构
-- v1.0.0：完全重构，5 层 Persona + 结构化 Profile + 进化机制
-- v0.3.0：初始版本，基于 prompt 模板
+- v1.3.2-beta：强化人文与哲思表达层，为主文档、共享 Persona 模板和 5 个 prompts 增加“先证据、后张力、再追问”的统一写作原则
+- 当前仓库仅保留这一条 beta 版本线，历史正式版标签和版本列表已清理
 
 ---
 
