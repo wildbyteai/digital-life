@@ -37,15 +37,6 @@
 
 ---
 
-## 单人模式
-
-- 保留单一契约源：`profiles/contracts/skill-contract.json`
-- 保留核心运维脚本：`scripts/profile-manager.py`
-- 保留一个校验入口：`scripts/validate-skill.py`
-- 删除双脚本校验和重型架构文档，降低维护负担
-
----
-
 ## 5 个考古工具
 
 按人生时间线排列：
@@ -109,77 +100,6 @@ npx clawhub install digital-life
 | 🥉 降级 | 公开 URL | ⚠️ 有同名风险，必须先确认是本人 |
 
 Agent 会根据你提供的信息类型，自动选择最高效的数据获取路径。
-
----
-
-## 产出
-
-每次分析会生成一份**当前生效 profile**，并在后续追加/纠正时保存**历史快照**：
-
-```text
-profiles/
-├── README.md
-├── past_life_{slug}.json                # 当前生效 profile
-├── past_life_{slug}.md
-├── cringe_archaeology_{slug}.json
-├── cringe_archaeology_{slug}.md
-├── ai_clone_{slug}.json
-├── ai_clone_{slug}.md
-├── legacy_audit_{slug}.json
-├── legacy_audit_{slug}.md
-├── epitaph_{slug}.json
-├── epitaph_{slug}.md
-├── history/
-│   └── legacy_audit_{slug}_{timestamp}.json
-└── templates/
-    ├── past_life.json
-    ├── cringe_archaeology.json
-    ├── ai_clone.json
-    ├── legacy_audit.json
-    └── epitaph.json
-```
-
-- **JSON** — 结构化 Profile，供后续追加、纠正、版本管理
-- **Markdown** — 人话解读，包含完整分析、关键洞察、数字墓碑（如果适用）
-- **templates/** — 仓库内置模板；生成结果默认写在 `profiles/` 根目录
-- **history/** — 每次追加、纠正前的快照，便于回滚
-- **隐私默认优先** — 真实 profile 和历史快照已加入 `.gitignore`，避免把私人数据提交到 GitHub
-
----
-
-## 管理命令
-
-| 命令 | 说明 |
-|------|------|
-| `python scripts/profile-manager.py list` | 列出 `profiles/` 根目录中的当前 profile |
-| `python scripts/profile-manager.py init --skill legacy_audit --slug demo` | 按模板初始化 profile |
-| `python scripts/profile-manager.py snapshot --skill legacy_audit --slug demo` | 把当前 profile 保存到 `profiles/history/` |
-| `python scripts/profile-manager.py rollback --skill legacy_audit --slug demo` | 回滚到最近快照（或 `--timestamp` 指定） |
-| `python scripts/profile-manager.py delete --skill legacy_audit --slug demo --yes --with-history` | 删除当前 profile，并可选删除历史 |
-| `python scripts/profile-manager.py doctor` | 批量校验当前所有 profile 的结构和关键字段 |
-
----
-
-## 开发者自检
-
-维护 prompt、模板或目录结构后，运行：
-
-```bash
-python scripts/validate-skill.py
-```
-
-补充运维校验：
-
-```bash
-python scripts/profile-manager.py doctor
-```
-
-自检会检查：
-
-- 契约、模板、路径映射是否一致
-- `prompts / layer0 / references / templates` 是否齐全
-- 示例输出、图标资源和运维脚本是否完整
-- `profiles/` 目录和 `.gitignore` 的隐私规则是否存在
 
 ---
 
@@ -251,7 +171,95 @@ python scripts/profile-manager.py doctor
 
 ---
 
-## 目录结构
+## 产出
+
+每次分析会生成一份**当前生效 profile**，并在后续追加、纠正时保存**历史快照**：
+
+```text
+profiles/
+├── README.md
+├── past_life_{slug}.json                # 当前生效 profile
+├── past_life_{slug}.md
+├── cringe_archaeology_{slug}.json
+├── cringe_archaeology_{slug}.md
+├── ai_clone_{slug}.json
+├── ai_clone_{slug}.md
+├── legacy_audit_{slug}.json
+├── legacy_audit_{slug}.md
+├── epitaph_{slug}.json
+├── epitaph_{slug}.md
+├── history/
+│   └── legacy_audit_{slug}_{timestamp}.json
+└── templates/
+    ├── past_life.json
+    ├── cringe_archaeology.json
+    ├── ai_clone.json
+    ├── legacy_audit.json
+    └── epitaph.json
+```
+
+- **JSON** — 结构化 Profile，供后续追加、纠正、版本管理
+- **Markdown** — 人话解读，包含完整分析、关键洞察、数字墓碑（如果适用）
+- **templates/** — 仓库内置模板；生成结果默认写在 `profiles/` 根目录
+- **history/** — 每次追加、纠正前的快照，便于回滚
+- **隐私默认优先** — 真实 profile 和历史快照已加入 `.gitignore`，避免把私人数据提交到 GitHub
+
+---
+
+## 技术细节
+
+### 单人模式
+
+- 保留单一契约源：`profiles/contracts/skill-contract.json`
+- 保留核心运维脚本：`scripts/profile-manager.py`
+- 保留一个校验入口：`scripts/validate-skill.py`
+- 删除双脚本校验和重型架构文档，降低维护负担
+
+### 管理命令
+
+| 命令 | 说明 |
+|------|------|
+| `python scripts/profile-manager.py list` | 列出 `profiles/` 根目录中的当前 profile |
+| `python scripts/profile-manager.py init --skill legacy_audit --slug demo` | 按模板初始化 profile |
+| `python scripts/profile-manager.py snapshot --skill legacy_audit --slug demo` | 把当前 profile 保存到 `profiles/history/` |
+| `python scripts/profile-manager.py rollback --skill legacy_audit --slug demo` | 回滚到最近快照（或 `--timestamp` 指定） |
+| `python scripts/profile-manager.py delete --skill legacy_audit --slug demo --yes --with-history` | 删除当前 profile，并可选删除历史 |
+| `python scripts/profile-manager.py doctor` | 批量校验当前所有 profile 的结构和关键字段 |
+
+### 开发者自检
+
+维护 prompt、模板或目录结构后，运行：
+
+```bash
+python scripts/validate-skill.py
+```
+
+补充运维校验：
+
+```bash
+python scripts/profile-manager.py doctor
+```
+
+自检会检查：
+
+- 契约、模板、路径映射是否一致
+- `prompts / layer0 / references / templates` 是否齐全
+- 示例输出、图标资源和运维脚本是否完整
+- `profiles/` 目录和 `.gitignore` 的隐私规则是否存在
+
+### 核心设计
+
+- **Persona 5 层结构**：Layer 0 硬规则 → Layer 1 身份 → Layer 2 表达 → Layer 3 思维 → Layer 4 边界
+- **结构化 Profile**：JSON 存数据，Markdown 讲故事，可追加、可纠正、可回滚
+- **叙事原则**：先证据，后张力，再追问；先理解防御，再谈代价
+- **Browser 代操作**：用户已登录时，agent 直接抓个人页面数据（最准确）
+- **隐私优先**：所有分析本地进行，不上传任何服务器
+- **安全边界**：agent 确认触发，不会泛激活；数据获取分级降级
+- **进化机制**：用户追加新信息或纠正错误时，Profile 增量更新
+- **契约驱动**：`skill-contract.json` 统一定义 skill 路径和字段要求
+- **可运维**：`profile-manager.py` 提供初始化、快照、回滚、删除、巡检
+
+### 目录结构
 
 ```text
 digital-life/
@@ -293,9 +301,7 @@ digital-life/
     └── *.md                  # 各 skill 的方法论文档
 ```
 
----
-
-## 版本
+### 版本
 
 - v1.3.2-beta：强化人文与哲思表达层，为主文档、共享 Persona 模板和 5 个 prompts 增加“先证据、后张力、再追问”的统一写作原则
 - 当前仓库仅保留这一条 beta 版本线，历史正式版标签和版本列表已清理
