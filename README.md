@@ -11,9 +11,6 @@
 [![clawhub](https://img.shields.io/badge/clawhub-published-green)](https://clawhub.com)
 [![Version](https://img.shields.io/badge/version-1.3.2--beta-1E6B5B)](CHANGELOG.md)
 
-![数字人生标志](assets/digital-life-large.svg)
-&nbsp;
-
 用你的数字痕迹照见真实的自己  
 每个 skill 生成**结构化 Profile + 人话解读**，可迭代、可纠错、可回滚，也能把“发生了什么”翻译成“这说明了什么”
 
