@@ -23,17 +23,29 @@ REQUIRED_ROOT_FILES = [
     "profiles/README.md",
     "profiles/history/.gitkeep",
     CONTRACT_PATH,
+    "prompts/persona_builder.md",
+    "prompts/evolution.md",
     "examples/README.md",
     "examples/legacy_audit_demo.json",
     "examples/legacy_audit_demo.md",
     "examples/ai_clone_demo.json",
     "examples/ai_clone_demo.md",
+    "examples/past_life_demo.json",
+    "examples/past_life_demo.md",
+    "examples/cringe_archaeology_demo.json",
+    "examples/cringe_archaeology_demo.md",
+    "examples/epitaph_demo.json",
+    "examples/epitaph_demo.md",
     "scripts/profile-manager.py",
+    "scripts/validate-skill.py",
 ]
 
 EXAMPLE_JSON_FILES = [
     "examples/legacy_audit_demo.json",
     "examples/ai_clone_demo.json",
+    "examples/past_life_demo.json",
+    "examples/cringe_archaeology_demo.json",
+    "examples/epitaph_demo.json",
 ]
 
 GITIGNORE_RULES = [
@@ -132,9 +144,36 @@ def main() -> int:
         full_path = root / relative_path
         if full_path.exists():
             try:
-                json.loads(full_path.read_text(encoding="utf-8"))
+                example = json.loads(full_path.read_text(encoding="utf-8"))
             except json.JSONDecodeError:
                 errors.append(f"Invalid example JSON: {relative_path}")
+                continue
+
+            ex_skill = example.get("skill")
+            matching = [s for s in skills if s.get("slug") == ex_skill]
+            if matching:
+                required_keys = matching[0].get("required_top_level_keys", [])
+                for key in required_keys:
+                    if key not in example:
+                        errors.append(
+                            f"Example '{relative_path}' missing required key: {key}"
+                        )
+
+    for item in skills:
+        slug = str(item.get("slug", ""))
+        prompt_path = root / str(item.get("prompt_path", ""))
+        if prompt_path.exists():
+            prompt_text = prompt_path.read_text(encoding="utf-8")
+            layer0_ref = str(item.get("layer0_path", ""))
+            ref_ref = str(item.get("reference_path", ""))
+            if layer0_ref and layer0_ref not in prompt_text:
+                errors.append(
+                    f"Prompt '{item['prompt_path']}' does not reference layer0 path: {layer0_ref}"
+                )
+            if ref_ref and ref_ref not in prompt_text:
+                errors.append(
+                    f"Prompt '{item['prompt_path']}' does not reference reference path: {ref_ref}"
+                )
 
     gitignore_path = root / ".gitignore"
     if gitignore_path.exists():
@@ -153,6 +192,8 @@ def main() -> int:
     print(f"- skills: {len(skills)}")
     print("- skill contract is valid and paths are consistent")
     print("- prompts / layer0 / references / templates are present")
+    print("- prompt cross-references to layer0 and references are verified")
+    print("- shared prompts (persona_builder, evolution) are present")
     print("- profiles layout and privacy ignore rules are in place")
     print("- agents metadata, icon assets, example outputs, and scripts are present")
     return 0
