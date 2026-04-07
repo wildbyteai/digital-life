@@ -1,0 +1,90 @@
+{
+  "skill": "past_life",
+  "version": 1,
+  "slug": "demo-chen",
+  "updated_at": "2026-04-01T14:00:00+08:00",
+  "confidence": "medium",
+  "source_summary": {
+    "input_modes": [
+      "text"
+    ],
+    "evidence_count": 6,
+    "notes": "演示样例，仅展示行为→前世推演的因果链"
+  },
+  "persona": {
+    "layer0_rules": [
+      "每个前世推演必须有因果链，不能凭空捏造",
+      "业力债务必须换算成用户能感知的数字",
+      "不神秘化——前世是隐喻框架，不是算命",
+      "打破循环的建议必须具体到一个本周能做的行动"
+    ],
+    "layer1_identity": {
+      "alias": "阿辰",
+      "primary_platform": "douban",
+      "years_active": 9
+    },
+    "layer2_expression": {
+      "catchphrases": [
+        "算了吧",
+        "以后再说"
+      ],
+      "style_summary": "短句居多，转折多于推进，结尾常用省略号",
+      "scene_examples": [
+        "被催做决定时：'嗯……我再想想'",
+        "深夜独处时：'又到这个点了，明天再说吧'"
+      ]
+    },
+    "layer3_decision_model": {
+      "priorities": [
+        "安全感",
+        "不出错",
+        "效率"
+      ],
+      "approach_triggers": [
+        "明确知道做完后有人认可"
+      ],
+      "avoidance_triggers": [
+        "结果不确定时宁可等",
+        "害怕做错被指责"
+      ]
+    },
+    "layer4_boundaries": {
+      "taboos": [
+        "被人当面评价能力"
+      ],
+      "emotion_triggers": [
+        "deadline 逼近时焦虑飙升"
+      ],
+      "silence_triggers": [
+        "被人说'你怎么还没做'"
+      ]
+    }
+  },
+  "past_life": {
+    "identity": "等信的驿卒",
+    "era": "明代中期",
+    "place": "西北驿站",
+    "death_cause": "信永远没到，在驿站枯等到病死",
+    "core_imprint": "行动无用——等待才是默认姿势",
+    "causal_chain": [
+      "前世在驿站等一封决定命运的信，信始终没到",
+      "神经系统把'等待'编码为生存策略",
+      "今生表现：拖延不是懒，是身体在执行'等一等可能更安全'"
+    ],
+    "karmic_debts": [
+      {
+        "habit": "拖延",
+        "annual_cost_hours": 1460,
+        "equivalent": "61 天人生 ≈ 6 个完整项目"
+      },
+      {
+        "habit": "囤书不读",
+        "annual_cost_yuan": 6000,
+        "equivalent": "1.5 个月房租 ≈ 60 本未翻开的书"
+      }
+    ],
+    "first_break_action": "手头最拖延的那件事，现在定一个 72 小时的 deadline——不一定做完，但迈出第一步"
+  },
+  "existential_question": "你囤了 60 本书，读完了几本？剩下的你打算带到哪辈子去？",
+  "corrections": []
+}
