@@ -211,10 +211,9 @@ profiles/
 
 ### 单人模式
 
-- 保留单一契约源：`profiles/contracts/skill-contract.json`
-- 保留核心运维脚本：`scripts/profile-manager.py`
-- 保留一个校验入口：`scripts/validate-skill.py`
-- 删除双脚本校验和重型架构文档，降低维护负担
+- 单一契约源：`profiles/contracts/skill-contract.json`
+- 核心运维脚本：`scripts/profile-manager.py`
+- 校验入口：`scripts/validate-skill.py`
 
 ### 管理命令
 
@@ -247,18 +246,6 @@ python scripts/profile-manager.py doctor
 - `prompts / layer0 / references / templates` 是否齐全
 - 示例输出、图标资源和运维脚本是否完整
 - `profiles/` 目录和 `.gitignore` 的隐私规则是否存在
-
-### 核心设计
-
-- **Persona 5 层结构**：Layer 0 硬规则 → Layer 1 身份 → Layer 2 表达 → Layer 3 思维 → Layer 4 边界
-- **结构化 Profile**：JSON 存数据，Markdown 讲故事，可追加、可纠正、可回滚
-- **叙事原则**：先证据，后张力，再追问；先理解防御，再谈代价
-- **Browser 代操作**：用户已登录时，agent 直接抓个人页面数据（最准确）
-- **隐私优先**：所有分析本地进行，不上传任何服务器
-- **安全边界**：agent 确认触发，不会泛激活；数据获取分级降级
-- **进化机制**：用户追加新信息或纠正错误时，Profile 增量更新
-- **契约驱动**：`skill-contract.json` 统一定义 skill 路径和字段要求
-- **可运维**：`profile-manager.py` 提供初始化、快照、回滚、删除、巡检
 
 ### 目录结构
 
