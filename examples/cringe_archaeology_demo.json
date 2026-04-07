@@ -1,0 +1,89 @@
+{
+  "skill": "cringe_archaeology",
+  "version": 1,
+  "slug": "demo-chen",
+  "updated_at": "2026-04-01T15:00:00+08:00",
+  "confidence": "high",
+  "source_summary": {
+    "input_modes": [
+      "text"
+    ],
+    "platforms_scanned": [
+      "qq_zones"
+    ],
+    "evidence_count": 7,
+    "notes": "演示样例，所有内容为虚构脱敏，不可回溯到真实个人"
+  },
+  "persona": {
+    "layer0_rules": [
+      "每条内容同时打社死指数和本真指数，强调两者的正相关",
+      "识别面具转折点，用具体时间和事件锚定",
+      "温暖的毒舌，不是嘲笑",
+      "最终让用户自己回答：那个不加掩饰的你，真的比现在差吗"
+    ],
+    "layer1_identity": {
+      "alias": "阿辰",
+      "primary_platform": "qq_zones",
+      "years_active": 12
+    },
+    "layer2_expression": {
+      "before_mask": "火星文、感叹号爆炸、大量转发心灵鸡汤",
+      "after_mask": "极简、克制、朋友圈三天可见",
+      "style_shift": "从'啊啊啊太开心了！！！'变成了'还行'"
+    },
+    "layer3_decision_model": {
+      "mask_turning_point": "大三那年一条吐槽老师的说说被截图传到了辅导员手里",
+      "social_pressure_sources": [
+        "职场形象管理",
+        "恋爱中被前任翻过旧帖"
+      ]
+    },
+    "layer4_boundaries": {
+      "taboos": [
+        "提起 QQ 空间就紧张"
+      ],
+      "emotion_triggers": [
+        "有人说'你以前发过什么来着'"
+      ]
+    }
+  },
+  "top_cringe": [
+    {
+      "excerpt": "莪の丗堺伱卜懂，嘸亽螚嬞莪の恠苸",
+      "platform": "qq_zones",
+      "year": 2011,
+      "cringe_score": 98,
+      "authenticity_score": 92,
+      "interpretation": "你当时是真的觉得没人懂你。现在你不说了，不是因为被懂了，是因为放弃了被理解"
+    },
+    {
+      "excerpt": "今天和XXX吵架了，好难过，为什么世界上没有真正理解我的人",
+      "platform": "qq_zones",
+      "year": 2012,
+      "cringe_score": 85,
+      "authenticity_score": 90,
+      "interpretation": "你在认真记录一段关系的痛。现在你吵完架连朋友圈都不发了——不是不痛了，是学会了独自消化"
+    },
+    {
+      "excerpt": "转发：《真正爱你的人会有的10个表现》",
+      "platform": "qq_zones",
+      "year": 2013,
+      "cringe_score": 75,
+      "authenticity_score": 60,
+      "interpretation": "你当时真的相信爱情有标准答案。现在你什么都不信了——但你也不再认真谈论爱情了"
+    }
+  ],
+  "mask_turning_point": {
+    "period": "2015",
+    "trigger": "大三那年，一条吐槽老师的说说被截图发到了辅导员群里。从那以后你学会了'发之前先想想谁会看到'",
+    "before": "想说就说，感叹号当标点用",
+    "after": "每条都像过审稿，发完还要反复看一遍"
+  },
+  "lost_things": [
+    "你不再用感叹号了——连开心都学会了克制",
+    "你不再转发任何'心灵鸡汤'——不是因为看穿了，是因为害怕被嘲笑'居然信这个'",
+    "你不再公开说'我好难过'——现在难过的时候，你选择什么都不发"
+  ],
+  "existential_question": "你上一次在网上毫无保留地表达喜欢一个东西，是什么时候？",
+  "corrections": []
+}
