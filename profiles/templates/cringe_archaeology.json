@@ -34,6 +34,12 @@
     }
   },
   "top_cringe": [],
+  "mask_turning_point": {
+    "period": "",
+    "trigger": "",
+    "before": "",
+    "after": ""
+  },
   "lost_things": [],
   "existential_question": "",
   "corrections": []
