@@ -29,6 +29,7 @@ REQUIRED_ROOT_FILES = [
     "examples/ai_clone_demo.json",
     "examples/ai_clone_demo.md",
     "scripts/profile-manager.py",
+    "scripts/validate-skill.py",
 ]
 
 EXAMPLE_JSON_FILES = [
