@@ -1,0 +1,63 @@
+{
+  "skill": "epitaph",
+  "version": 1,
+  "slug": "demo-zhao",
+  "updated_at": "2026-04-01T15:00:00+08:00",
+  "confidence": "medium",
+  "source_summary": {
+    "input_modes": [
+      "text"
+    ],
+    "evidence_count": 5,
+    "notes": "演示样例，仅展示五种风格墓志铭与数字墓碑"
+  },
+  "persona": {
+    "layer0_rules": [
+      "墓志铭要让读者感受到时间的真实重量，不是鸡汤",
+      "五种风格必须各有力量，至少两种让人读完沉默",
+      "不替用户做价值判断——是镜子，不是法官",
+      "存在追问要具体到行为，不问'你活得有意义吗'"
+    ],
+    "layer1_identity": {
+      "alias": "老赵",
+      "life_status": "35岁，互联网产品经理，已婚有一个孩子"
+    },
+    "layer2_expression": {
+      "how_the_user_describes_themself": "普通上班族，没什么特别的",
+      "how_others_might_describe_them": "靠谱、不麻烦人、随叫随到"
+    },
+    "layer3_decision_model": {
+      "proudest_choice": "放弃大厂 offer 回老家陪父母度过父亲手术期",
+      "biggest_regret": "大学毕业旅行一直想去没去，后来再也没有那群人了"
+    },
+    "layer4_boundaries": {
+      "unlived_desires": [
+        "想写一本书",
+        "想学吉他",
+        "想带家人去冰岛看极光"
+      ],
+      "remember_me_as": [
+        "一个靠得住的人"
+      ]
+    }
+  },
+  "digital_tombstone": {
+    "posts": 3200,
+    "likes": 41000,
+    "longest_silence_days": 47,
+    "most_remembered_quote": "我没事"
+  },
+  "versions": {
+    "serious": "这里长眠着一个靠得住的人。\n他用 12 年证明自己不会让人失望。\n他的家人在他面前都很安心。\n只有他自己知道，那叫什么感觉。\n\n「我没事」\n——他一生说得最多的话",
+    "sarcastic": "他把最好的精力给了产品需求文档，\n把次好的给了复盘会议，\n把剩下的给了通勤。\n至于他自己想做什么——\n他打算退休后再想。\n\n退休时间：未定\n遗愿清单完成度：0%",
+    "literary": "他活着的时候像一盏走廊的灯——\n在该亮的时候亮着，\n在没人经过的时候也亮着。\n没有人问过他，累不累。\n\n他说不累。\n灯也这么说。",
+    "worker": "工龄 12 年，换了 4 家公司。\n简历写了 7 版，面试了 23 次。\n他记得每一个 deadline，\n忘了每一个生日。\n\n墓碑上刻着 KPI：已完成。\n但 OKR 那栏是空的。",
+    "philosophical": "他想被记住的方式：一个认真活过的人。\n\n他实际的生活：\n- 上一次和最好的朋友认真聊天：半年前\n- 上一次做一件不是为了别人的事：说不清\n- 上一次拒绝一件让他疲惫的事：还没有\n\n这两个版本之间的距离，\n他一直知道，但一直没动。"
+  },
+  "existential_questions": [
+    "你想被记住的方式是「靠得住的人」——但你上一次主动让别人靠你（而不是等别人来找你）是什么时候？",
+    "你说想写一本书、学吉他、去冰岛——这三件事里，哪一件你这周能迈出第一步？",
+    "你说得最多的话是「我没事」——你上一次对一个人说「我不太好」是什么时候？"
+  ],
+  "corrections": []
+}
