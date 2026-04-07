@@ -164,5 +164,5 @@
 
 ## 参考
 
-- 方法论：`references/cringe-archaeology.md`
+- 方法论：`references/cringe_archaeology.md`
 - 硬规则：`layer0/cringe_archaeology.md`

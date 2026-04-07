@@ -19,7 +19,7 @@
       ],
       "prompt_path": "prompts/past_life.md",
       "layer0_path": "layer0/past_life.md",
-      "reference_path": "references/past-life.md",
+      "reference_path": "references/past_life.md",
       "template_path": "profiles/templates/past_life.json",
       "required_top_level_keys": [
         "skill",
@@ -43,7 +43,7 @@
       ],
       "prompt_path": "prompts/cringe_archaeology.md",
       "layer0_path": "layer0/cringe_archaeology.md",
-      "reference_path": "references/cringe-archaeology.md",
+      "reference_path": "references/cringe_archaeology.md",
       "template_path": "profiles/templates/cringe_archaeology.json",
       "required_top_level_keys": [
         "skill",
@@ -68,7 +68,7 @@
       ],
       "prompt_path": "prompts/ai_clone.md",
       "layer0_path": "layer0/ai_clone.md",
-      "reference_path": "references/ai-clone.md",
+      "reference_path": "references/ai_clone.md",
       "template_path": "profiles/templates/ai_clone.json",
       "required_top_level_keys": [
         "skill",
@@ -94,7 +94,7 @@
       ],
       "prompt_path": "prompts/legacy_audit.md",
       "layer0_path": "layer0/legacy_audit.md",
-      "reference_path": "references/legacy-audit.md",
+      "reference_path": "references/legacy_audit.md",
       "template_path": "profiles/templates/legacy_audit.json",
       "required_top_level_keys": [
         "skill",

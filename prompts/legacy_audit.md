@@ -178,5 +178,5 @@
 
 ## 参考
 
-- 方法论：`references/legacy-audit.md`
+- 方法论：`references/legacy_audit.md`
 - 硬规则：`layer0/legacy_audit.md`

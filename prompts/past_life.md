@@ -189,5 +189,5 @@
 
 ## 参考
 
-- 方法论：`references/past-life.md`
+- 方法论：`references/past_life.md`
 - 硬规则：`layer0/past_life.md`

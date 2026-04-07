@@ -151,5 +151,5 @@
 
 ## 参考
 
-- 方法论：`references/ai-clone.md`
+- 方法论：`references/ai_clone.md`
 - 硬规则：`layer0/ai_clone.md`

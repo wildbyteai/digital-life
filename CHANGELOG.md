@@ -8,6 +8,12 @@
 - Add 纠正机制 (correction mechanism) section to `ai_clone.md`, `legacy_audit.md`, and `epitaph.md` for consistent user feedback handling across all 5 skills.
 - Add demo examples for `past_life`, `cringe_archaeology`, and `epitaph` — all 5 skills now have complete JSON + Markdown examples.
 
+### Maintenance
+
+- Unify `references/` filenames from hyphens to underscores, matching all other directories.
+- Wire `prompts/evolution.md` into SKILL.md Step 5 so the append/correct workflow is reachable by agents.
+- Update `README.md` directory tree to list all 10 example files.
+
 ### Documentation
 
 - Update `examples/README.md` to list all 5 demo example sets.

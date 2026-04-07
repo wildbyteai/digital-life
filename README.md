@@ -276,10 +276,16 @@ digital-life/
 │   └── digital-life-large.svg
 ├── examples/
 │   ├── README.md             # 脱敏示例说明
-│   ├── legacy_audit_demo.md
-│   ├── legacy_audit_demo.json
+│   ├── past_life_demo.json
+│   ├── past_life_demo.md
+│   ├── cringe_archaeology_demo.json
+│   ├── cringe_archaeology_demo.md
+│   ├── ai_clone_demo.json
 │   ├── ai_clone_demo.md
-│   └── ai_clone_demo.json
+│   ├── legacy_audit_demo.json
+│   ├── legacy_audit_demo.md
+│   ├── epitaph_demo.json
+│   └── epitaph_demo.md
 ├── scripts/
 │   ├── profile-manager.py    # profile 生命周期管理（init/list/snapshot/rollback/delete/doctor）
 │   └── validate-skill.py     # 单一自检入口
