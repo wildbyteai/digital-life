@@ -24,16 +24,25 @@ REQUIRED_ROOT_FILES = [
     "profiles/history/.gitkeep",
     CONTRACT_PATH,
     "examples/README.md",
-    "examples/legacy_audit_demo.json",
-    "examples/legacy_audit_demo.md",
+    "examples/past_life_demo.json",
+    "examples/past_life_demo.md",
+    "examples/cringe_archaeology_demo.json",
+    "examples/cringe_archaeology_demo.md",
     "examples/ai_clone_demo.json",
     "examples/ai_clone_demo.md",
+    "examples/legacy_audit_demo.json",
+    "examples/legacy_audit_demo.md",
+    "examples/epitaph_demo.json",
+    "examples/epitaph_demo.md",
     "scripts/profile-manager.py",
 ]
 
 EXAMPLE_JSON_FILES = [
-    "examples/legacy_audit_demo.json",
+    "examples/past_life_demo.json",
+    "examples/cringe_archaeology_demo.json",
     "examples/ai_clone_demo.json",
+    "examples/legacy_audit_demo.json",
+    "examples/epitaph_demo.json",
 ]
 
 GITIGNORE_RULES = [

@@ -1,0 +1,63 @@
+{
+  "skill": "epitaph",
+  "version": 1,
+  "slug": "demo-wei",
+  "updated_at": "2026-04-01T16:00:00+08:00",
+  "confidence": "medium",
+  "source_summary": {
+    "input_modes": [
+      "text"
+    ],
+    "evidence_count": 4,
+    "notes": "演示样例，基于虚构口述生成，无真实个人数据"
+  },
+  "persona": {
+    "layer0_rules": [
+      "墓志铭让用户在活着的时候读到结局，不是恐吓而是照见",
+      "五种风格各有力量，至少两种让用户读完沉默",
+      "灵魂追问具体到行为，不是抽象鸡汤",
+      "不替用户判断人生好不好"
+    ],
+    "layer1_identity": {
+      "alias": "阿微",
+      "life_status": "30 岁，互联网运营，单身，养了一只猫"
+    },
+    "layer2_expression": {
+      "how_the_user_describes_themself": "普通打工人，没什么特别的",
+      "how_others_might_describe_them": "靠谱、能扛事、但好像总是一个人"
+    },
+    "layer3_decision_model": {
+      "proudest_choice": "25 岁的时候一个人搬到了一个不认识任何人的城市",
+      "biggest_regret": "没有在外公还在的时候多回几次家"
+    },
+    "layer4_boundaries": {
+      "unlived_desires": [
+        "想写一本书",
+        "想学潜水",
+        "想对一个人说'我很在乎你'"
+      ],
+      "remember_me_as": [
+        "一个认真活过的人"
+      ]
+    }
+  },
+  "digital_tombstone": {
+    "posts": 2340,
+    "likes": 8700,
+    "longest_silence_days": 47,
+    "most_remembered_quote": "算了，先这样吧"
+  },
+  "versions": {
+    "serious": "这里安息着一个认真活过的普通人。\n她 25 岁时一个人去了一座陌生的城市，\n没有带多少行李，但带了全部的勇气。\n她不常说「我很在乎你」，\n但每一次沉默，都是在用力忍着不说。",
+    "sarcastic": "这里躺着一个发了 2340 条动态的人。\n她最常说的话是「算了，先这样吧」。\n她花了 30 年学会了扛事，\n但一直没学会让别人帮她扛。\n猫比她活得自在。",
+    "literary": "她把勇气用在了出发上，\n把沉默留给了在乎的人。\n那些没说出口的话，\n比她发过的 2340 条动态都重。",
+    "worker": "工龄 8 年，加班 2000+ 小时。\n最长连续沉默 47 天——不是因为没话说，\n是因为太累了，连发朋友圈的力气都没有。\n她想被记住的方式是「认真活过」，\n但她大部分时间都在认真加班。",
+    "philosophical": "她一直在等一个「准备好了」的时刻：\n准备好了再写书，准备好了再学潜水，\n准备好了再对那个人说「我很在乎你」。\n她没有等到。\n不是因为时间不够——\n是因为「准备好了」这个时刻，从来不会自己到来。"
+  },
+  "existential_questions": [
+    "你想被记住的方式是'认真活过'——你上一次不是在'认真加班'而是在'认真活'，是什么时候？",
+    "你最想对谁说'我很在乎你'？为什么到现在还没说？",
+    "那本想写的书、想学的潜水——你在等什么'准备好了'的信号？"
+  ],
+  "corrections": []
+}
