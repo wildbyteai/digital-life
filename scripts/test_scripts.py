@@ -1031,6 +1031,27 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_complete_persona(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "full_pers", False)
+            json_path = tmp / "profiles" / "past_life_full_pers.json"
+            payload = pm.load_json(json_path)
+            payload["persona"] = {
+                "layer0_rules": ["rule1"],
+                "layer1_identity": {"alias": "test"},
+                "layer2_expression": {"style": "casual"},
+                "layer3_decision_model": {"priority": "safety"},
+                "layer4_boundaries": {"limit": 100}
+            }
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "full_pers")
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_complete_source_summary(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
