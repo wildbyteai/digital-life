@@ -309,6 +309,61 @@ class TestValidateJsonOutput(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_snapshot_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "sjson", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.snapshot_profile(contract, tmp, "past_life", "sjson", None, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertIn("timestamp", result)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_rollback_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "rjson", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "rjson", None)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.rollback_profile(contract, tmp, "past_life", "rjson", None, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertIn("timestamp", result)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_delete_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "djson2", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.delete_profile(contract, tmp, "past_life", "djson2", False, True, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["removed"], 2)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestValidateSkill(unittest.TestCase):
     """Test validate-skill.py against the real repo."""
