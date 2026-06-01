@@ -1031,6 +1031,22 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_zero_version(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "zero_ver", False)
+            json_path = tmp / "profiles" / "past_life_zero_ver.json"
+            payload = pm.load_json(json_path)
+            payload["version"] = 0
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "zero_ver")
+            # version=0 is valid int type, validation only checks type not value
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_null_confidence(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
