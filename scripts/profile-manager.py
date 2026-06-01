@@ -590,6 +590,26 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
                 print(msg)
             failed += 1
 
+        # Validate source_summary structure
+        if "source_summary" in template:
+            ss = template["source_summary"]
+            if not isinstance(ss, dict):
+                msg = f"Template {item['template_path']} 'source_summary' must be dict"
+                if fmt == "json":
+                    errors.append(msg)
+                else:
+                    print(msg)
+                failed += 1
+            else:
+                for field in ("input_modes", "evidence_count", "notes"):
+                    if field not in ss:
+                        msg = f"Template {item['template_path']} source_summary missing '{field}'"
+                        if fmt == "json":
+                            errors.append(msg)
+                        else:
+                            print(msg)
+                        failed += 1
+
     # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
     profiles_checked = 0
