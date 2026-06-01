@@ -255,6 +255,16 @@ def main() -> int:
             if "corrections" in template and isinstance(template["corrections"], list) and template["corrections"]:
                 errors.append(f"Template 'corrections' should be empty list: {template_path.as_posix()}")
 
+            # Validate source_summary structure in template
+            if "source_summary" in template:
+                ss = template["source_summary"]
+                if not isinstance(ss, dict):
+                    errors.append(f"Template 'source_summary' must be dict: {template_path.as_posix()}")
+                else:
+                    for field in ("input_modes", "evidence_count", "notes"):
+                        if field not in ss:
+                            errors.append(f"Template source_summary missing '{field}': {template_path.as_posix()}")
+
             if isinstance(required_keys, list):
                 for key in required_keys:
                     if key not in template:
