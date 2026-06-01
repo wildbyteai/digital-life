@@ -158,6 +158,14 @@ def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: 
         template["version"] = 1
     if "corrections" not in template or not isinstance(template["corrections"], list):
         template["corrections"] = []
+    if "confidence" not in template:
+        template["confidence"] = "low"
+    if "source_summary" not in template or not isinstance(template["source_summary"], dict):
+        template["source_summary"] = {
+            "input_modes": [],
+            "evidence_count": 0,
+            "notes": "初始化自动生成，尚未填入真实数据",
+        }
 
     dump_json(json_path, template)
     md_title = skill_map[skill].get("display_name", skill)
@@ -342,6 +350,14 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
 
         if "source_summary" in payload and not isinstance(payload["source_summary"], dict):
             errors.append("'source_summary' must be an object")
+
+        if "confidence" in payload:
+            valid_confidence = ("high", "medium", "low")
+            if payload["confidence"] not in valid_confidence:
+                errors.append(f"'confidence' must be one of {valid_confidence}, got: {payload['confidence']!r}")
+
+        if "persona" in payload and not isinstance(payload["persona"], dict):
+            errors.append("'persona' must be an object")
 
     if md_path.exists() and md_path.stat().st_size == 0:
         errors.append("Markdown report is empty")
