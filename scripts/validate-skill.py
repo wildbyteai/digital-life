@@ -87,6 +87,13 @@ def main() -> int:
                 if key not in naming:
                     errors.append(f"Contract naming missing key: {key}")
 
+        for path_key in ("profile_root", "history_root", "templates_root"):
+            value = contract.get(path_key)
+            if not value:
+                errors.append(f"Contract missing '{path_key}' field")
+            elif not isinstance(value, str):
+                errors.append(f"Contract '{path_key}' must be a string")
+
     skills = contract.get("skills") if isinstance(contract, dict) else None
     if not isinstance(skills, list) or not skills:
         errors.append("Contract must contain a non-empty 'skills' list")
