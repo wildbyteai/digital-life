@@ -619,6 +619,15 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
                 print(msg)
             failed += 1
 
+        # Validate slug placeholder in template
+        if "slug" in template and template["slug"] != "{slug}":
+            msg = f"Template {item['template_path']} 'slug' should be '{{slug}}' placeholder, got {template['slug']!r}"
+            if fmt == "json":
+                errors.append(msg)
+            else:
+                print(msg)
+            failed += 1
+
     # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
     profiles_checked = 0
