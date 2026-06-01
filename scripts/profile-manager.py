@@ -531,6 +531,19 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
                 print(msg)
             failed += 1
 
+        # Validate persona layers in template
+        if "persona" in template and isinstance(template["persona"], dict):
+            persona = template["persona"]
+            required_layers = ("layer0_rules", "layer1_identity", "layer2_expression", "layer3_decision_model", "layer4_boundaries")
+            for layer in required_layers:
+                if layer not in persona:
+                    msg = f"Template {item['template_path']} persona missing layer: {layer}"
+                    if fmt == "json":
+                        errors.append(msg)
+                    else:
+                        print(msg)
+                    failed += 1
+
     # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
     profiles_checked = 0
