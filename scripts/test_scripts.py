@@ -51,6 +51,25 @@ class TestSlugValidation(unittest.TestCase):
         for slug in ("", "Test", "test user", "test@user", "测试", ".hidden"):
             self.assertFalse(pm.is_valid_slug(slug))
 
+    def test_slug_edge_cases(self):
+        # Single character
+        self.assertTrue(pm.is_valid_slug("a"))
+        # Numbers only
+        self.assertTrue(pm.is_valid_slug("123"))
+        # Underscore start
+        self.assertTrue(pm.is_valid_slug("_test"))
+        # Hyphen start
+        self.assertTrue(pm.is_valid_slug("-test"))
+        # Mixed
+        self.assertTrue(pm.is_valid_slug("test_123-abc"))
+        # Spaces
+        self.assertFalse(pm.is_valid_slug(" test"))
+        self.assertFalse(pm.is_valid_slug("test "))
+        # Special chars
+        self.assertFalse(pm.is_valid_slug("test.name"))
+        self.assertFalse(pm.is_valid_slug("test/name"))
+        self.assertFalse(pm.is_valid_slug("test\\name"))
+
 
 class TestTimestampRegex(unittest.TestCase):
     def test_valid_timestamps(self):
