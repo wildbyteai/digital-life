@@ -367,6 +367,17 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
         if "persona" in payload and not isinstance(payload["persona"], dict):
             errors.append("'persona' must be an object")
 
+        if "version" in payload and not isinstance(payload["version"], int):
+            errors.append(f"'version' must be an integer, got: {type(payload['version']).__name__}")
+
+        if "updated_at" in payload:
+            ua = str(payload["updated_at"])
+            if ua and ua != "-":
+                try:
+                    datetime.fromisoformat(ua)
+                except (ValueError, TypeError):
+                    errors.append(f"'updated_at' is not a valid ISO 8601 string: {ua!r}")
+
     if md_path.exists() and md_path.stat().st_size == 0:
         errors.append("Markdown report is empty")
 
