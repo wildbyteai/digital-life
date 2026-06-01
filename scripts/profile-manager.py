@@ -484,6 +484,14 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
     return 0
 
 
+def _report(msg: str, fmt: str, errors: list[str] | None = None) -> None:
+    """Report a message, appending to errors list in JSON mode or printing in text mode."""
+    if fmt == "json" and errors is not None:
+        errors.append(msg)
+    else:
+        print(msg)
+
+
 def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "text") -> int:
     """Validate all current profiles and templates."""
     failed = 0
@@ -494,21 +502,13 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
     for slug, item in sorted(skill_map.items()):
         template_path = root / item["template_path"]
         if not template_path.exists():
-            msg = f"Missing template: {item['template_path']}"
-            if fmt == "json":
-                errors.append(msg)
-            else:
-                print(msg)
+            _report(f"Missing template: {item['template_path']}", fmt, errors)
             failed += 1
             continue
         try:
             template = load_json(template_path)
         except json.JSONDecodeError as exc:
-            msg = f"Invalid template JSON: {item['template_path']}: {exc}"
-            if fmt == "json":
-                errors.append(msg)
-            else:
-                print(msg)
+            _report(f"Invalid template JSON: {item['template_path']}: {exc}", fmt, errors)
             failed += 1
             continue
 
@@ -516,19 +516,11 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
         required_keys = item.get("required_top_level_keys") or []
         for key in required_keys:
             if key not in template:
-                msg = f"Template {item['template_path']} missing required key: {key}"
-                if fmt == "json":
-                    errors.append(msg)
-                else:
-                    print(msg)
+                _report(f"Template {item['template_path']} missing required key: {key}", fmt, errors)
                 failed += 1
 
         if template.get("skill") != slug:
-            msg = f"Template {item['template_path']} skill mismatch: expected {slug}, got {template.get('skill')}"
-            if fmt == "json":
-                errors.append(msg)
-            else:
-                print(msg)
+            _report(f"Template {item['template_path']} skill mismatch: expected {slug}, got {template.get('skill')}", fmt, errors)
             failed += 1
 
         # Validate persona layers in template
@@ -537,20 +529,12 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
             required_layers = ("layer0_rules", "layer1_identity", "layer2_expression", "layer3_decision_model", "layer4_boundaries")
             for layer in required_layers:
                 if layer not in persona:
-                    msg = f"Template {item['template_path']} persona missing layer: {layer}"
-                    if fmt == "json":
-                        errors.append(msg)
-                    else:
-                        print(msg)
+                    _report(f"Template {item['template_path']} persona missing layer: {layer}", fmt, errors)
                     failed += 1
 
         # Validate template version is integer
         if "version" in template and not isinstance(template["version"], int):
-            msg = f"Template {item['template_path']} 'version' must be int, got {type(template['version']).__name__}"
-            if fmt == "json":
-                errors.append(msg)
-            else:
-                print(msg)
+            _report(f"Template {item['template_path']} 'version' must be int, got {type(template['version']).__name__}", fmt, errors)
             failed += 1
 
         # Validate template confidence placeholder
@@ -558,83 +542,47 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
             conf = template["confidence"]
             valid_placeholders = ("high", "medium", "low", "high|medium|low")
             if conf not in valid_placeholders:
-                msg = f"Template {item['template_path']} 'confidence' unexpected value: {conf!r}"
-                if fmt == "json":
-                    errors.append(msg)
-                else:
-                    print(msg)
+                _report(f"Template {item['template_path']} 'confidence' unexpected value: {conf!r}", fmt, errors)
                 failed += 1
 
         # Validate existential question fields
         has_question = "existential_question" in template
         has_questions = "existential_questions" in template
         if not has_question and not has_questions:
-            msg = f"Template {item['template_path']} missing 'existential_question' or 'existential_questions'"
-            if fmt == "json":
-                errors.append(msg)
-            else:
-                print(msg)
+            _report(f"Template {item['template_path']} missing 'existential_question' or 'existential_questions'", fmt, errors)
             failed += 1
         elif has_question and not isinstance(template["existential_question"], str):
-            msg = f"Template {item['template_path']} 'existential_question' must be str"
-            if fmt == "json":
-                errors.append(msg)
-            else:
-                print(msg)
+            _report(f"Template {item['template_path']} 'existential_question' must be str", fmt, errors)
             failed += 1
         elif has_questions and not isinstance(template["existential_questions"], list):
-            msg = f"Template {item['template_path']} 'existential_questions' must be list"
-            if fmt == "json":
-                errors.append(msg)
-            else:
-                print(msg)
+            _report(f"Template {item['template_path']} 'existential_questions' must be list", fmt, errors)
             failed += 1
 
         # Validate source_summary structure
         if "source_summary" in template:
             ss = template["source_summary"]
             if not isinstance(ss, dict):
-                msg = f"Template {item['template_path']} 'source_summary' must be dict"
-                if fmt == "json":
-                    errors.append(msg)
-                else:
-                    print(msg)
+                _report(f"Template {item['template_path']} 'source_summary' must be dict", fmt, errors)
                 failed += 1
             else:
                 for field in ("input_modes", "evidence_count", "notes"):
                     if field not in ss:
-                        msg = f"Template {item['template_path']} source_summary missing '{field}'"
-                        if fmt == "json":
-                            errors.append(msg)
-                        else:
-                            print(msg)
+                        _report(f"Template {item['template_path']} source_summary missing '{field}'", fmt, errors)
                         failed += 1
 
         # Validate corrections is list
         if "corrections" in template and not isinstance(template["corrections"], list):
-            msg = f"Template {item['template_path']} 'corrections' must be list"
-            if fmt == "json":
-                errors.append(msg)
-            else:
-                print(msg)
+            _report(f"Template {item['template_path']} 'corrections' must be list", fmt, errors)
             failed += 1
 
         # Validate slug placeholder in template
         if "slug" in template and template["slug"] != "{slug}":
-            msg = f"Template {item['template_path']} 'slug' should be '{{slug}}' placeholder, got {template['slug']!r}"
-            if fmt == "json":
-                errors.append(msg)
-            else:
-                print(msg)
+            _report(f"Template {item['template_path']} 'slug' should be '{{slug}}' placeholder, got {template['slug']!r}", fmt, errors)
             failed += 1
 
         # Validate updated_at placeholder in template
         if "updated_at" in template and template["updated_at"] != "{ISO8601}":
-            msg = f"Template {item['template_path']} 'updated_at' should be '{{ISO8601}}' placeholder, got {template['updated_at']!r}"
-            if fmt == "json":
-                errors.append(msg)
-            else:
-                print(msg)
+            _report(f"Template {item['template_path']} 'updated_at' should be '{{ISO8601}}' placeholder, got {template['updated_at']!r}", fmt, errors)
             failed += 1
 
     # Validate profiles
