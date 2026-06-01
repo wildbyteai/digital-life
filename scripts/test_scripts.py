@@ -3107,6 +3107,25 @@ class TestDoctor(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_doctor_all_skills(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+                pm.init_profile(contract, sm, tmp, skill, "doc_all", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["profiles_checked"], 5)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestValidateJsonOutput(unittest.TestCase):
     """Test validate and doctor JSON output format."""
