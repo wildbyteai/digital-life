@@ -1031,6 +1031,36 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_all_fields_set(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "all_fields", False)
+            json_path = tmp / "profiles" / "past_life_all_fields.json"
+            payload = pm.load_json(json_path)
+            payload["confidence"] = "high"
+            payload["version"] = 2
+            payload["corrections"] = [{"fix": "test"}]
+            payload["source_summary"] = {
+                "input_modes": ["text"],
+                "evidence_count": 5,
+                "notes": "All fields test"
+            }
+            payload["existential_question"] = "What is the meaning?"
+            payload["persona"] = {
+                "layer0_rules": ["rule1", "rule2"],
+                "layer1_identity": {"alias": "test_user"},
+                "layer2_expression": {"style": "formal"},
+                "layer3_decision_model": {"priority": "accuracy"},
+                "layer4_boundaries": {"limit": 50}
+            }
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "all_fields")
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_complete_persona(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
