@@ -315,10 +315,13 @@ def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_histo
     return 0
 
 
-def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: str, slug: str) -> int:
+def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: str, slug: str, fmt: str = "text") -> int:
     """Validate a single profile against its template and contract."""
     if skill not in skill_map:
-        print(f"Unknown skill: {skill}")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "errors": [f"Unknown skill: {skill}"]}, ensure_ascii=False))
+        else:
+            print(f"Unknown skill: {skill}")
         return 2
 
     if not validate_slug(slug):
@@ -398,12 +401,18 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
         errors.append("Markdown report is empty")
 
     if errors:
-        print("Validation failed:")
-        for item in errors:
-            print(f"- {item}")
+        if fmt == "json":
+            print(json.dumps({"status": "fail", "profile": f"{skill}_{slug}", "errors": errors}, ensure_ascii=False, indent=2))
+        else:
+            print("Validation failed:")
+            for item in errors:
+                print(f"- {item}")
         return 1
 
-    print(f"Validation passed: {skill}_{slug}")
+    if fmt == "json":
+        print(json.dumps({"status": "ok", "profile": f"{skill}_{slug}"}, ensure_ascii=False, indent=2))
+    else:
+        print(f"Validation passed: {skill}_{slug}")
     return 0
 
 
@@ -494,6 +503,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_validate = sub.add_parser("validate", help="Validate one current profile.")
     p_validate.add_argument("--skill", required=True, help="Skill slug.")
     p_validate.add_argument("--slug", required=True, help="Profile slug.")
+    p_validate.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
 
     sub.add_parser("doctor", help="Validate all current profiles in profiles/ root.")
     return parser
@@ -521,7 +531,7 @@ def main() -> int:
     if args.command == "delete":
         return delete_profile(contract, root, args.skill, args.slug, args.with_history, args.yes)
     if args.command == "validate":
-        return validate_profile(contract, skill_map, root, args.skill, args.slug)
+        return validate_profile(contract, skill_map, root, args.skill, args.slug, args.format)
     if args.command == "doctor":
         return doctor(contract, skill_map, root)
 
