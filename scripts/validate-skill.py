@@ -229,6 +229,13 @@ def main() -> int:
             if "version" in template and isinstance(template["version"], int) and template["version"] < 1:
                 errors.append(f"Template 'version' must be >= 1: {template_path.as_posix()}")
 
+            # Validate confidence placeholder
+            if "confidence" in template:
+                conf = template["confidence"]
+                valid_placeholders = ("high", "medium", "low", "high|medium|low")
+                if conf not in valid_placeholders:
+                    errors.append(f"Template 'confidence' unexpected value: {conf!r}: {template_path.as_posix()}")
+
             if "persona" in template and isinstance(template["persona"], dict):
                 persona = template["persona"]
                 for layer in REQUIRED_PERSONA_LAYERS:
