@@ -39,7 +39,11 @@
     "equivalent_trips": 0
   },
   "platforms": [],
-  "regret_patterns": {},
+  "regret_patterns": {
+    "instant_regret": 0,
+    "accumulated_regret": "",
+    "social_regret": ""
+  },
   "existential_questions": [],
   "corrections": []
 }
