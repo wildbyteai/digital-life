@@ -1499,6 +1499,18 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_all_skills(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+                pm.init_profile(contract, sm, tmp, skill, "valid_all", False)
+                code = pm.validate_profile(contract, sm, tmp, skill, "valid_all")
+                self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_missing_md(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
