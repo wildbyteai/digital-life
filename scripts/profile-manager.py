@@ -565,6 +565,31 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
                     print(msg)
                 failed += 1
 
+        # Validate existential question fields
+        has_question = "existential_question" in template
+        has_questions = "existential_questions" in template
+        if not has_question and not has_questions:
+            msg = f"Template {item['template_path']} missing 'existential_question' or 'existential_questions'"
+            if fmt == "json":
+                errors.append(msg)
+            else:
+                print(msg)
+            failed += 1
+        elif has_question and not isinstance(template["existential_question"], str):
+            msg = f"Template {item['template_path']} 'existential_question' must be str"
+            if fmt == "json":
+                errors.append(msg)
+            else:
+                print(msg)
+            failed += 1
+        elif has_questions and not isinstance(template["existential_questions"], list):
+            msg = f"Template {item['template_path']} 'existential_questions' must be list"
+            if fmt == "json":
+                errors.append(msg)
+            else:
+                print(msg)
+            failed += 1
+
     # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
     profiles_checked = 0
