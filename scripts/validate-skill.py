@@ -169,35 +169,23 @@ def main() -> int:
             if template.get("skill") != slug:
                 errors.append(f"Template skill field mismatch: {template_path.as_posix()} -> {template.get('skill')}")
 
-            if "slug" not in template:
-                errors.append(f"Template missing 'slug' field: {template_path.as_posix()}")
+            required_template_fields = {
+                "slug": str,
+                "updated_at": str,
+                "confidence": str,
+                "source_summary": dict,
+                "version": int,
+                "corrections": list,
+                "persona": dict,
+            }
 
-            if "updated_at" not in template:
-                errors.append(f"Template missing 'updated_at' field: {template_path.as_posix()}")
+            for field, expected_type in required_template_fields.items():
+                if field not in template:
+                    errors.append(f"Template missing '{field}' field: {template_path.as_posix()}")
+                elif not isinstance(template[field], expected_type):
+                    errors.append(f"Template '{field}' must be a {expected_type.__name__}: {template_path.as_posix()}")
 
-            if "confidence" not in template:
-                errors.append(f"Template missing 'confidence' field: {template_path.as_posix()}")
-
-            if "source_summary" not in template:
-                errors.append(f"Template missing 'source_summary' field: {template_path.as_posix()}")
-            elif not isinstance(template["source_summary"], dict):
-                errors.append(f"Template 'source_summary' must be an object: {template_path.as_posix()}")
-
-            if "version" not in template:
-                errors.append(f"Template missing 'version' field: {template_path.as_posix()}")
-            elif not isinstance(template["version"], int):
-                errors.append(f"Template 'version' must be an integer: {template_path.as_posix()}")
-
-            if "corrections" not in template:
-                errors.append(f"Template missing 'corrections' field: {template_path.as_posix()}")
-            elif not isinstance(template["corrections"], list):
-                errors.append(f"Template 'corrections' must be a list: {template_path.as_posix()}")
-
-            if "persona" not in template:
-                errors.append(f"Template missing 'persona' field: {template_path.as_posix()}")
-            elif not isinstance(template["persona"], dict):
-                errors.append(f"Template 'persona' must be an object: {template_path.as_posix()}")
-            else:
+            if "persona" in template and isinstance(template["persona"], dict):
                 persona = template["persona"]
                 required_persona_layers = {
                     "layer0_rules",
