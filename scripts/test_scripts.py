@@ -303,6 +303,47 @@ class TestInitEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_init_template_with_missing_optional_fields(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            # Remove optional fields from template
+            template_path = tmp / "profiles" / "templates" / "past_life.json"
+            template = json.loads(template_path.read_text(encoding="utf-8"))
+            del template["confidence"]
+            del template["version"]
+            del template["corrections"]
+            del template["source_summary"]
+            template_path.write_text(json.dumps(template, ensure_ascii=False, indent=2), encoding="utf-8")
+            # Reload contract
+            contract, sm = pm.load_contract(tmp)
+            code = pm.init_profile(contract, sm, tmp, "past_life", "miss_opt", False)
+            self.assertEqual(code, 0)
+            # Verify defaults were added
+            json_path = tmp / "profiles" / "past_life_miss_opt.json"
+            payload = pm.load_json(json_path)
+            self.assertEqual(payload["confidence"], "low")
+            self.assertEqual(payload["version"], 1)
+            self.assertEqual(payload["corrections"], [])
+            self.assertIn("source_summary", payload)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_init_creates_md_with_metadata(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "md_test", False)
+            md_path = tmp / "profiles" / "past_life_md_test.md"
+            content = md_path.read_text(encoding="utf-8")
+            self.assertIn("past_life", content)
+            self.assertIn("md_test", content)
+            self.assertIn("updated_at", content)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestSnapshotEdgeCases(unittest.TestCase):
     def test_snapshot_missing_profile(self):
