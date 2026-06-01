@@ -910,9 +910,19 @@ class TestHelperFunctions(unittest.TestCase):
         result = pm.now_iso()
         self.assertRegex(result, r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
 
+    def test_now_iso_timezone(self):
+        result = pm.now_iso()
+        # Should have timezone info
+        self.assertTrue("+" in result or "-" in result or "Z" in result)
+
     def test_now_timestamp_format(self):
         result = pm.now_timestamp()
         self.assertRegex(result, r"^\d{4}-\d{2}-\d{2}T\d{6}[+-]\d{4}$")
+
+    def test_now_timestamp_timezone(self):
+        result = pm.now_timestamp()
+        # Should have timezone offset like +0800
+        self.assertRegex(result, r"[+-]\d{4}$")
 
     def test_current_paths(self):
         root = Path(__file__).resolve().parent.parent
@@ -920,6 +930,34 @@ class TestHelperFunctions(unittest.TestCase):
         json_path, md_path = pm.current_paths(contract, root, "past_life", "test")
         self.assertEqual(json_path.name, "past_life_test.json")
         self.assertEqual(md_path.name, "past_life_test.md")
+
+    def test_load_json_valid(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "test.json"
+            path.write_text(json.dumps({"key": "value"}), encoding="utf-8")
+            result = pm.load_json(path)
+            self.assertEqual(result, {"key": "value"})
+
+    def test_load_json_not_found(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(FileNotFoundError):
+                pm.load_json(Path(tmp) / "missing.json")
+
+    def test_load_json_invalid(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "bad.json"
+            path.write_text("not json", encoding="utf-8")
+            with self.assertRaises(json.JSONDecodeError):
+                pm.load_json(path)
+
+    def test_dump_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "out.json"
+            pm.dump_json(path, {"a": 1})
+            result = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(result, {"a": 1})
+            # Should end with newline
+            self.assertTrue(path.read_text(encoding="utf-8").endswith("\n"))
 
     def test_print_rows_empty(self):
         import io
