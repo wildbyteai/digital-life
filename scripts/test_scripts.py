@@ -3455,6 +3455,19 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
             self.assertIsInstance(required, list)
             self.assertGreater(len(required), 0, f"Skill {skill['slug']} has empty required_top_level_keys")
 
+    def test_all_layer0_files_valid(self):
+        """All layer0 files should have section headers and bullet points."""
+        root = Path(__file__).resolve().parent.parent
+        contract_path = root / "profiles" / "contracts" / "skill-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        for skill in contract["skills"]:
+            layer0_path = root / skill["layer0_path"]
+            if layer0_path.exists():
+                content = layer0_path.read_text(encoding="utf-8")
+                self.assertIn("## ", content, f"Layer0 missing section headers: {skill['layer0_path']}")
+                bullet_count = sum(1 for line in content.splitlines() if line.strip().startswith("- "))
+                self.assertGreaterEqual(bullet_count, 3, f"Layer0 too few rules: {skill['layer0_path']}")
+
     def test_all_template_files_valid(self):
         """All template files should be valid JSON with required fields."""
         root = Path(__file__).resolve().parent.parent
