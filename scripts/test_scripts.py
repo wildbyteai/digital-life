@@ -251,6 +251,28 @@ class TestDoctor(unittest.TestCase):
             shutil.rmtree(tmp)
 
 
+class TestValidateJsonOutput(unittest.TestCase):
+    """Test validate command JSON output format."""
+
+    def test_validate_json_ok(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "vjson", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.validate_profile(contract, sm, tmp, "past_life", "vjson", "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["profile"], "past_life_vjson")
+        finally:
+            shutil.rmtree(tmp)
+
+
 class TestValidateSkill(unittest.TestCase):
     """Test validate-skill.py against the real repo."""
 
