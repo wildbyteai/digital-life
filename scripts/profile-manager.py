@@ -311,10 +311,13 @@ def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestam
     return 0
 
 
-def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_history: bool, yes: bool) -> int:
+def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_history: bool, yes: bool, fmt: str = "text") -> int:
     """Delete current profile and optionally its history snapshots."""
     if not yes:
-        print("Refused to delete without --yes.")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": "Refused to delete without --yes"}, ensure_ascii=False))
+        else:
+            print("Refused to delete without --yes.")
         return 2
 
     if not validate_slug(slug):
@@ -327,16 +330,26 @@ def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_histo
             path.unlink()
             removed += 1
 
+    history_files = []
     if with_history:
         for _, history_json, history_md in find_history_candidates(contract, root, skill, slug):
             if history_json.exists():
                 history_json.unlink()
                 removed += 1
+                history_files.append(history_json.name)
             if history_md.exists():
                 history_md.unlink()
                 removed += 1
+                history_files.append(history_md.name)
 
-    print(f"Removed files: {removed}")
+    if fmt == "json":
+        print(json.dumps({
+            "status": "ok",
+            "removed": removed,
+            "with_history": with_history,
+        }, ensure_ascii=False, indent=2))
+    else:
+        print(f"Removed files: {removed}")
     return 0
 
 
@@ -563,6 +576,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_delete.add_argument("--slug", required=True, help="Profile slug.")
     p_delete.add_argument("--with-history", action="store_true", help="Also delete history snapshots.")
     p_delete.add_argument("--yes", action="store_true", help="Skip confirmation prompt.")
+    p_delete.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
 
     p_validate = sub.add_parser("validate", help="Validate one current profile.")
     p_validate.add_argument("--skill", required=True, help="Skill slug.")
@@ -594,7 +608,7 @@ def main() -> int:
     if args.command == "rollback":
         return rollback_profile(contract, root, args.skill, args.slug, args.timestamp, args.format)
     if args.command == "delete":
-        return delete_profile(contract, root, args.skill, args.slug, args.with_history, args.yes)
+        return delete_profile(contract, root, args.skill, args.slug, args.with_history, args.yes, args.format)
     if args.command == "validate":
         return validate_profile(contract, skill_map, root, args.skill, args.slug, args.format)
     if args.command == "doctor":
