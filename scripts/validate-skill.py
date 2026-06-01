@@ -177,6 +177,18 @@ def main() -> int:
                 errors.append(f"Template missing 'persona' field: {template_path.as_posix()}")
             elif not isinstance(template["persona"], dict):
                 errors.append(f"Template 'persona' must be an object: {template_path.as_posix()}")
+            else:
+                persona = template["persona"]
+                required_persona_layers = {
+                    "layer0_rules",
+                    "layer1_identity",
+                    "layer2_expression",
+                    "layer3_decision_model",
+                    "layer4_boundaries",
+                }
+                for layer in required_persona_layers:
+                    if layer not in persona:
+                        errors.append(f"Template persona missing '{layer}': {template_path.as_posix()}")
 
             if isinstance(required_keys, list):
                 for key in required_keys:
