@@ -341,6 +341,49 @@ class TestDoctorEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_doctor_template_missing_persona_layer(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            # Corrupt a template by removing a persona layer
+            template_path = tmp / "profiles" / "templates" / "past_life.json"
+            template = json.loads(template_path.read_text(encoding="utf-8"))
+            del template["persona"]["layer4_boundaries"]
+            template_path.write_text(json.dumps(template, ensure_ascii=False, indent=2), encoding="utf-8")
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "json")
+            self.assertEqual(code, 1)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "fail")
+            self.assertTrue(any("persona missing layer" in e for e in result.get("errors", [])))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_doctor_template_missing_existential_question(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            template_path = tmp / "profiles" / "templates" / "past_life.json"
+            template = json.loads(template_path.read_text(encoding="utf-8"))
+            del template["existential_question"]
+            template_path.write_text(json.dumps(template, ensure_ascii=False, indent=2), encoding="utf-8")
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "json")
+            self.assertEqual(code, 1)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "fail")
+            self.assertTrue(any("existential_question" in e for e in result.get("errors", [])))
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestLoadContract(unittest.TestCase):
     def test_load_contract(self):
