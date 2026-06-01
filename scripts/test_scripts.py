@@ -570,6 +570,18 @@ class TestHelperFunctions(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_profile_root(self):
+        root = Path(__file__).resolve().parent.parent
+        contract, _ = pm.load_contract(root)
+        result = pm.profile_root(contract, root)
+        self.assertEqual(result.name, "profiles")
+
+    def test_history_root(self):
+        root = Path(__file__).resolve().parent.parent
+        contract, _ = pm.load_contract(root)
+        result = pm.history_root(contract, root)
+        self.assertEqual(result.name, "history")
+
 
 class TestDoctorEdgeCases(unittest.TestCase):
     def test_doctor_json_with_failures(self):
