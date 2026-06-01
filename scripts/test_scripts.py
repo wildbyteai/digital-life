@@ -2354,6 +2354,27 @@ class TestDoctorEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_doctor_profile_missing_existential_question(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "no_eq_doc", False)
+            json_path = tmp / "profiles" / "past_life_no_eq_doc.json"
+            payload = pm.load_json(json_path)
+            del payload["existential_question"]
+            pm.dump_json(json_path, payload)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "json")
+            self.assertEqual(code, 1)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "fail")
+        finally:
+            shutil.rmtree(tmp)
+
     def test_doctor_multiple_template_failures(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
