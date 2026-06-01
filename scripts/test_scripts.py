@@ -344,6 +344,18 @@ class TestInitEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_init_slug_starting_with_number(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            code = pm.init_profile(contract, sm, tmp, "past_life", "123test", False)
+            self.assertEqual(code, 0)
+            json_path = tmp / "profiles" / "past_life_123test.json"
+            self.assertTrue(json_path.exists())
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestSnapshotEdgeCases(unittest.TestCase):
     def test_snapshot_missing_profile(self):
