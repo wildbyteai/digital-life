@@ -251,6 +251,11 @@ def main() -> int:
                     errors.append(f"Example JSON missing 'slug' field: {relative_path}")
                 else:
                     skill_slug = example["skill"]
+                    # Check skill field matches filename prefix
+                    filename_prefix = Path(relative_path).stem.replace("_demo", "")
+                    if skill_slug != filename_prefix:
+                        errors.append(f"Example skill '{skill_slug}' doesn't match filename prefix '{filename_prefix}': {relative_path}")
+
                     skill_entry = next((s for s in skills if s.get("slug") == skill_slug), None)
                     if skill_entry:
                         for key in skill_entry.get("required_top_level_keys", []):
