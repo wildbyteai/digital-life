@@ -205,6 +205,39 @@ class TestSnapshotEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_snapshot_missing_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.snapshot_profile(contract, tmp, "past_life", "ghost", None, "json")
+            self.assertEqual(code, 2)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "error")
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_snapshot_invalid_timestamp_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "tsj", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.snapshot_profile(contract, tmp, "past_life", "tsj", "bad", "json")
+            self.assertEqual(code, 2)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "error")
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestRollbackEdgeCases(unittest.TestCase):
     def test_rollback_no_history(self):
