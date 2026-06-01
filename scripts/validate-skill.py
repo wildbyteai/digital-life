@@ -79,33 +79,37 @@ def main() -> int:
             contract = json.loads(contract_file.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             errors.append(f"Invalid JSON contract: {CONTRACT_PATH}")
+            return 1
 
-    if isinstance(contract, dict):
-        version = contract.get("version")
-        if not version:
-            errors.append("Contract missing 'version' field")
-        elif not isinstance(version, str):
-            errors.append(f"Contract 'version' must be a string, got: {type(version).__name__}")
+    if not isinstance(contract, dict):
+        errors.append(f"Contract must be a JSON object: {CONTRACT_PATH}")
+        return 1
 
-        naming = contract.get("naming")
-        if not isinstance(naming, dict):
-            errors.append("Contract missing 'naming' object")
-        else:
-            required_naming_keys = {"current_json", "current_md", "history_json", "history_md"}
-            for key in required_naming_keys:
-                if key not in naming:
-                    errors.append(f"Contract naming missing key: {key}")
+    version = contract.get("version")
+    if not version:
+        errors.append("Contract missing 'version' field")
+    elif not isinstance(version, str):
+        errors.append(f"Contract 'version' must be a string, got: {type(version).__name__}")
 
-        for path_key in ("profile_root", "history_root", "templates_root"):
-            value = contract.get(path_key)
-            if not value:
-                errors.append(f"Contract missing '{path_key}' field")
-            elif not isinstance(value, str):
-                errors.append(f"Contract '{path_key}' must be a string")
-            elif not (root / value).is_dir():
-                errors.append(f"Contract '{path_key}' directory does not exist: {value}")
+    naming = contract.get("naming")
+    if not isinstance(naming, dict):
+        errors.append("Contract missing 'naming' object")
+    else:
+        required_naming_keys = {"current_json", "current_md", "history_json", "history_md"}
+        for key in required_naming_keys:
+            if key not in naming:
+                errors.append(f"Contract naming missing key: {key}")
 
-    skills = contract.get("skills") if isinstance(contract, dict) else None
+    for path_key in ("profile_root", "history_root", "templates_root"):
+        value = contract.get(path_key)
+        if not value:
+            errors.append(f"Contract missing '{path_key}' field")
+        elif not isinstance(value, str):
+            errors.append(f"Contract '{path_key}' must be a string")
+        elif not (root / value).is_dir():
+            errors.append(f"Contract '{path_key}' directory does not exist: {value}")
+
+    skills = contract.get("skills")
     if not isinstance(skills, list) or not skills:
         errors.append("Contract must contain a non-empty 'skills' list")
         skills = []
@@ -210,11 +214,9 @@ def main() -> int:
             has_questions = "existential_questions" in template
             if not has_question and not has_questions:
                 errors.append(f"Template missing 'existential_question' or 'existential_questions': {template_path.as_posix()}")
-
-            if has_question and not isinstance(template["existential_question"], str):
+            elif has_question and not isinstance(template["existential_question"], str):
                 errors.append(f"Template 'existential_question' must be a string: {template_path.as_posix()}")
-
-            if has_questions and not isinstance(template["existential_questions"], list):
+            elif has_questions and not isinstance(template["existential_questions"], list):
                 errors.append(f"Template 'existential_questions' must be a list: {template_path.as_posix()}")
 
             if isinstance(required_keys, list):

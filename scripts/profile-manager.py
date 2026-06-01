@@ -7,7 +7,6 @@ import re
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{6}[+-]\d{4}$")
@@ -44,13 +43,13 @@ def now_timestamp() -> str:
     return datetime.now().astimezone().strftime("%Y-%m-%dT%H%M%S%z")
 
 
-def load_contract(root: Path) -> Tuple[dict, Dict[str, dict]]:
+def load_contract(root: Path) -> tuple[dict, dict[str, dict]]:
     """Load skill-contract.json and build a slug-to-skill mapping."""
     contract_path = root / "profiles" / "contracts" / "skill-contract.json"
     contract = load_json(contract_path)
 
     skills = contract.get("skills", [])
-    skill_map: Dict[str, dict] = {}
+    skill_map: dict[str, dict] = {}
     for item in skills:
         slug = item.get("slug")
         if not slug:
@@ -71,7 +70,7 @@ def history_root(contract: dict, root: Path) -> Path:
     return root / contract.get("history_root", "profiles/history")
 
 
-def current_paths(contract: dict, root: Path, skill: str, slug: str) -> Tuple[Path, Path]:
+def current_paths(contract: dict, root: Path, skill: str, slug: str) -> tuple[Path, Path]:
     """Return (json_path, md_path) for the current profile."""
     p_root = profile_root(contract, root)
     return (
@@ -89,10 +88,10 @@ def read_updated_at(path: Path) -> str:
     return str(payload.get("updated_at", "-"))
 
 
-def discover_current_profiles(contract: dict, skill_map: Dict[str, dict], root: Path) -> List[Tuple[str, str, str, str]]:
+def discover_current_profiles(contract: dict, skill_map: dict[str, dict], root: Path) -> list[tuple[str, str, str, str]]:
     """Scan profiles root for current profile files and return (skill, slug, updated_at, status) rows."""
     p_root = profile_root(contract, root)
-    rows: List[Tuple[str, str, str, str]] = []
+    rows: list[tuple[str, str, str, str]] = []
 
     for skill in sorted(skill_map.keys()):
         for json_path in sorted(p_root.glob(f"{skill}_*.json")):
@@ -105,7 +104,7 @@ def discover_current_profiles(contract: dict, skill_map: Dict[str, dict], root: 
     return rows
 
 
-def print_rows(rows: List[Tuple[str, str, str, str]]) -> None:
+def print_rows(rows: list[tuple[str, str, str, str]]) -> None:
     """Print profile rows in a formatted table."""
     if not rows:
         print("No current profile files found in profiles/ root.")
@@ -126,7 +125,7 @@ def print_rows(rows: List[Tuple[str, str, str, str]]) -> None:
         print(fmt.format(*row))
 
 
-def list_profiles(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str | None, fmt: str) -> int:
+def list_profiles(contract: dict, skill_map: dict[str, dict], root: Path, skill: str | None, fmt: str) -> int:
     """List current profiles, optionally filtered by skill."""
     rows = discover_current_profiles(contract, skill_map, root)
     if skill:
@@ -143,7 +142,7 @@ def list_profiles(contract: dict, skill_map: Dict[str, dict], root: Path, skill:
     return 0
 
 
-def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str, slug: str, force: bool) -> int:
+def init_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: str, slug: str, force: bool) -> int:
     """Initialize a new profile from template."""
     if skill not in skill_map:
         print(f"Unknown skill: {skill}")
@@ -227,10 +226,10 @@ def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestam
     return 0
 
 
-def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -> List[Tuple[str, Path, Path]]:
+def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -> list[tuple[str, Path, Path]]:
     """Find all history snapshots for a given skill and slug."""
     h_root = history_root(contract, root)
-    candidates: List[Tuple[str, Path, Path]] = []
+    candidates: list[tuple[str, Path, Path]] = []
 
     for json_path in sorted(h_root.glob(f"{skill}_{slug}_*.json")):
         stem = json_path.stem
@@ -307,7 +306,7 @@ def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_histo
     return 0
 
 
-def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str, slug: str) -> int:
+def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: str, slug: str) -> int:
     """Validate a single profile against its template and contract."""
     if skill not in skill_map:
         print(f"Unknown skill: {skill}")
@@ -397,7 +396,7 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
     return 0
 
 
-def doctor(contract: dict, skill_map: Dict[str, dict], root: Path) -> int:
+def doctor(contract: dict, skill_map: dict[str, dict], root: Path) -> int:
     """Validate all current profiles and templates."""
     failed = 0
 
