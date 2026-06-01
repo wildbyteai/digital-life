@@ -18,6 +18,9 @@ def repo_root() -> Path:
 
 
 def load_json(path: Path) -> dict:
+    """Load and parse a JSON file. Raises FileNotFoundError or json.JSONDecodeError on failure."""
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {path}")
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -267,7 +270,7 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
     if json_path.exists():
         try:
             payload = load_json(json_path)
-        except Exception as exc:  # noqa: BLE001
+        except (FileNotFoundError, json.JSONDecodeError) as exc:
             errors.append(f"Invalid JSON profile: {exc}")
 
     template = {}
@@ -275,7 +278,7 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
     if template_path.exists():
         try:
             template = load_json(template_path)
-        except Exception as exc:  # noqa: BLE001
+        except (FileNotFoundError, json.JSONDecodeError) as exc:
             errors.append(f"Invalid template JSON: {exc}")
     else:
         errors.append(f"Missing template file: {template_path}")

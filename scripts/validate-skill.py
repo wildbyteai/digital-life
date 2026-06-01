@@ -35,6 +35,7 @@ REQUIRED_ROOT_FILES = [
     "examples/epitaph_demo.json",
     "examples/epitaph_demo.md",
     "scripts/profile-manager.py",
+    "scripts/validate-skill.py",
 ]
 
 EXAMPLE_JSON_FILES = [
