@@ -1221,6 +1221,20 @@ class TestHelperFunctions(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_discover_current_profiles_missing_md(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "dmd", False)
+            md_path = tmp / "profiles" / "past_life_dmd.md"
+            md_path.unlink()
+            rows = pm.discover_current_profiles(contract, sm, tmp)
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0][3], "missing_md")
+        finally:
+            shutil.rmtree(tmp)
+
     def test_find_history_candidates_with_data(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
