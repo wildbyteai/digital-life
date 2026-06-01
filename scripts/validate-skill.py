@@ -211,6 +211,14 @@ def main() -> int:
             if template.get("skill") != slug:
                 errors.append(f"Template skill field mismatch: {template_path.as_posix()} -> {template.get('skill')}")
 
+            # Validate template slug placeholder
+            if "slug" in template and template["slug"] != "{slug}":
+                errors.append(f"Template 'slug' should be '{{slug}}' placeholder: {template_path.as_posix()}")
+
+            # Validate template updated_at placeholder
+            if "updated_at" in template and template["updated_at"] != "{ISO8601}":
+                errors.append(f"Template 'updated_at' should be '{{ISO8601}}' placeholder: {template_path.as_posix()}")
+
             for field, expected_type in REQUIRED_TEMPLATE_FIELDS.items():
                 if field not in template:
                     errors.append(f"Template missing '{field}' field: {template_path.as_posix()}")
