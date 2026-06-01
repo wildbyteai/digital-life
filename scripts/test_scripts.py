@@ -3455,6 +3455,21 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
             self.assertIsInstance(required, list)
             self.assertGreater(len(required), 0, f"Skill {skill['slug']} has empty required_top_level_keys")
 
+    def test_template_source_summary_structure(self):
+        """Template source_summary should have required fields."""
+        root = Path(__file__).resolve().parent.parent
+        contract_path = root / "profiles" / "contracts" / "skill-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        for skill in contract["skills"]:
+            template_path = root / skill["template_path"]
+            if template_path.exists():
+                template = json.loads(template_path.read_text(encoding="utf-8"))
+                if "source_summary" in template and isinstance(template["source_summary"], dict):
+                    ss = template["source_summary"]
+                    self.assertIn("input_modes", ss, f"source_summary missing input_modes: {skill['template_path']}")
+                    self.assertIn("evidence_count", ss, f"source_summary missing evidence_count: {skill['template_path']}")
+                    self.assertIn("notes", ss, f"source_summary missing notes: {skill['template_path']}")
+
     def test_template_corrections_empty(self):
         """Template corrections should be empty list."""
         root = Path(__file__).resolve().parent.parent
