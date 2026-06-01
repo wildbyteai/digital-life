@@ -2054,6 +2054,26 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
         version = contract.get("version", "")
         self.assertRegex(version, r"^\d+\.\d+\.\d+$")
 
+    def test_contract_skills_have_triggers(self):
+        """All skills should have non-empty triggers list."""
+        root = Path(__file__).resolve().parent.parent
+        contract_path = root / "profiles" / "contracts" / "skill-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        for skill in contract["skills"]:
+            triggers = skill.get("triggers", [])
+            self.assertIsInstance(triggers, list)
+            self.assertGreater(len(triggers), 0, f"Skill {skill['slug']} has empty triggers")
+
+    def test_contract_skills_have_required_keys(self):
+        """All skills should have required_top_level_keys list."""
+        root = Path(__file__).resolve().parent.parent
+        contract_path = root / "profiles" / "contracts" / "skill-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        for skill in contract["skills"]:
+            required = skill.get("required_top_level_keys", [])
+            self.assertIsInstance(required, list)
+            self.assertGreater(len(required), 0, f"Skill {skill['slug']} has empty required_top_level_keys")
+
 
 class TestBuildParser(unittest.TestCase):
     """Test build_parser argument parser configuration."""
