@@ -467,6 +467,38 @@ class TestRollbackEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_rollback_json_success(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "rb_ok", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "rb_ok", "2026-01-01T100000+0800")
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.rollback_profile(contract, tmp, "past_life", "rb_ok", "2026-01-01T100000+0800", "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["timestamp"], "2026-01-01T100000+0800")
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_rollback_latest(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "rb_latest", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "rb_latest", "2026-01-01T100000+0800")
+            pm.snapshot_profile(contract, tmp, "past_life", "rb_latest", "2026-02-01T100000+0800")
+            code = pm.rollback_profile(contract, tmp, "past_life", "rb_latest", None)
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestDeleteEdgeCases(unittest.TestCase):
     def test_delete_with_history(self):
