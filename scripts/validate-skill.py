@@ -138,6 +138,9 @@ def main() -> int:
             if template.get("skill") != slug:
                 errors.append(f"Template skill field mismatch: {template_path.as_posix()} -> {template.get('skill')}")
 
+            if "slug" not in template:
+                errors.append(f"Template missing 'slug' field: {template_path.as_posix()}")
+
             if isinstance(required_keys, list):
                 for key in required_keys:
                     if key not in template:
