@@ -168,6 +168,11 @@ def main() -> int:
             if "version" not in template:
                 errors.append(f"Template missing 'version' field: {template_path.as_posix()}")
 
+            if "corrections" not in template:
+                errors.append(f"Template missing 'corrections' field: {template_path.as_posix()}")
+            elif not isinstance(template["corrections"], list):
+                errors.append(f"Template 'corrections' must be a list: {template_path.as_posix()}")
+
             if isinstance(required_keys, list):
                 for key in required_keys:
                     if key not in template:
