@@ -529,6 +529,25 @@ class TestHelperFunctions(unittest.TestCase):
             with self.assertRaises(json.JSONDecodeError):
                 pm.load_contract(Path(tmp))
 
+    def test_read_updated_at_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = pm.read_updated_at(Path(tmp) / "missing.json")
+            self.assertEqual(result, "-")
+
+    def test_read_updated_at_invalid_json(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
+            f.write("not json")
+            f.flush()
+            result = pm.read_updated_at(Path(f.name))
+            self.assertEqual(result, "-")
+
+    def test_read_updated_at_valid(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "test.json"
+            path.write_text(json.dumps({"updated_at": "2026-01-01T12:00:00+08:00"}), encoding="utf-8")
+            result = pm.read_updated_at(path)
+            self.assertEqual(result, "2026-01-01T12:00:00+08:00")
+
 
 class TestDoctorEdgeCases(unittest.TestCase):
     def test_doctor_json_with_failures(self):
