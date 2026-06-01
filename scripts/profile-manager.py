@@ -373,6 +373,13 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
                 except (ValueError, TypeError):
                     errors.append(f"'updated_at' is not a valid ISO 8601 string: {ua!r}")
 
+        if "persona" in payload and isinstance(payload["persona"], dict):
+            persona = payload["persona"]
+            required_layers = ("layer0_rules", "layer1_identity", "layer2_expression", "layer3_decision_model", "layer4_boundaries")
+            for layer in required_layers:
+                if layer not in persona:
+                    errors.append(f"persona missing required layer: {layer}")
+
     if md_path.exists() and md_path.stat().st_size == 0:
         errors.append("Markdown report is empty")
 
@@ -389,6 +396,7 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
 def doctor(contract: dict, skill_map: dict[str, dict], root: Path) -> int:
     """Validate all current profiles and templates."""
     failed = 0
+    templates_checked = 0
 
     # Validate templates
     for slug, item in sorted(skill_map.items()):
@@ -404,6 +412,7 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path) -> int:
             failed += 1
             continue
 
+        templates_checked += 1
         required_keys = item.get("required_top_level_keys") or []
         for key in required_keys:
             if key not in template:
@@ -420,7 +429,7 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path) -> int:
         if failed:
             print(f"Doctor finished with failures: {failed}")
             return 1
-        print("No current profiles found. Nothing to validate.")
+        print(f"Templates checked: {templates_checked}. No current profiles found.")
         return 0
 
     for skill, slug, _, _ in rows:
@@ -430,7 +439,7 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path) -> int:
     if failed:
         print(f"Doctor finished with failures: {failed}")
         return 1
-    print(f"Doctor finished successfully. Profiles checked: {len(rows)}")
+    print(f"Doctor finished successfully. Templates: {templates_checked}, Profiles: {len(rows)}")
     return 0
 
 
