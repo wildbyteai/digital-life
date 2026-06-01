@@ -381,13 +381,42 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
 
 
 def doctor(contract: dict, skill_map: Dict[str, dict], root: Path) -> int:
-    """Validate all current profiles in profiles/ root."""
+    """Validate all current profiles and templates."""
+    failed = 0
+
+    # Validate templates
+    for slug, item in sorted(skill_map.items()):
+        template_path = root / item["template_path"]
+        if not template_path.exists():
+            print(f"Missing template: {item['template_path']}")
+            failed += 1
+            continue
+        try:
+            template = load_json(template_path)
+        except json.JSONDecodeError as exc:
+            print(f"Invalid template JSON: {item['template_path']}: {exc}")
+            failed += 1
+            continue
+
+        required_keys = item.get("required_top_level_keys") or []
+        for key in required_keys:
+            if key not in template:
+                print(f"Template {item['template_path']} missing required key: {key}")
+                failed += 1
+
+        if template.get("skill") != slug:
+            print(f"Template {item['template_path']} skill mismatch: expected {slug}, got {template.get('skill')}")
+            failed += 1
+
+    # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
     if not rows:
+        if failed:
+            print(f"Doctor finished with failures: {failed}")
+            return 1
         print("No current profiles found. Nothing to validate.")
         return 0
 
-    failed = 0
     for skill, slug, _, _ in rows:
         code = validate_profile(contract, skill_map, root, skill, slug)
         if code != 0:
