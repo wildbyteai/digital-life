@@ -247,6 +247,18 @@ def main() -> int:
                         for key in skill_entry.get("required_top_level_keys", []):
                             if key not in example:
                                 errors.append(f"Example JSON missing required key '{key}': {relative_path}")
+
+                    # Validate persona layers in example
+                    if "persona" in example and isinstance(example["persona"], dict):
+                        persona = example["persona"]
+                        for layer in REQUIRED_PERSONA_LAYERS:
+                            if layer not in persona:
+                                errors.append(f"Example persona missing '{layer}': {relative_path}")
+
+                    # Validate confidence value in example
+                    if "confidence" in example:
+                        if example["confidence"] not in ("high", "medium", "low"):
+                            errors.append(f"Example 'confidence' invalid: {example['confidence']!r}: {relative_path}")
             except json.JSONDecodeError:
                 errors.append(f"Invalid example JSON: {relative_path}")
 
