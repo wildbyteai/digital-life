@@ -989,6 +989,27 @@ class TestDoctorEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_doctor_template_source_summary_missing_field(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            template_path = tmp / "profiles" / "templates" / "past_life.json"
+            template = json.loads(template_path.read_text(encoding="utf-8"))
+            del template["source_summary"]["notes"]
+            template_path.write_text(json.dumps(template, ensure_ascii=False, indent=2), encoding="utf-8")
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "json")
+            self.assertEqual(code, 1)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "fail")
+            self.assertTrue(any("source_summary missing" in e for e in result.get("errors", [])))
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestLoadContract(unittest.TestCase):
     def test_load_contract(self):
