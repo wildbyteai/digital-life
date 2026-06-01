@@ -62,6 +62,26 @@ class TestSlugValidation(unittest.TestCase):
         self.assertTrue(pm.is_valid_slug("-test"))
         # Mixed
         self.assertTrue(pm.is_valid_slug("test_123-abc"))
+
+    def test_print_slug_error_text(self):
+        import io
+        from contextlib import redirect_stdout
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            pm.print_slug_error("bad slug", "text")
+        output = buf.getvalue()
+        self.assertIn("Invalid slug", output)
+        self.assertIn("bad slug", output)
+
+    def test_print_slug_error_json(self):
+        import io
+        from contextlib import redirect_stdout
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            pm.print_slug_error("bad slug", "json")
+        result = json.loads(buf.getvalue())
+        self.assertEqual(result["status"], "error")
+        self.assertIn("Invalid slug", result["message"])
         # Spaces
         self.assertFalse(pm.is_valid_slug(" test"))
         self.assertFalse(pm.is_valid_slug("test "))
