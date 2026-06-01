@@ -62,6 +62,7 @@ GITATTRIBUTES_RULES = [
 
 
 def main() -> int:
+    """Validate skill contract, templates, examples, and gitignore rules."""
     root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent
     errors: list[str] = []
 
