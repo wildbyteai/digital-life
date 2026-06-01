@@ -2307,6 +2307,21 @@ class TestBuildParser(unittest.TestCase):
         args = parser.parse_args(["init", "--skill", "past_life", "--slug", "test", "--format", "text"])
         self.assertEqual(args.format, "text")
 
+    def test_build_parser_default_format(self):
+        parser = pm.build_parser()
+        args = parser.parse_args(["init", "--skill", "past_life", "--slug", "test"])
+        self.assertEqual(args.format, "text")
+
+    def test_build_parser_rollback_timestamp(self):
+        parser = pm.build_parser()
+        args = parser.parse_args(["rollback", "--skill", "past_life", "--slug", "test", "--timestamp", "2026-01-01T100000+0800"])
+        self.assertEqual(args.timestamp, "2026-01-01T100000+0800")
+
+    def test_build_parser_doctor_format(self):
+        parser = pm.build_parser()
+        args = parser.parse_args(["doctor", "--format", "json"])
+        self.assertEqual(args.format, "json")
+
 
 class TestValidateJsonEdgeCases(unittest.TestCase):
     """Test validate_profile JSON output for various error conditions."""
