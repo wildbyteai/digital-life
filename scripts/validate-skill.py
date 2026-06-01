@@ -179,6 +179,8 @@ def main() -> int:
 
             if "version" not in template:
                 errors.append(f"Template missing 'version' field: {template_path.as_posix()}")
+            elif not isinstance(template["version"], int):
+                errors.append(f"Template 'version' must be an integer: {template_path.as_posix()}")
 
             if "corrections" not in template:
                 errors.append(f"Template missing 'corrections' field: {template_path.as_posix()}")
