@@ -280,6 +280,16 @@ def main() -> int:
                     # Validate version field in example
                     if "version" in example and not isinstance(example["version"], int):
                         errors.append(f"Example 'version' must be int: {relative_path}")
+
+                    # Validate source_summary structure in example
+                    if "source_summary" in example:
+                        ss = example["source_summary"]
+                        if not isinstance(ss, dict):
+                            errors.append(f"Example 'source_summary' must be dict: {relative_path}")
+                        else:
+                            for field in ("input_modes", "evidence_count", "notes"):
+                                if field not in ss:
+                                    errors.append(f"Example source_summary missing '{field}': {relative_path}")
             except json.JSONDecodeError:
                 errors.append(f"Invalid example JSON: {relative_path}")
 
