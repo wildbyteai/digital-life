@@ -475,6 +475,31 @@ class TestRollbackEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_rollback_invalid_slug(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            code = pm.rollback_profile(contract, tmp, "past_life", "bad slug", None)
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_rollback_missing_md(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "rb_mmd", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "rb_mmd", "2026-01-01T100000+0800")
+            # Remove the history markdown file
+            h_md = tmp / "profiles" / "history" / "past_life_rb_mmd_2026-01-01T100000+0800.md"
+            h_md.unlink()
+            code = pm.rollback_profile(contract, tmp, "past_life", "rb_mmd", "2026-01-01T100000+0800")
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_rollback_specific_timestamp(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
