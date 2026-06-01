@@ -78,6 +78,15 @@ def main() -> int:
         elif not isinstance(version, str):
             errors.append(f"Contract 'version' must be a string, got: {type(version).__name__}")
 
+        naming = contract.get("naming")
+        if not isinstance(naming, dict):
+            errors.append("Contract missing 'naming' object")
+        else:
+            required_naming_keys = {"current_json", "current_md", "history_json", "history_md"}
+            for key in required_naming_keys:
+                if key not in naming:
+                    errors.append(f"Contract naming missing key: {key}")
+
     skills = contract.get("skills") if isinstance(contract, dict) else None
     if not isinstance(skills, list) or not skills:
         errors.append("Contract must contain a non-empty 'skills' list")
