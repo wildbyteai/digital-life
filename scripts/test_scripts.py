@@ -3455,6 +3455,18 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
             self.assertIsInstance(required, list)
             self.assertGreater(len(required), 0, f"Skill {skill['slug']} has empty required_top_level_keys")
 
+    def test_all_example_files_valid(self):
+        """All example JSON files should be valid JSON with required fields."""
+        root = Path(__file__).resolve().parent.parent
+        vs = importlib.import_module("validate-skill")
+        for rel_path in vs.EXAMPLE_JSON_FILES:
+            full_path = root / rel_path
+            if full_path.exists():
+                example = json.loads(full_path.read_text(encoding="utf-8"))
+                self.assertIsInstance(example, dict, f"Example must be dict: {rel_path}")
+                self.assertIn("skill", example, f"Example missing 'skill': {rel_path}")
+                self.assertIn("slug", example, f"Example missing 'slug': {rel_path}")
+
     def test_gitignore_rules_present(self):
         """All required gitignore rules should be present."""
         root = Path(__file__).resolve().parent.parent
