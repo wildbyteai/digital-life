@@ -608,6 +608,24 @@ class TestDeleteEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_delete_without_history_keeps_history(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "dwoh", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "dwoh", "2026-01-01T100000+0800")
+            code = pm.delete_profile(contract, tmp, "past_life", "dwoh", False, True)
+            self.assertEqual(code, 0)
+            # Current files should be removed
+            self.assertFalse((tmp / "profiles" / "past_life_dwoh.json").exists())
+            self.assertFalse((tmp / "profiles" / "past_life_dwoh.md").exists())
+            # History should remain
+            history = list((tmp / "profiles" / "history").glob("past_life_dwoh_*"))
+            self.assertEqual(len(history), 2)  # json + md
+        finally:
+            shutil.rmtree(tmp)
+
     def test_delete_without_yes_json(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
