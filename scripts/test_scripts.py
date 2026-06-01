@@ -318,6 +318,31 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertEqual(json_path.name, "past_life_test.json")
         self.assertEqual(md_path.name, "past_life_test.md")
 
+    def test_print_rows_empty(self):
+        import io
+        from contextlib import redirect_stdout
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            pm.print_rows([])
+        output = buf.getvalue()
+        self.assertIn("No current profile files found", output)
+
+    def test_print_rows_with_data(self):
+        import io
+        from contextlib import redirect_stdout
+        rows = [
+            ("past_life", "test", "2026-01-01", "ok"),
+            ("epitaph", "demo", "2026-02-01", "ok"),
+        ]
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            pm.print_rows(rows)
+        output = buf.getvalue()
+        self.assertIn("past_life", output)
+        self.assertIn("epitaph", output)
+        self.assertIn("test", output)
+        self.assertIn("demo", output)
+
 
 class TestDoctorEdgeCases(unittest.TestCase):
     def test_doctor_json_with_failures(self):
