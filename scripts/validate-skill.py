@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 
 SLUG_RE = re.compile(r"^[a-z0-9_]+$")
@@ -295,6 +296,14 @@ def main() -> int:
                             for field in ("input_modes", "evidence_count", "notes"):
                                 if field not in ss:
                                     errors.append(f"Example source_summary missing '{field}': {relative_path}")
+
+                    # Validate updated_at is valid ISO 8601 in example
+                    if "updated_at" in example:
+                        ua = str(example["updated_at"])
+                        try:
+                            datetime.fromisoformat(ua)
+                        except (ValueError, TypeError):
+                            errors.append(f"Example 'updated_at' is not valid ISO 8601: {ua!r}: {relative_path}")
             except json.JSONDecodeError:
                 errors.append(f"Invalid example JSON: {relative_path}")
 
