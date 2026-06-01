@@ -511,6 +511,20 @@ class TestSnapshotEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_snapshot_all_skills(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+                pm.init_profile(contract, sm, tmp, skill, "snap_all", False)
+                code = pm.snapshot_profile(contract, tmp, skill, "snap_all", "2026-01-01T100000+0800")
+                self.assertEqual(code, 0)
+                history = list((tmp / "profiles" / "history").glob(f"{skill}_snap_all_*.json"))
+                self.assertEqual(len(history), 1)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestRollbackEdgeCases(unittest.TestCase):
     def test_rollback_no_history(self):
