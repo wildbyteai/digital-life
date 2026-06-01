@@ -93,6 +93,8 @@ def main() -> int:
                 errors.append(f"Contract missing '{path_key}' field")
             elif not isinstance(value, str):
                 errors.append(f"Contract '{path_key}' must be a string")
+            elif not (root / value).is_dir():
+                errors.append(f"Contract '{path_key}' directory does not exist: {value}")
 
     skills = contract.get("skills") if isinstance(contract, dict) else None
     if not isinstance(skills, list) or not skills:
