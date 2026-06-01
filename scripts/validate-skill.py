@@ -1,13 +1,44 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 import json
 import re
-import sys
 from pathlib import Path
 
 SLUG_RE = re.compile(r"^[a-z0-9_]+$")
 CONTRACT_PATH = "profiles/contracts/skill-contract.json"
+
+REQUIRED_CONTRACT_KEYS = {
+    "slug",
+    "display_name",
+    "triggers",
+    "prompt_path",
+    "layer0_path",
+    "reference_path",
+    "template_path",
+    "required_top_level_keys",
+}
+
+REQUIRED_TEMPLATE_FIELDS = {
+    "slug": str,
+    "updated_at": str,
+    "confidence": str,
+    "source_summary": dict,
+    "version": int,
+    "corrections": list,
+    "persona": dict,
+}
+
+REQUIRED_PERSONA_LAYERS = {
+    "layer0_rules",
+    "layer1_identity",
+    "layer2_expression",
+    "layer3_decision_model",
+    "layer4_boundaries",
+}
+
+REQUIRED_NAMING_KEYS = {"current_json", "current_md", "history_json", "history_md"}
 
 REQUIRED_ROOT_FILES = [
     "README.md",
@@ -63,9 +94,21 @@ GITATTRIBUTES_RULES = [
 ]
 
 
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="validate-skill",
+        description="Validate skill contract, templates, examples, and gitignore rules.",
+    )
+    parser.add_argument("root", nargs="?", default=None, help="Repository root path. Defaults to script parent.")
+    parser.add_argument("--version", action="version", version="%(prog)s 1.0.0")
+    return parser
+
+
 def main() -> int:
     """Validate skill contract, templates, examples, and gitignore rules."""
-    root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent
+    parser = build_parser()
+    args = parser.parse_args()
+    root = Path(args.root).resolve() if args.root else Path(__file__).resolve().parent.parent
     errors: list[str] = []
 
     for relative_path in REQUIRED_ROOT_FILES:
@@ -95,8 +138,7 @@ def main() -> int:
     if not isinstance(naming, dict):
         errors.append("Contract missing 'naming' object")
     else:
-        required_naming_keys = {"current_json", "current_md", "history_json", "history_md"}
-        for key in required_naming_keys:
+        for key in REQUIRED_NAMING_KEYS:
             if key not in naming:
                 errors.append(f"Contract naming missing key: {key}")
 
@@ -115,23 +157,13 @@ def main() -> int:
         skills = []
 
     seen_slugs: set[str] = set()
-    required_contract_keys = {
-        "slug",
-        "display_name",
-        "triggers",
-        "prompt_path",
-        "layer0_path",
-        "reference_path",
-        "template_path",
-        "required_top_level_keys",
-    }
 
     for item in skills:
         if not isinstance(item, dict):
             errors.append("Contract skill item must be an object")
             continue
 
-        missing_keys = sorted(k for k in required_contract_keys if k not in item)
+        missing_keys = sorted(k for k in REQUIRED_CONTRACT_KEYS if k not in item)
         if missing_keys:
             errors.append(f"Contract skill item missing keys: {', '.join(missing_keys)}")
             continue
@@ -169,17 +201,7 @@ def main() -> int:
             if template.get("skill") != slug:
                 errors.append(f"Template skill field mismatch: {template_path.as_posix()} -> {template.get('skill')}")
 
-            required_template_fields = {
-                "slug": str,
-                "updated_at": str,
-                "confidence": str,
-                "source_summary": dict,
-                "version": int,
-                "corrections": list,
-                "persona": dict,
-            }
-
-            for field, expected_type in required_template_fields.items():
+            for field, expected_type in REQUIRED_TEMPLATE_FIELDS.items():
                 if field not in template:
                     errors.append(f"Template missing '{field}' field: {template_path.as_posix()}")
                 elif not isinstance(template[field], expected_type):
@@ -187,14 +209,7 @@ def main() -> int:
 
             if "persona" in template and isinstance(template["persona"], dict):
                 persona = template["persona"]
-                required_persona_layers = {
-                    "layer0_rules",
-                    "layer1_identity",
-                    "layer2_expression",
-                    "layer3_decision_model",
-                    "layer4_boundaries",
-                }
-                for layer in required_persona_layers:
+                for layer in REQUIRED_PERSONA_LAYERS:
                     if layer not in persona:
                         errors.append(f"Template persona missing '{layer}': {template_path.as_posix()}")
 
