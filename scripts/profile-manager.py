@@ -137,10 +137,13 @@ def list_profiles(contract: dict, skill_map: dict[str, dict], root: Path, skill:
     return 0
 
 
-def init_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: str, slug: str, force: bool) -> int:
+def init_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: str, slug: str, force: bool, fmt: str = "text") -> int:
     """Initialize a new profile from template."""
     if skill not in skill_map:
-        print(f"Unknown skill: {skill}")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": f"Unknown skill: {skill}"}, ensure_ascii=False))
+        else:
+            print(f"Unknown skill: {skill}")
         return 2
 
     if not validate_slug(slug):
@@ -148,18 +151,27 @@ def init_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: 
 
     json_path, md_path = current_paths(contract, root, skill, slug)
     if not force and (json_path.exists() or md_path.exists()):
-        print(f"Profile already exists: {json_path.name} / {md_path.name}. Use --force to overwrite.")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": "Profile already exists. Use --force to overwrite."}, ensure_ascii=False))
+        else:
+            print(f"Profile already exists: {json_path.name} / {md_path.name}. Use --force to overwrite.")
         return 2
 
     template_path = root / skill_map[skill]["template_path"]
     if not template_path.exists():
-        print(f"Template not found: {template_path}")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": f"Template not found: {template_path}"}, ensure_ascii=False))
+        else:
+            print(f"Template not found: {template_path}")
         return 2
 
     try:
         template = load_json(template_path)
     except json.JSONDecodeError as exc:
-        print(f"Invalid template JSON: {exc}")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": f"Invalid template JSON: {exc}"}, ensure_ascii=False))
+        else:
+            print(f"Invalid template JSON: {exc}")
         return 2
 
     template["skill"] = skill
@@ -194,8 +206,15 @@ def init_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: 
     )
     md_path.write_text(md_payload, encoding="utf-8")
 
-    print(f"Initialized profile: {json_path}")
-    print(f"Initialized report:  {md_path}")
+    if fmt == "json":
+        print(json.dumps({
+            "status": "ok",
+            "json_path": str(json_path),
+            "md_path": str(md_path),
+        }, ensure_ascii=False, indent=2))
+    else:
+        print(f"Initialized profile: {json_path}")
+        print(f"Initialized report:  {md_path}")
     return 0
 
 
@@ -558,6 +577,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_init.add_argument("--skill", required=True, help="Skill slug (e.g. past_life, legacy_audit).")
     p_init.add_argument("--slug", required=True, help="Profile slug identifier.")
     p_init.add_argument("--force", action="store_true", help="Overwrite existing profile.")
+    p_init.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
 
     p_snapshot = sub.add_parser("snapshot", help="Create a history snapshot from current profile.")
     p_snapshot.add_argument("--skill", required=True, help="Skill slug.")
@@ -602,7 +622,7 @@ def main() -> int:
     if args.command == "list":
         return list_profiles(contract, skill_map, root, args.skill, args.format)
     if args.command == "init":
-        return init_profile(contract, skill_map, root, args.skill, args.slug, args.force)
+        return init_profile(contract, skill_map, root, args.skill, args.slug, args.force, args.format)
     if args.command == "snapshot":
         return snapshot_profile(contract, root, args.skill, args.slug, args.timestamp, args.format)
     if args.command == "rollback":
