@@ -870,6 +870,40 @@ class TestListEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_list_json_output(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "list_json", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.list_profiles(contract, sm, tmp, None, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertIsInstance(result, list)
+            self.assertTrue(any(r["slug"] == "list_json" for r in result))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_list_empty(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.list_profiles(contract, sm, tmp, None, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result, [])
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestHelperFunctions(unittest.TestCase):
     def test_now_iso_format(self):
