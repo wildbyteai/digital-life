@@ -207,6 +207,12 @@ def main() -> int:
             if not has_question and not has_questions:
                 errors.append(f"Template missing 'existential_question' or 'existential_questions': {template_path.as_posix()}")
 
+            if has_question and not isinstance(template["existential_question"], str):
+                errors.append(f"Template 'existential_question' must be a string: {template_path.as_posix()}")
+
+            if has_questions and not isinstance(template["existential_questions"], list):
+                errors.append(f"Template 'existential_questions' must be a list: {template_path.as_posix()}")
+
             if isinstance(required_keys, list):
                 for key in required_keys:
                     if key not in template:
