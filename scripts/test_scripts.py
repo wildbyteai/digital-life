@@ -635,6 +635,92 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_invalid_version_type(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "bad_ver", False)
+            json_path = tmp / "profiles" / "past_life_bad_ver.json"
+            payload = pm.load_json(json_path)
+            payload["version"] = "1"  # Should be int
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "bad_ver")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_invalid_corrections_type(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "bad_corr", False)
+            json_path = tmp / "profiles" / "past_life_bad_corr.json"
+            payload = pm.load_json(json_path)
+            payload["corrections"] = "not a list"  # Should be list
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "bad_corr")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_invalid_persona_type(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "bad_pers", False)
+            json_path = tmp / "profiles" / "past_life_bad_pers.json"
+            payload = pm.load_json(json_path)
+            payload["persona"] = "not a dict"  # Should be dict
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "bad_pers")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_invalid_source_summary_type(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "bad_ss", False)
+            json_path = tmp / "profiles" / "past_life_bad_ss.json"
+            payload = pm.load_json(json_path)
+            payload["source_summary"] = "not a dict"  # Should be dict
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "bad_ss")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_invalid_existential_question_type(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "bad_eq", False)
+            json_path = tmp / "profiles" / "past_life_bad_eq.json"
+            payload = pm.load_json(json_path)
+            payload["existential_question"] = 123  # Should be str
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "bad_eq")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_valid_profile(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "valid", False)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "valid")
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestListEdgeCases(unittest.TestCase):
     def test_list_filtered_by_skill(self):
