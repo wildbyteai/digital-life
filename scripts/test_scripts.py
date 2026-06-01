@@ -2184,6 +2184,25 @@ class TestDoctorEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_doctor_profile_corrupted_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "corrupt_doc", False)
+            json_path = tmp / "profiles" / "past_life_corrupt_doc.json"
+            json_path.write_text("not json", encoding="utf-8")
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "json")
+            self.assertEqual(code, 1)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "fail")
+        finally:
+            shutil.rmtree(tmp)
+
     def test_doctor_multiple_template_failures(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
