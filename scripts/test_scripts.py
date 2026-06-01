@@ -1250,6 +1250,24 @@ class TestHelperFunctions(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_find_history_candidates_sorted(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "fhc_sort", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "fhc_sort", "2026-03-01T100000+0800")
+            pm.snapshot_profile(contract, tmp, "past_life", "fhc_sort", "2026-01-01T100000+0800")
+            pm.snapshot_profile(contract, tmp, "past_life", "fhc_sort", "2026-02-01T100000+0800")
+            candidates = pm.find_history_candidates(contract, tmp, "past_life", "fhc_sort")
+            self.assertEqual(len(candidates), 3)
+            # Verify sorted order
+            self.assertEqual(candidates[0][0], "2026-01-01T100000+0800")
+            self.assertEqual(candidates[1][0], "2026-02-01T100000+0800")
+            self.assertEqual(candidates[2][0], "2026-03-01T100000+0800")
+        finally:
+            shutil.rmtree(tmp)
+
     def test_profile_root(self):
         root = Path(__file__).resolve().parent.parent
         contract, _ = pm.load_contract(root)
