@@ -1415,5 +1415,75 @@ class TestValidateSkill(unittest.TestCase):
             self.assertNotRegex(slug, vs.SLUG_RE)
 
 
+class TestValidateSkillEdgeCases(unittest.TestCase):
+    """Test validate-skill.py with intentional errors."""
+
+    def _run_validate(self, root: Path) -> int:
+        import unittest.mock
+        vs = importlib.import_module("validate-skill")
+        with unittest.mock.patch("sys.argv", ["validate-skill", str(root)]):
+            return vs.main()
+
+    def test_missing_required_root_file(self):
+        """Validation should fail when a required file is missing."""
+        root = Path(__file__).resolve().parent.parent
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            # Copy minimal structure
+            shutil.copytree(root / "profiles", tmp / "profiles")
+            (tmp / "scripts").mkdir()
+            # Don't copy README.md
+            (tmp / "SKILL.md").write_text("test", encoding="utf-8")
+            (tmp / "LICENSE").write_text("test", encoding="utf-8")
+            (tmp / "VERSION").write_text("1.0.0", encoding="utf-8")
+            (tmp / "CHANGELOG.md").write_text("test", encoding="utf-8")
+            (tmp / ".gitignore").write_text("", encoding="utf-8")
+            (tmp / ".gitattributes").write_text("", encoding="utf-8")
+            (tmp / "agents").mkdir()
+            (tmp / "agents" / "openai.yaml").write_text("test", encoding="utf-8")
+            (tmp / "assets").mkdir()
+            (tmp / "assets" / "digital-life-small.svg").write_text("<svg/>", encoding="utf-8")
+            (tmp / "assets" / "digital-life-large.svg").write_text("<svg/>", encoding="utf-8")
+            (tmp / "examples").mkdir()
+            (tmp / "examples" / "README.md").write_text("test", encoding="utf-8")
+            (tmp / "scripts" / "profile-manager.py").write_text("# stub", encoding="utf-8")
+            (tmp / "scripts" / "validate-skill.py").write_text("# stub", encoding="utf-8")
+            code = self._run_validate(tmp)
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_invalid_json_contract(self):
+        """Validation should fail when contract is invalid JSON."""
+        root = Path(__file__).resolve().parent.parent
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            shutil.copytree(root / "profiles", tmp / "profiles")
+            contract_path = tmp / "profiles" / "contracts" / "skill-contract.json"
+            contract_path.write_text("not json", encoding="utf-8")
+            # Copy all other required files
+            for rel in ("README.md", "SKILL.md", "LICENSE", "VERSION", "CHANGELOG.md",
+                        ".gitignore", ".gitattributes"):
+                shutil.copy2(root / rel, tmp / rel)
+            (tmp / "agents").mkdir(exist_ok=True)
+            shutil.copy2(root / "agents" / "openai.yaml", tmp / "agents" / "openai.yaml")
+            (tmp / "assets").mkdir(exist_ok=True)
+            shutil.copy2(root / "assets" / "digital-life-small.svg", tmp / "assets")
+            shutil.copy2(root / "assets" / "digital-life-large.svg", tmp / "assets")
+            (tmp / "examples").mkdir(exist_ok=True)
+            shutil.copy2(root / "examples" / "README.md", tmp / "examples")
+            for f in ("past_life_demo.json", "past_life_demo.md", "cringe_archaeology_demo.json",
+                      "cringe_archaeology_demo.md", "ai_clone_demo.json", "ai_clone_demo.md",
+                      "legacy_audit_demo.json", "legacy_audit_demo.md", "epitaph_demo.json", "epitaph_demo.md"):
+                shutil.copy2(root / "examples" / f, tmp / "examples" / f)
+            (tmp / "scripts").mkdir(exist_ok=True)
+            shutil.copy2(root / "scripts" / "profile-manager.py", tmp / "scripts")
+            shutil.copy2(root / "scripts" / "validate-skill.py", tmp / "scripts")
+            code = self._run_validate(tmp)
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
+
 if __name__ == "__main__":
     unittest.main()
