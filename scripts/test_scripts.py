@@ -3455,6 +3455,15 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
             self.assertIsInstance(required, list)
             self.assertGreater(len(required), 0, f"Skill {skill['slug']} has empty required_top_level_keys")
 
+    def test_all_prompt_files_exist(self):
+        """All prompt files referenced in contract should exist."""
+        root = Path(__file__).resolve().parent.parent
+        contract_path = root / "profiles" / "contracts" / "skill-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        for skill in contract["skills"]:
+            prompt_path = root / skill["prompt_path"]
+            self.assertTrue(prompt_path.exists(), f"Missing prompt: {skill['prompt_path']}")
+
     def test_all_layer0_files_valid(self):
         """All layer0 files should have section headers and bullet points."""
         root = Path(__file__).resolve().parent.parent
