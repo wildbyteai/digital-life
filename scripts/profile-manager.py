@@ -347,28 +347,23 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
         if payload.get("slug") not in (None, slug):
             errors.append(f"'slug' mismatch: expected {slug}, got {payload.get('slug')}")
 
-        if "corrections" in payload and not isinstance(payload["corrections"], list):
-            errors.append("'corrections' must be a list")
+        typed_fields = {
+            "corrections": list,
+            "source_summary": dict,
+            "persona": dict,
+            "existential_question": str,
+            "existential_questions": list,
+            "version": int,
+        }
 
-        if "source_summary" in payload and not isinstance(payload["source_summary"], dict):
-            errors.append("'source_summary' must be an object")
+        for field, expected_type in typed_fields.items():
+            if field in payload and not isinstance(payload[field], expected_type):
+                errors.append(f"'{field}' must be a {expected_type.__name__}")
 
         if "confidence" in payload:
             valid_confidence = ("high", "medium", "low")
             if payload["confidence"] not in valid_confidence:
                 errors.append(f"'confidence' must be one of {valid_confidence}, got: {payload['confidence']!r}")
-
-        if "persona" in payload and not isinstance(payload["persona"], dict):
-            errors.append("'persona' must be an object")
-
-        if "existential_question" in payload and not isinstance(payload["existential_question"], str):
-            errors.append("'existential_question' must be a string")
-
-        if "existential_questions" in payload and not isinstance(payload["existential_questions"], list):
-            errors.append("'existential_questions' must be a list")
-
-        if "version" in payload and not isinstance(payload["version"], int):
-            errors.append(f"'version' must be an integer, got: {type(payload['version']).__name__}")
 
         if "updated_at" in payload:
             ua = str(payload["updated_at"])
