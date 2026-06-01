@@ -111,13 +111,8 @@ def print_rows(rows: list[tuple[str, str, str, str]]) -> None:
         return
 
     headers = ("skill", "slug", "updated_at", "status")
-    widths = [
-        max(len(headers[0]), max(len(r[0]) for r in rows)),
-        max(len(headers[1]), max(len(r[1]) for r in rows)),
-        max(len(headers[2]), max(len(r[2]) for r in rows)),
-        max(len(headers[3]), max(len(r[3]) for r in rows)),
-    ]
-    fmt = f"{{:<{widths[0]}}}  {{:<{widths[1]}}}  {{:<{widths[2]}}}  {{:<{widths[3]}}}"
+    widths = [max(len(h), max(len(r[i]) for r in rows)) for i, h in enumerate(headers)]
+    fmt = "  ".join(f"{{:<{w}}}" for w in widths)
 
     print(fmt.format(*headers))
     print(fmt.format(*("-" * w for w in widths)))
@@ -316,7 +311,7 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
         return 2
 
     json_path, md_path = current_paths(contract, root, skill, slug)
-    errors: List[str] = []
+    errors: list[str] = []
 
     if not json_path.exists():
         errors.append(f"Missing profile json: {json_path}")
