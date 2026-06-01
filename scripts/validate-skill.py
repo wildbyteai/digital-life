@@ -270,6 +270,9 @@ def main() -> int:
                     # Validate notes is string
                     if "notes" in ss and not isinstance(ss["notes"], str):
                         errors.append(f"Template source_summary 'notes' must be str: {template_path.as_posix()}")
+                    # Validate evidence_count is int
+                    if "evidence_count" in ss and not isinstance(ss["evidence_count"], int):
+                        errors.append(f"Template source_summary 'evidence_count' must be int: {template_path.as_posix()}")
 
             if isinstance(required_keys, list):
                 for key in required_keys:
