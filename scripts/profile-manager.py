@@ -397,7 +397,15 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     root = Path(args.root).resolve() if args.root else repo_root()
-    contract, skill_map = load_contract(root)
+
+    try:
+        contract, skill_map = load_contract(root)
+    except FileNotFoundError as exc:
+        print(f"Error: {exc}")
+        return 1
+    except ValueError as exc:
+        print(f"Error: {exc}")
+        return 1
 
     if args.command == "list":
         return list_profiles(contract, skill_map, root, args.skill)
