@@ -874,6 +874,37 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_valid_profile_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "vjson", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.validate_profile(contract, sm, tmp, "past_life", "vjson", "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["profile"], "past_life_vjson")
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_missing_md(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "nomd", False)
+            md_path = tmp / "profiles" / "past_life_nomd.md"
+            md_path.unlink()
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "nomd")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestListEdgeCases(unittest.TestCase):
     def test_list_filtered_by_skill(self):
