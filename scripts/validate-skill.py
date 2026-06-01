@@ -58,6 +58,8 @@ GITATTRIBUTES_RULES = [
     "* text=auto",
     "*.md text eol=lf",
     "*.json text eol=lf",
+    "*.yaml text eol=lf",
+    "*.svg text eol=lf",
 ]
 
 
