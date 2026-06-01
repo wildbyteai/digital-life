@@ -554,6 +554,44 @@ class TestListProfiles(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_list_json_output(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "ljson", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.list_profiles(contract, sm, tmp, None, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result[0]["skill"], "past_life")
+            self.assertEqual(result[0]["slug"], "ljson")
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_list_filtered_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "a", False)
+            pm.init_profile(contract, sm, tmp, "epitaph", "b", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.list_profiles(contract, sm, tmp, "past_life", "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result[0]["skill"], "past_life")
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestDoctor(unittest.TestCase):
     def test_doctor_empty(self):
