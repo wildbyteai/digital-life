@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple
 
 
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{6}[+-]\d{4}$")
+SLUG_RE = re.compile(r"^[a-z0-9_]+$")
 
 
 def repo_root() -> Path:
@@ -127,6 +128,9 @@ def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: 
         print(f"Unknown skill: {skill}")
         return 2
 
+    if not validate_slug(slug):
+        return 2
+
     json_path, md_path = current_paths(contract, root, skill, slug)
     if not force and (json_path.exists() or md_path.exists()):
         print(f"Profile already exists: {json_path.name} / {md_path.name}. Use --force to overwrite.")
@@ -158,7 +162,18 @@ def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: 
     return 0
 
 
+def validate_slug(slug: str) -> bool:
+    """Validate slug format. Returns True if valid."""
+    if not SLUG_RE.match(slug):
+        print(f"Invalid slug format: {slug}. Must match {SLUG_RE.pattern}")
+        return False
+    return True
+
+
 def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None) -> int:
+    if not validate_slug(slug):
+        return 2
+
     json_path, md_path = current_paths(contract, root, skill, slug)
     if not json_path.exists() or not md_path.exists():
         print("Current profile files not found. Snapshot aborted.")
@@ -198,6 +213,9 @@ def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -
 
 
 def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None) -> int:
+    if not validate_slug(slug):
+        return 2
+
     candidates = find_history_candidates(contract, root, skill, slug)
     if not candidates:
         print("No history snapshots found for this profile.")
@@ -233,6 +251,9 @@ def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_histo
         print("Refused to delete without --yes.")
         return 2
 
+    if not validate_slug(slug):
+        return 2
+
     removed = 0
     current_json, current_md = current_paths(contract, root, skill, slug)
     for path in (current_json, current_md):
@@ -256,6 +277,9 @@ def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_histo
 def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str, slug: str) -> int:
     if skill not in skill_map:
         print(f"Unknown skill: {skill}")
+        return 2
+
+    if not validate_slug(slug):
         return 2
 
     json_path, md_path = current_paths(contract, root, skill, slug)
