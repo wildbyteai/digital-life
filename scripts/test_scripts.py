@@ -1929,6 +1929,62 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
             shutil.rmtree(tmp)
 
 
+class TestBuildParser(unittest.TestCase):
+    """Test build_parser argument parser configuration."""
+
+    def test_build_parser_subcommands(self):
+        parser = pm.build_parser()
+        # Test that all subcommands are recognized by trying to parse them
+        for cmd in ("list", "init", "snapshot", "rollback", "delete", "validate", "doctor"):
+            try:
+                if cmd in ("init", "snapshot", "rollback", "delete", "validate"):
+                    parser.parse_args([cmd, "--skill", "past_life", "--slug", "test"])
+                elif cmd == "doctor":
+                    parser.parse_args([cmd])
+                else:
+                    parser.parse_args([cmd])
+            except SystemExit:
+                self.fail(f"Subcommand '{cmd}' not recognized")
+
+    def test_build_parser_init_required_args(self):
+        parser = pm.build_parser()
+        # init requires --skill and --slug
+        args = parser.parse_args(["init", "--skill", "past_life", "--slug", "test"])
+        self.assertEqual(args.skill, "past_life")
+        self.assertEqual(args.slug, "test")
+        self.assertFalse(args.force)
+
+    def test_build_parser_init_force(self):
+        parser = pm.build_parser()
+        args = parser.parse_args(["init", "--skill", "past_life", "--slug", "test", "--force"])
+        self.assertTrue(args.force)
+
+    def test_build_parser_list_optional_skill(self):
+        parser = pm.build_parser()
+        args = parser.parse_args(["list"])
+        self.assertIsNone(args.skill)
+        args = parser.parse_args(["list", "--skill", "past_life"])
+        self.assertEqual(args.skill, "past_life")
+
+    def test_build_parser_delete_with_history(self):
+        parser = pm.build_parser()
+        args = parser.parse_args(["delete", "--skill", "past_life", "--slug", "test", "--with-history"])
+        self.assertTrue(args.with_history)
+
+    def test_build_parser_snapshot_timestamp(self):
+        parser = pm.build_parser()
+        args = parser.parse_args(["snapshot", "--skill", "past_life", "--slug", "test", "--timestamp", "2026-01-01T100000+0800"])
+        self.assertEqual(args.timestamp, "2026-01-01T100000+0800")
+
+    def test_build_parser_format_choices(self):
+        parser = pm.build_parser()
+        # Test that format choices are accepted
+        args = parser.parse_args(["init", "--skill", "past_life", "--slug", "test", "--format", "json"])
+        self.assertEqual(args.format, "json")
+        args = parser.parse_args(["init", "--skill", "past_life", "--slug", "test", "--format", "text"])
+        self.assertEqual(args.format, "text")
+
+
 class TestValidateJsonEdgeCases(unittest.TestCase):
     """Test validate_profile JSON output for various error conditions."""
 
