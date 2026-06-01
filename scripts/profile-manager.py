@@ -553,6 +553,18 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
                 print(msg)
             failed += 1
 
+        # Validate template confidence placeholder
+        if "confidence" in template:
+            conf = template["confidence"]
+            valid_placeholders = ("high", "medium", "low", "high|medium|low")
+            if conf not in valid_placeholders:
+                msg = f"Template {item['template_path']} 'confidence' unexpected value: {conf!r}"
+                if fmt == "json":
+                    errors.append(msg)
+                else:
+                    print(msg)
+                failed += 1
+
     # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
     profiles_checked = 0
