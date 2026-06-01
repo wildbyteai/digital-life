@@ -544,6 +544,15 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
                         print(msg)
                     failed += 1
 
+        # Validate template version is integer
+        if "version" in template and not isinstance(template["version"], int):
+            msg = f"Template {item['template_path']} 'version' must be int, got {type(template['version']).__name__}"
+            if fmt == "json":
+                errors.append(msg)
+            else:
+                print(msg)
+            failed += 1
+
     # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
     profiles_checked = 0
