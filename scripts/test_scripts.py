@@ -569,6 +569,34 @@ class TestDeleteEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_delete_json_no_history(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "dnj", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.delete_profile(contract, tmp, "past_life", "dnj", False, True, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["with_history"], False)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_delete_invalid_slug(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            code = pm.delete_profile(contract, tmp, "past_life", "bad slug", False, True)
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestValidateEdgeCases(unittest.TestCase):
     def test_validate_missing_profile(self):
