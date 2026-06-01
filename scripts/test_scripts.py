@@ -845,6 +845,27 @@ class TestHelperFunctions(unittest.TestCase):
         result = pm.history_root(contract, root)
         self.assertEqual(result.name, "history")
 
+    def test_report_json_mode(self):
+        errors: list[str] = []
+        pm._report("test error", "json", errors)
+        self.assertEqual(errors, ["test error"])
+
+    def test_report_text_mode(self):
+        import io
+        from contextlib import redirect_stdout
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            pm._report("test error", "text")
+        self.assertIn("test error", buf.getvalue())
+
+    def test_report_json_no_errors_list(self):
+        import io
+        from contextlib import redirect_stdout
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            pm._report("test error", "json", None)
+        self.assertIn("test error", buf.getvalue())
+
 
 class TestDoctorEdgeCases(unittest.TestCase):
     def test_doctor_json_with_failures(self):
