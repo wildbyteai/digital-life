@@ -267,6 +267,9 @@ def main() -> int:
                     # Validate input_modes is list
                     if "input_modes" in ss and not isinstance(ss["input_modes"], list):
                         errors.append(f"Template source_summary 'input_modes' must be list: {template_path.as_posix()}")
+                    # Validate notes is string
+                    if "notes" in ss and not isinstance(ss["notes"], str):
+                        errors.append(f"Template source_summary 'notes' must be str: {template_path.as_posix()}")
 
             if isinstance(required_keys, list):
                 for key in required_keys:
