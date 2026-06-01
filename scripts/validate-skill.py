@@ -173,7 +173,13 @@ def main() -> int:
         full_path = root / relative_path
         if full_path.exists():
             try:
-                json.loads(full_path.read_text(encoding="utf-8"))
+                example = json.loads(full_path.read_text(encoding="utf-8"))
+                if not isinstance(example, dict):
+                    errors.append(f"Example JSON must be an object: {relative_path}")
+                elif "skill" not in example:
+                    errors.append(f"Example JSON missing 'skill' field: {relative_path}")
+                elif "slug" not in example:
+                    errors.append(f"Example JSON missing 'slug' field: {relative_path}")
             except json.JSONDecodeError:
                 errors.append(f"Invalid example JSON: {relative_path}")
 
