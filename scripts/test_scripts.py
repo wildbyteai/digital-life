@@ -242,6 +242,47 @@ class TestInitEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_init_corrupted_template(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            template_path = tmp / "profiles" / "templates" / "past_life.json"
+            template_path.write_text("not json", encoding="utf-8")
+            code = pm.init_profile(contract, sm, tmp, "past_life", "corrupt", False)
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_init_force_overwrite(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "force_test", False)
+            code = pm.init_profile(contract, sm, tmp, "past_life", "force_test", True)
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_init_json_success(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.init_profile(contract, sm, tmp, "past_life", "json_ok", False, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertIn("json_path", result)
+            self.assertIn("md_path", result)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestSnapshotEdgeCases(unittest.TestCase):
     def test_snapshot_missing_profile(self):
