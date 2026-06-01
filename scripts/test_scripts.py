@@ -3720,6 +3720,19 @@ class TestMainFunction(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_main_all_skills(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            import unittest.mock
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+                with unittest.mock.patch("sys.argv", ["profile-manager", "--root", str(tmp), "init", "--skill", skill, "--slug", "main_all"]):
+                    code = pm.main()
+                self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
 
 if __name__ == "__main__":
     unittest.main()
