@@ -1031,6 +1031,25 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_complete_source_summary(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "full_ss", False)
+            json_path = tmp / "profiles" / "past_life_full_ss.json"
+            payload = pm.load_json(json_path)
+            payload["source_summary"] = {
+                "input_modes": ["text", "browser"],
+                "evidence_count": 10,
+                "notes": "Complete test data"
+            }
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "full_ss")
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_non_empty_corrections(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
