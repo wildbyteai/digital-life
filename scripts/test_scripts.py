@@ -2178,6 +2178,40 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
         version = contract.get("version", "")
         self.assertRegex(version, r"^\d+\.\d+\.\d+$")
 
+    def test_template_fields_types(self):
+        """All template fields should have correct types."""
+        root = Path(__file__).resolve().parent.parent
+        vs = importlib.import_module("validate-skill")
+        contract_path = root / "profiles" / "contracts" / "skill-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        for skill in contract["skills"]:
+            template_path = root / skill["template_path"]
+            if template_path.exists():
+                template = json.loads(template_path.read_text(encoding="utf-8"))
+                for field, expected_type in vs.REQUIRED_TEMPLATE_FIELDS.items():
+                    if field in template:
+                        self.assertIsInstance(
+                            template[field], expected_type,
+                            f"Template {skill['template_path']} field '{field}' should be {expected_type.__name__}"
+                        )
+
+    def test_template_persona_layers(self):
+        """All templates should have required persona layers."""
+        root = Path(__file__).resolve().parent.parent
+        vs = importlib.import_module("validate-skill")
+        contract_path = root / "profiles" / "contracts" / "skill-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        for skill in contract["skills"]:
+            template_path = root / skill["template_path"]
+            if template_path.exists():
+                template = json.loads(template_path.read_text(encoding="utf-8"))
+                if "persona" in template and isinstance(template["persona"], dict):
+                    for layer in vs.REQUIRED_PERSONA_LAYERS:
+                        self.assertIn(
+                            layer, template["persona"],
+                            f"Template {skill['template_path']} missing persona layer '{layer}'"
+                        )
+
     def test_contract_skills_have_triggers(self):
         """All skills should have non-empty triggers list."""
         root = Path(__file__).resolve().parent.parent
