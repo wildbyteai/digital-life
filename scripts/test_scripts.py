@@ -1031,6 +1031,22 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_empty_updated_at(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "empty_ua", False)
+            json_path = tmp / "profiles" / "past_life_empty_ua.json"
+            payload = pm.load_json(json_path)
+            payload["updated_at"] = ""
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "empty_ua")
+            # Empty string should pass (ua and ua != "-" check)
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_missing_updated_at(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
