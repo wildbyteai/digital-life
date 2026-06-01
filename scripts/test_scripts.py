@@ -963,6 +963,30 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_multiple_errors(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "multi_err", False)
+            json_path = tmp / "profiles" / "past_life_multi_err.json"
+            payload = pm.load_json(json_path)
+            payload["skill"] = "wrong"
+            payload["confidence"] = "invalid"
+            payload["version"] = "bad"
+            pm.dump_json(json_path, payload)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.validate_profile(contract, sm, tmp, "past_life", "multi_err", "json")
+            self.assertEqual(code, 1)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "fail")
+            self.assertGreater(len(result["errors"]), 1)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_valid_profile(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
