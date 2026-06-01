@@ -112,6 +112,37 @@ class TestJsonHelpers(unittest.TestCase):
             pm.dump_json(path, data)
             self.assertEqual(pm.load_json(path), data)
 
+    def test_dump_json_unicode(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "test.json"
+            data = {"name": "测试", "emoji": "👻"}
+            pm.dump_json(path, data)
+            loaded = pm.load_json(path)
+            self.assertEqual(loaded["name"], "测试")
+            self.assertEqual(loaded["emoji"], "👻")
+
+    def test_dump_json_nested(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "test.json"
+            data = {
+                "persona": {
+                    "layer0_rules": ["rule1", "rule2"],
+                    "layer1_identity": {"alias": "test"}
+                }
+            }
+            pm.dump_json(path, data)
+            loaded = pm.load_json(path)
+            self.assertEqual(loaded["persona"]["layer0_rules"], ["rule1", "rule2"])
+            self.assertEqual(loaded["persona"]["layer1_identity"]["alias"], "test")
+
+    def test_dump_json_overwrite(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "test.json"
+            pm.dump_json(path, {"version": 1})
+            pm.dump_json(path, {"version": 2})
+            loaded = pm.load_json(path)
+            self.assertEqual(loaded["version"], 2)
+
 
 class TestInitEdgeCases(unittest.TestCase):
     def test_init_invalid_skill(self):
