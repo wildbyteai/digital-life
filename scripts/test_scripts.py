@@ -367,6 +367,22 @@ class TestSnapshotEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_snapshot_default_timestamp(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "def_ts", False)
+            code = pm.snapshot_profile(contract, tmp, "past_life", "def_ts", None)
+            self.assertEqual(code, 0)
+            history = list((tmp / "profiles" / "history").glob("past_life_def_ts_*.json"))
+            self.assertEqual(len(history), 1)
+            # Verify timestamp format in filename
+            ts = history[0].stem.split("past_life_def_ts_")[1]
+            self.assertRegex(ts, r"^\d{4}-\d{2}-\d{2}T\d{6}[+-]\d{4}$")
+        finally:
+            shutil.rmtree(tmp)
+
     def test_snapshot_custom_timestamp(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
