@@ -11,17 +11,23 @@ from typing import Dict, List, Tuple
 
 
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{6}[+-]\d{4}$")
+SLUG_RE = re.compile(r"^[a-z0-9_]+$")
 
 
 def repo_root() -> Path:
+    """Return the repository root directory."""
     return Path(__file__).resolve().parent.parent
 
 
 def load_json(path: Path) -> dict:
+    """Load and parse a JSON file. Raises FileNotFoundError or json.JSONDecodeError on failure."""
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {path}")
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def dump_json(path: Path, payload: dict) -> None:
+    """Write a dict as formatted JSON to a file."""
     path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -29,14 +35,17 @@ def dump_json(path: Path, payload: dict) -> None:
 
 
 def now_iso() -> str:
+    """Return current local time as ISO 8601 string with timezone."""
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
 def now_timestamp() -> str:
+    """Return current local time as compact timestamp string for file naming."""
     return datetime.now().astimezone().strftime("%Y-%m-%dT%H%M%S%z")
 
 
 def load_contract(root: Path) -> Tuple[dict, Dict[str, dict]]:
+    """Load skill-contract.json and build a slug-to-skill mapping."""
     contract_path = root / "profiles" / "contracts" / "skill-contract.json"
     contract = load_json(contract_path)
 
@@ -53,14 +62,17 @@ def load_contract(root: Path) -> Tuple[dict, Dict[str, dict]]:
 
 
 def profile_root(contract: dict, root: Path) -> Path:
+    """Return the profiles root directory from contract config."""
     return root / contract.get("profile_root", "profiles")
 
 
 def history_root(contract: dict, root: Path) -> Path:
+    """Return the history root directory from contract config."""
     return root / contract.get("history_root", "profiles/history")
 
 
 def current_paths(contract: dict, root: Path, skill: str, slug: str) -> Tuple[Path, Path]:
+    """Return (json_path, md_path) for the current profile."""
     p_root = profile_root(contract, root)
     return (
         p_root / f"{skill}_{slug}.json",
@@ -69,14 +81,16 @@ def current_paths(contract: dict, root: Path, skill: str, slug: str) -> Tuple[Pa
 
 
 def read_updated_at(path: Path) -> str:
+    """Read the updated_at field from a profile JSON file."""
     try:
         payload = load_json(path)
-    except Exception:
+    except (FileNotFoundError, json.JSONDecodeError):
         return "-"
     return str(payload.get("updated_at", "-"))
 
 
 def discover_current_profiles(contract: dict, skill_map: Dict[str, dict], root: Path) -> List[Tuple[str, str, str, str]]:
+    """Scan profiles root for current profile files and return (skill, slug, updated_at, status) rows."""
     p_root = profile_root(contract, root)
     rows: List[Tuple[str, str, str, str]] = []
 
@@ -92,6 +106,7 @@ def discover_current_profiles(contract: dict, skill_map: Dict[str, dict], root: 
 
 
 def print_rows(rows: List[Tuple[str, str, str, str]]) -> None:
+    """Print profile rows in a formatted table."""
     if not rows:
         print("No current profile files found in profiles/ root.")
         return
@@ -111,17 +126,30 @@ def print_rows(rows: List[Tuple[str, str, str, str]]) -> None:
         print(fmt.format(*row))
 
 
-def list_profiles(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str | None) -> int:
+def list_profiles(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str | None, fmt: str) -> int:
+    """List current profiles, optionally filtered by skill."""
     rows = discover_current_profiles(contract, skill_map, root)
     if skill:
         rows = [r for r in rows if r[0] == skill]
-    print_rows(rows)
+
+    if fmt == "json":
+        entries = [
+            {"skill": r[0], "slug": r[1], "updated_at": r[2], "status": r[3]}
+            for r in rows
+        ]
+        print(json.dumps(entries, ensure_ascii=False, indent=2))
+    else:
+        print_rows(rows)
     return 0
 
 
 def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str, slug: str, force: bool) -> int:
+    """Initialize a new profile from template."""
     if skill not in skill_map:
         print(f"Unknown skill: {skill}")
+        return 2
+
+    if not validate_slug(slug):
         return 2
 
     json_path, md_path = current_paths(contract, root, skill, slug)
@@ -138,6 +166,14 @@ def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: 
         template["version"] = 1
     if "corrections" not in template or not isinstance(template["corrections"], list):
         template["corrections"] = []
+    if "confidence" not in template:
+        template["confidence"] = "low"
+    if "source_summary" not in template or not isinstance(template["source_summary"], dict):
+        template["source_summary"] = {
+            "input_modes": [],
+            "evidence_count": 0,
+            "notes": "初始化自动生成，尚未填入真实数据",
+        }
 
     dump_json(json_path, template)
     md_title = skill_map[skill].get("display_name", skill)
@@ -155,7 +191,19 @@ def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: 
     return 0
 
 
+def validate_slug(slug: str) -> bool:
+    """Validate slug format. Returns True if valid."""
+    if not SLUG_RE.match(slug):
+        print(f"Invalid slug format: {slug}. Must match {SLUG_RE.pattern}")
+        return False
+    return True
+
+
 def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None) -> int:
+    """Create a history snapshot of the current profile."""
+    if not validate_slug(slug):
+        return 2
+
     json_path, md_path = current_paths(contract, root, skill, slug)
     if not json_path.exists() or not md_path.exists():
         print("Current profile files not found. Snapshot aborted.")
@@ -180,6 +228,7 @@ def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestam
 
 
 def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -> List[Tuple[str, Path, Path]]:
+    """Find all history snapshots for a given skill and slug."""
     h_root = history_root(contract, root)
     candidates: List[Tuple[str, Path, Path]] = []
 
@@ -195,6 +244,10 @@ def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -
 
 
 def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None) -> int:
+    """Rollback current profile to a history snapshot."""
+    if not validate_slug(slug):
+        return 2
+
     candidates = find_history_candidates(contract, root, skill, slug)
     if not candidates:
         print("No history snapshots found for this profile.")
@@ -226,8 +279,12 @@ def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestam
 
 
 def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_history: bool, yes: bool) -> int:
+    """Delete current profile and optionally its history snapshots."""
     if not yes:
         print("Refused to delete without --yes.")
+        return 2
+
+    if not validate_slug(slug):
         return 2
 
     removed = 0
@@ -251,8 +308,12 @@ def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_histo
 
 
 def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str, slug: str) -> int:
+    """Validate a single profile against its template and contract."""
     if skill not in skill_map:
         print(f"Unknown skill: {skill}")
+        return 2
+
+    if not validate_slug(slug):
         return 2
 
     json_path, md_path = current_paths(contract, root, skill, slug)
@@ -267,7 +328,7 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
     if json_path.exists():
         try:
             payload = load_json(json_path)
-        except Exception as exc:  # noqa: BLE001
+        except (FileNotFoundError, json.JSONDecodeError) as exc:
             errors.append(f"Invalid JSON profile: {exc}")
 
     template = {}
@@ -275,7 +336,7 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
     if template_path.exists():
         try:
             template = load_json(template_path)
-        except Exception as exc:  # noqa: BLE001
+        except (FileNotFoundError, json.JSONDecodeError) as exc:
             errors.append(f"Invalid template JSON: {exc}")
     else:
         errors.append(f"Missing template file: {template_path}")
@@ -298,6 +359,31 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
         if "source_summary" in payload and not isinstance(payload["source_summary"], dict):
             errors.append("'source_summary' must be an object")
 
+        if "confidence" in payload:
+            valid_confidence = ("high", "medium", "low")
+            if payload["confidence"] not in valid_confidence:
+                errors.append(f"'confidence' must be one of {valid_confidence}, got: {payload['confidence']!r}")
+
+        if "persona" in payload and not isinstance(payload["persona"], dict):
+            errors.append("'persona' must be an object")
+
+        if "existential_question" in payload and not isinstance(payload["existential_question"], str):
+            errors.append("'existential_question' must be a string")
+
+        if "existential_questions" in payload and not isinstance(payload["existential_questions"], list):
+            errors.append("'existential_questions' must be a list")
+
+        if "version" in payload and not isinstance(payload["version"], int):
+            errors.append(f"'version' must be an integer, got: {type(payload['version']).__name__}")
+
+        if "updated_at" in payload:
+            ua = str(payload["updated_at"])
+            if ua and ua != "-":
+                try:
+                    datetime.fromisoformat(ua)
+                except (ValueError, TypeError):
+                    errors.append(f"'updated_at' is not a valid ISO 8601 string: {ua!r}")
+
     if md_path.exists() and md_path.stat().st_size == 0:
         errors.append("Markdown report is empty")
 
@@ -312,12 +398,42 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
 
 
 def doctor(contract: dict, skill_map: Dict[str, dict], root: Path) -> int:
+    """Validate all current profiles and templates."""
+    failed = 0
+
+    # Validate templates
+    for slug, item in sorted(skill_map.items()):
+        template_path = root / item["template_path"]
+        if not template_path.exists():
+            print(f"Missing template: {item['template_path']}")
+            failed += 1
+            continue
+        try:
+            template = load_json(template_path)
+        except json.JSONDecodeError as exc:
+            print(f"Invalid template JSON: {item['template_path']}: {exc}")
+            failed += 1
+            continue
+
+        required_keys = item.get("required_top_level_keys") or []
+        for key in required_keys:
+            if key not in template:
+                print(f"Template {item['template_path']} missing required key: {key}")
+                failed += 1
+
+        if template.get("skill") != slug:
+            print(f"Template {item['template_path']} skill mismatch: expected {slug}, got {template.get('skill')}")
+            failed += 1
+
+    # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
     if not rows:
+        if failed:
+            print(f"Doctor finished with failures: {failed}")
+            return 1
         print("No current profiles found. Nothing to validate.")
         return 0
 
-    failed = 0
     for skill, slug, _, _ in rows:
         code = validate_profile(contract, skill_map, root, skill, slug)
         if code != 0:
@@ -336,6 +452,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_list = sub.add_parser("list", help="List current profiles.")
     p_list.add_argument("--skill", help="Filter by skill slug.")
+    p_list.add_argument("--format", choices=["table", "json"], default="table", help="Output format.")
 
     p_init = sub.add_parser("init", help="Initialize a profile from template.")
     p_init.add_argument("--skill", required=True)
@@ -370,10 +487,18 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     root = Path(args.root).resolve() if args.root else repo_root()
-    contract, skill_map = load_contract(root)
+
+    try:
+        contract, skill_map = load_contract(root)
+    except FileNotFoundError as exc:
+        print(f"Error: {exc}")
+        return 1
+    except ValueError as exc:
+        print(f"Error: {exc}")
+        return 1
 
     if args.command == "list":
-        return list_profiles(contract, skill_map, root, args.skill)
+        return list_profiles(contract, skill_map, root, args.skill, args.format)
     if args.command == "init":
         return init_profile(contract, skill_map, root, args.skill, args.slug, args.force)
     if args.command == "snapshot":

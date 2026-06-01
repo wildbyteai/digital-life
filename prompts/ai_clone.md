@@ -86,7 +86,36 @@
 ```json
 {
   "skill": "ai_clone",
-  "timestamp": "2026-04-01T12:00:00+08:00",
+  "version": 1,
+  "slug": "demo",
+  "updated_at": "2026-04-01T12:00:00+08:00",
+  "confidence": "medium",
+  "source_summary": {
+    "input_modes": ["file"],
+    "scenes_compared": ["public", "private"],
+    "evidence_count": 2,
+    "notes": "微信聊天记录导出"
+  },
+  "persona": {
+    "layer0_rules": [],
+    "layer1_identity": {
+      "alias": "",
+      "primary_context": ""
+    },
+    "layer2_expression": {
+      "public_style": "",
+      "private_style": "",
+      "style_gap": ""
+    },
+    "layer3_decision_model": {
+      "trust_threshold": "",
+      "switch_conditions": []
+    },
+    "layer4_boundaries": {
+      "topics_avoided_in_public": [],
+      "people_allowed_in_private": []
+    }
+  },
   "similarity_score": 65,
   "public_persona": {
     "speech_style": "简短、确认型",
@@ -98,11 +127,8 @@
     "core_need": "被理解、被接纳",
     "typical_phrases": ["我其实觉得...", "跟你说个事"]
   },
-  "trust_threshold": {
-    "trigger": "推断的信任触发条件",
-    "scenes": ["深夜私聊", "和特定朋友"]
-  },
-  "existential_question": "具体追问"
+  "existential_question": "你上一次用私密人格的语气说话，是什么时候？跟谁说的？",
+  "corrections": []
 }
 ```
 

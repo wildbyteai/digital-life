@@ -79,8 +79,37 @@
 ```json
 {
   "skill": "cringe_archaeology",
-  "timestamp": "2026-04-01T12:00:00+08:00",
-  "platforms_scanned": ["qq_zones"],
+  "version": 1,
+  "slug": "demo",
+  "updated_at": "2026-04-01T12:00:00+08:00",
+  "confidence": "medium",
+  "source_summary": {
+    "input_modes": ["browser"],
+    "platforms_scanned": ["qq_zones"],
+    "evidence_count": 5,
+    "notes": "QQ空间日志和说说"
+  },
+  "persona": {
+    "layer0_rules": [],
+    "layer1_identity": {
+      "alias": "",
+      "primary_platform": "",
+      "years_active": 0
+    },
+    "layer2_expression": {
+      "before_mask": "",
+      "after_mask": "",
+      "style_shift": ""
+    },
+    "layer3_decision_model": {
+      "mask_turning_point": "",
+      "social_pressure_sources": []
+    },
+    "layer4_boundaries": {
+      "taboos": [],
+      "emotion_triggers": []
+    }
+  },
   "top_cringe": [
     {
       "excerpt": "摘录（脱敏后）",
@@ -102,7 +131,8 @@
     "你不再相信的东西",
     "你不再敢说的话"
   ],
-  "existential_question": "具体到行为的追问"
+  "existential_question": "你上一次在网上毫无保留地表达喜欢，是什么时候？",
+  "corrections": []
 }
 ```
 

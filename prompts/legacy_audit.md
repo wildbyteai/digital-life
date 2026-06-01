@@ -85,7 +85,36 @@
 ```json
 {
   "skill": "legacy_audit",
-  "timestamp": "2026-04-01T12:00:00+08:00",
+  "version": 1,
+  "slug": "demo",
+  "updated_at": "2026-04-01T12:00:00+08:00",
+  "confidence": "medium",
+  "source_summary": {
+    "input_modes": ["text"],
+    "platforms_scanned": ["wechat", "weibo"],
+    "evidence_count": 2,
+    "notes": "用户口述平台数据"
+  },
+  "persona": {
+    "layer0_rules": [],
+    "layer1_identity": {
+      "alias": "",
+      "primary_platform": "",
+      "years_active": 0
+    },
+    "layer2_expression": {
+      "most_visible_platform": "",
+      "most_valuable_content_type": ""
+    },
+    "layer3_decision_model": {
+      "time_allocation_priority": [],
+      "regret_patterns": []
+    },
+    "layer4_boundaries": {
+      "things_worth_keeping": [],
+      "things_ready_to_let_go": []
+    }
+  },
   "life_in_numbers": {
     "total_hours": 2847,
     "total_days": 118,
@@ -110,7 +139,8 @@
     "你花在刷手机上的时间，够读完几本买了没看的书？",
     "你在网上建立的连接，有多少人你叫得出名字？",
     "如果明天所有平台关闭，你最遗憾失去的是什么？"
-  ]
+  ],
+  "corrections": []
 }
 ```
 
