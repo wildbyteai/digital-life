@@ -15,6 +15,7 @@ SLUG_RE = re.compile(r"^[a-z0-9_]+$")
 
 
 def repo_root() -> Path:
+    """Return the repository root directory."""
     return Path(__file__).resolve().parent.parent
 
 
@@ -26,6 +27,7 @@ def load_json(path: Path) -> dict:
 
 
 def dump_json(path: Path, payload: dict) -> None:
+    """Write a dict as formatted JSON to a file."""
     path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -33,14 +35,17 @@ def dump_json(path: Path, payload: dict) -> None:
 
 
 def now_iso() -> str:
+    """Return current local time as ISO 8601 string with timezone."""
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
 def now_timestamp() -> str:
+    """Return current local time as compact timestamp string for file naming."""
     return datetime.now().astimezone().strftime("%Y-%m-%dT%H%M%S%z")
 
 
 def load_contract(root: Path) -> Tuple[dict, Dict[str, dict]]:
+    """Load skill-contract.json and build a slug-to-skill mapping."""
     contract_path = root / "profiles" / "contracts" / "skill-contract.json"
     contract = load_json(contract_path)
 
@@ -57,14 +62,17 @@ def load_contract(root: Path) -> Tuple[dict, Dict[str, dict]]:
 
 
 def profile_root(contract: dict, root: Path) -> Path:
+    """Return the profiles root directory from contract config."""
     return root / contract.get("profile_root", "profiles")
 
 
 def history_root(contract: dict, root: Path) -> Path:
+    """Return the history root directory from contract config."""
     return root / contract.get("history_root", "profiles/history")
 
 
 def current_paths(contract: dict, root: Path, skill: str, slug: str) -> Tuple[Path, Path]:
+    """Return (json_path, md_path) for the current profile."""
     p_root = profile_root(contract, root)
     return (
         p_root / f"{skill}_{slug}.json",
@@ -73,6 +81,7 @@ def current_paths(contract: dict, root: Path, skill: str, slug: str) -> Tuple[Pa
 
 
 def read_updated_at(path: Path) -> str:
+    """Read the updated_at field from a profile JSON file."""
     try:
         payload = load_json(path)
     except Exception:
@@ -81,6 +90,7 @@ def read_updated_at(path: Path) -> str:
 
 
 def discover_current_profiles(contract: dict, skill_map: Dict[str, dict], root: Path) -> List[Tuple[str, str, str, str]]:
+    """Scan profiles root for current profile files and return (skill, slug, updated_at, status) rows."""
     p_root = profile_root(contract, root)
     rows: List[Tuple[str, str, str, str]] = []
 
