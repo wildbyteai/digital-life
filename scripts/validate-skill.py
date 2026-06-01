@@ -231,6 +231,13 @@ def main() -> int:
                     errors.append(f"Example JSON missing 'skill' field: {relative_path}")
                 elif "slug" not in example:
                     errors.append(f"Example JSON missing 'slug' field: {relative_path}")
+                else:
+                    skill_slug = example["skill"]
+                    skill_entry = next((s for s in skills if s.get("slug") == skill_slug), None)
+                    if skill_entry:
+                        for key in skill_entry.get("required_top_level_keys", []):
+                            if key not in example:
+                                errors.append(f"Example JSON missing required key '{key}': {relative_path}")
             except json.JSONDecodeError:
                 errors.append(f"Invalid example JSON: {relative_path}")
 
