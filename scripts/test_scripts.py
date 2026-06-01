@@ -605,6 +605,21 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_missing_persona_layer(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "mpl", False)
+            json_path = tmp / "profiles" / "past_life_mpl.json"
+            payload = pm.load_json(json_path)
+            del payload["persona"]["layer4_boundaries"]
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "mpl")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestListEdgeCases(unittest.TestCase):
     def test_list_filtered_by_skill(self):
