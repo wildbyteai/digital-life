@@ -71,6 +71,13 @@ def main() -> int:
         except json.JSONDecodeError:
             errors.append(f"Invalid JSON contract: {CONTRACT_PATH}")
 
+    if isinstance(contract, dict):
+        version = contract.get("version")
+        if not version:
+            errors.append("Contract missing 'version' field")
+        elif not isinstance(version, str):
+            errors.append(f"Contract 'version' must be a string, got: {type(version).__name__}")
+
     skills = contract.get("skills") if isinstance(contract, dict) else None
     if not isinstance(skills, list) or not skills:
         errors.append("Contract must contain a non-empty 'skills' list")
