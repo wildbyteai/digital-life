@@ -1031,6 +1031,21 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_empty_persona(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "empty_pers", False)
+            json_path = tmp / "profiles" / "past_life_empty_pers.json"
+            payload = pm.load_json(json_path)
+            payload["persona"] = {}
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "empty_pers")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_empty_corrections(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
