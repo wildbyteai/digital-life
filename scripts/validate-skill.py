@@ -173,6 +173,11 @@ def main() -> int:
             elif not isinstance(template["corrections"], list):
                 errors.append(f"Template 'corrections' must be a list: {template_path.as_posix()}")
 
+            if "persona" not in template:
+                errors.append(f"Template missing 'persona' field: {template_path.as_posix()}")
+            elif not isinstance(template["persona"], dict):
+                errors.append(f"Template 'persona' must be an object: {template_path.as_posix()}")
+
             if isinstance(required_keys, list):
                 for key in required_keys:
                     if key not in template:
