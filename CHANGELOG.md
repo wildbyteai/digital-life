@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.4.1-beta - 2026-06-02
+
+### Improvements
+
+- Expanded `layer0/` hard rules for all 5 skills with counter-examples and gray area guidance (previously only `past_life.md` had this depth).
+- Added `--version` flag to both `profile-manager.py` and `validate-skill.py`.
+- Added `--format json` to `profile-manager.py validate` for machine-readable output.
+- Improved CLI help text with per-argument descriptions for all subcommands.
+- `profile-manager.py init` now validates template existence and cleans placeholder values before writing.
+- `profile-manager.py doctor` now reports template count alongside profile count.
+- `profile-manager.py validate` now checks persona layer completeness (layer0-layer4).
+- `validate-skill.py` now validates example JSON persona layers and confidence values.
+- Extracted module-level constants in `validate-skill.py` for contract keys, template fields, persona layers, and naming keys.
+- Unified error handling in `profile-manager.py main()` to catch `json.JSONDecodeError`.
+- Added `ai_clone.json` template sub-fields for `public_persona` and `private_persona`.
+- Added `legacy_audit.json` template sub-fields for `regret_patterns`.
+
+### Testing
+
+- Added `scripts/test_scripts.py` with 24 unit tests covering slug validation, JSON helpers, contract loading, init/validate/snapshot/rollback/delete/list/doctor workflows, and JSON output format.
+
 ## 1.4.0-beta - 2026-04-07
 
 ### Features
