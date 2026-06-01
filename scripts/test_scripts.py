@@ -1623,6 +1623,25 @@ class TestDoctorEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_doctor_text_with_failures(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "bad_txt", False)
+            json_path = tmp / "profiles" / "past_life_bad_txt.json"
+            json_path.write_text("not json", encoding="utf-8")
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "text")
+            self.assertEqual(code, 1)
+            output = buf.getvalue()
+            self.assertIn("failures", output)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestLoadContract(unittest.TestCase):
     def test_load_contract(self):
