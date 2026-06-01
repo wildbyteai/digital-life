@@ -3025,6 +3025,20 @@ class TestListProfiles(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_list_all_skills(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+                pm.init_profile(contract, sm, tmp, skill, "list_all", False)
+            rows = pm.discover_current_profiles(contract, sm, tmp)
+            self.assertEqual(len(rows), 5)
+            skills_found = {r[0] for r in rows}
+            self.assertEqual(skills_found, {"past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"})
+        finally:
+            shutil.rmtree(tmp)
+
     def test_list_missing_md(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
