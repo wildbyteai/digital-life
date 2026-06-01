@@ -301,6 +301,12 @@ def main() -> int:
                             for field in ("input_modes", "evidence_count", "notes"):
                                 if field not in ss:
                                     errors.append(f"Example source_summary missing '{field}': {relative_path}")
+                            # Validate input_modes is list
+                            if "input_modes" in ss and not isinstance(ss["input_modes"], list):
+                                errors.append(f"Example source_summary 'input_modes' must be list: {relative_path}")
+                            # Validate evidence_count is int
+                            if "evidence_count" in ss and not isinstance(ss["evidence_count"], int):
+                                errors.append(f"Example source_summary 'evidence_count' must be int: {relative_path}")
 
                     # Validate updated_at is valid ISO 8601 in example
                     if "updated_at" in example:
