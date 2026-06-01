@@ -264,14 +264,17 @@ def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -
     return sorted(candidates, key=lambda x: x[0])
 
 
-def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None) -> int:
+def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None, fmt: str = "text") -> int:
     """Rollback current profile to a history snapshot."""
     if not validate_slug(slug):
         return 2
 
     candidates = find_history_candidates(contract, root, skill, slug)
     if not candidates:
-        print("No history snapshots found for this profile.")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": "No history snapshots found"}, ensure_ascii=False))
+        else:
+            print("No history snapshots found for this profile.")
         return 2
 
     chosen = None
@@ -281,21 +284,30 @@ def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestam
                 chosen = item
                 break
         if not chosen:
-            print(f"Snapshot timestamp not found: {timestamp}")
+            if fmt == "json":
+                print(json.dumps({"status": "error", "message": f"Snapshot timestamp not found: {timestamp}"}, ensure_ascii=False))
+            else:
+                print(f"Snapshot timestamp not found: {timestamp}")
             return 2
     else:
         chosen = candidates[-1]
 
     ts, history_json, history_md = chosen
     if not history_md.exists():
-        print(f"History markdown missing for snapshot: {ts}")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": f"History markdown missing for snapshot: {ts}"}, ensure_ascii=False))
+        else:
+            print(f"History markdown missing for snapshot: {ts}")
         return 2
 
     current_json, current_md = current_paths(contract, root, skill, slug)
     shutil.copy2(history_json, current_json)
     shutil.copy2(history_md, current_md)
 
-    print(f"Rolled back profile to snapshot: {ts}")
+    if fmt == "json":
+        print(json.dumps({"status": "ok", "timestamp": ts}, ensure_ascii=False, indent=2))
+    else:
+        print(f"Rolled back profile to snapshot: {ts}")
     return 0
 
 
@@ -544,6 +556,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_rollback.add_argument("--skill", required=True, help="Skill slug.")
     p_rollback.add_argument("--slug", required=True, help="Profile slug.")
     p_rollback.add_argument("--timestamp", help="Snapshot timestamp. Default: latest.")
+    p_rollback.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
 
     p_delete = sub.add_parser("delete", help="Delete current profile and optionally history.")
     p_delete.add_argument("--skill", required=True, help="Skill slug.")
@@ -579,7 +592,7 @@ def main() -> int:
     if args.command == "snapshot":
         return snapshot_profile(contract, root, args.skill, args.slug, args.timestamp, args.format)
     if args.command == "rollback":
-        return rollback_profile(contract, root, args.skill, args.slug, args.timestamp)
+        return rollback_profile(contract, root, args.skill, args.slug, args.timestamp, args.format)
     if args.command == "delete":
         return delete_profile(contract, root, args.skill, args.slug, args.with_history, args.yes)
     if args.command == "validate":
