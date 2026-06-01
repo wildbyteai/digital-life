@@ -628,6 +628,15 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
                 print(msg)
             failed += 1
 
+        # Validate updated_at placeholder in template
+        if "updated_at" in template and template["updated_at"] != "{ISO8601}":
+            msg = f"Template {item['template_path']} 'updated_at' should be '{{ISO8601}}' placeholder, got {template['updated_at']!r}"
+            if fmt == "json":
+                errors.append(msg)
+            else:
+                print(msg)
+            failed += 1
+
     # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
     profiles_checked = 0
