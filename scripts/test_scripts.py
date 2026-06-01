@@ -353,6 +353,38 @@ class TestSnapshotEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_snapshot_json_success(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "snap_ok", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.snapshot_profile(contract, tmp, "past_life", "snap_ok", "2026-03-01T100000+0800", "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["timestamp"], "2026-03-01T100000+0800")
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_snapshot_multiple(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "multi", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "multi", "2026-01-01T100000+0800")
+            pm.snapshot_profile(contract, tmp, "past_life", "multi", "2026-02-01T100000+0800")
+            pm.snapshot_profile(contract, tmp, "past_life", "multi", "2026-03-01T100000+0800")
+            history = list((tmp / "profiles" / "history").glob("past_life_multi_*.json"))
+            self.assertEqual(len(history), 3)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestRollbackEdgeCases(unittest.TestCase):
     def test_rollback_no_history(self):
