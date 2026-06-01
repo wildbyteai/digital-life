@@ -2055,5 +2055,64 @@ class TestValidateJsonEdgeCases(unittest.TestCase):
             shutil.rmtree(tmp)
 
 
+class TestMainFunction(unittest.TestCase):
+    """Test main() function dispatch and error handling."""
+
+    def test_main_list(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            import unittest.mock
+            with unittest.mock.patch("sys.argv", ["profile-manager", "--root", str(tmp), "list"]):
+                code = pm.main()
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_main_doctor(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            import unittest.mock
+            with unittest.mock.patch("sys.argv", ["profile-manager", "--root", str(tmp), "doctor"]):
+                code = pm.main()
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_main_validate(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "main_test", False)
+            import unittest.mock
+            with unittest.mock.patch("sys.argv", ["profile-manager", "--root", str(tmp), "validate", "--skill", "past_life", "--slug", "main_test"]):
+                code = pm.main()
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_main_init(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            import unittest.mock
+            with unittest.mock.patch("sys.argv", ["profile-manager", "--root", str(tmp), "init", "--skill", "past_life", "--slug", "main_init"]):
+                code = pm.main()
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_main_invalid_root(self):
+        import unittest.mock
+        with unittest.mock.patch("sys.argv", ["profile-manager", "--root", "/nonexistent", "list"]):
+            code = pm.main()
+        self.assertEqual(code, 1)
+
+
 if __name__ == "__main__":
     unittest.main()
