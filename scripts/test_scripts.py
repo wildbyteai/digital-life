@@ -516,6 +516,19 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertIn("test", output)
         self.assertIn("demo", output)
 
+    def test_load_contract_missing_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(FileNotFoundError):
+                pm.load_contract(Path(tmp))
+
+    def test_load_contract_invalid_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            profiles_dir = Path(tmp) / "profiles" / "contracts"
+            profiles_dir.mkdir(parents=True)
+            (profiles_dir / "skill-contract.json").write_text("not json", encoding="utf-8")
+            with self.assertRaises(json.JSONDecodeError):
+                pm.load_contract(Path(tmp))
+
 
 class TestDoctorEdgeCases(unittest.TestCase):
     def test_doctor_json_with_failures(self):
