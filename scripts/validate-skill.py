@@ -272,6 +272,14 @@ def main() -> int:
                     if "confidence" in example:
                         if example["confidence"] not in ("high", "medium", "low"):
                             errors.append(f"Example 'confidence' invalid: {example['confidence']!r}: {relative_path}")
+
+                    # Validate corrections field in example
+                    if "corrections" in example and not isinstance(example["corrections"], list):
+                        errors.append(f"Example 'corrections' must be list: {relative_path}")
+
+                    # Validate version field in example
+                    if "version" in example and not isinstance(example["version"], int):
+                        errors.append(f"Example 'version' must be int: {relative_path}")
             except json.JSONDecodeError:
                 errors.append(f"Invalid example JSON: {relative_path}")
 
