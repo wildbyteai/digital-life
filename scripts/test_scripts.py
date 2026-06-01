@@ -793,6 +793,20 @@ class TestDeleteEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_delete_all_skills(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+                pm.init_profile(contract, sm, tmp, skill, "del_all", False)
+                code = pm.delete_profile(contract, tmp, skill, "del_all", False, True)
+                self.assertEqual(code, 0)
+                json_path = tmp / "profiles" / f"{skill}_del_all.json"
+                self.assertFalse(json_path.exists())
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestValidateEdgeCases(unittest.TestCase):
     def test_validate_missing_profile(self):
