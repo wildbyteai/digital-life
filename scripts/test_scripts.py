@@ -1839,5 +1839,75 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
             shutil.rmtree(tmp)
 
 
+class TestValidateJsonEdgeCases(unittest.TestCase):
+    """Test validate_profile JSON output for various error conditions."""
+
+    def test_validate_json_skill_mismatch(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "vjm", False)
+            json_path = tmp / "profiles" / "past_life_vjm.json"
+            payload = pm.load_json(json_path)
+            payload["skill"] = "wrong"
+            pm.dump_json(json_path, payload)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.validate_profile(contract, sm, tmp, "past_life", "vjm", "json")
+            self.assertEqual(code, 1)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "fail")
+            self.assertTrue(any("skill" in e for e in result["errors"]))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_json_missing_key(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "vmk", False)
+            json_path = tmp / "profiles" / "past_life_vmk.json"
+            payload = pm.load_json(json_path)
+            del payload["persona"]
+            pm.dump_json(json_path, payload)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.validate_profile(contract, sm, tmp, "past_life", "vmk", "json")
+            self.assertEqual(code, 1)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "fail")
+            self.assertTrue(any("persona" in e for e in result["errors"]))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_json_invalid_confidence(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "vic", False)
+            json_path = tmp / "profiles" / "past_life_vic.json"
+            payload = pm.load_json(json_path)
+            payload["confidence"] = "invalid"
+            pm.dump_json(json_path, payload)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.validate_profile(contract, sm, tmp, "past_life", "vic", "json")
+            self.assertEqual(code, 1)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "fail")
+            self.assertTrue(any("confidence" in e for e in result["errors"]))
+        finally:
+            shutil.rmtree(tmp)
+
+
 if __name__ == "__main__":
     unittest.main()
