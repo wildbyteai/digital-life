@@ -3455,6 +3455,20 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
             self.assertIsInstance(required, list)
             self.assertGreater(len(required), 0, f"Skill {skill['slug']} has empty required_top_level_keys")
 
+    def test_all_template_files_valid(self):
+        """All template files should be valid JSON with required fields."""
+        root = Path(__file__).resolve().parent.parent
+        vs = importlib.import_module("validate-skill")
+        contract_path = root / "profiles" / "contracts" / "skill-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        for skill in contract["skills"]:
+            template_path = root / skill["template_path"]
+            if template_path.exists():
+                template = json.loads(template_path.read_text(encoding="utf-8"))
+                self.assertIsInstance(template, dict, f"Template must be dict: {skill['template_path']}")
+                for field in vs.REQUIRED_TEMPLATE_FIELDS:
+                    self.assertIn(field, template, f"Template missing '{field}': {skill['template_path']}")
+
     def test_all_example_files_valid(self):
         """All example JSON files should be valid JSON with required fields."""
         root = Path(__file__).resolve().parent.parent
