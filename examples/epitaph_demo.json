@@ -20,11 +20,13 @@
     ],
     "layer1_identity": {
       "alias": "阿微",
+      "primary_platform": "wechat",
       "life_status": "30 岁，互联网运营，单身，养了一只猫"
     },
     "layer2_expression": {
       "how_the_user_describes_themself": "普通打工人，没什么特别的",
-      "how_others_might_describe_them": "靠谱、能扛事、但好像总是一个人"
+      "how_others_might_describe_them": "靠谱、能扛事、但好像总是一个人",
+      "typical_phrases": ["算了，先这样吧", "还好", "我没事"]
     },
     "layer3_decision_model": {
       "proudest_choice": "25 岁的时候一个人搬到了一个不认识任何人的城市",
