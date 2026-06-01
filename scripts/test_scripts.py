@@ -80,6 +80,17 @@ class TestTimestampRegex(unittest.TestCase):
         for ts in ("", "2026-04-01", "120000+0800", "not-a-timestamp"):
             self.assertIsNone(pm.TIMESTAMP_RE.match(ts))
 
+    def test_timestamp_edge_cases(self):
+        # Missing timezone
+        self.assertIsNone(pm.TIMESTAMP_RE.match("2026-04-01T120000"))
+        # Wrong separator
+        self.assertIsNone(pm.TIMESTAMP_RE.match("2026-04-01 120000+0800"))
+        # Milliseconds
+        self.assertIsNone(pm.TIMESTAMP_RE.match("2026-04-01T120000.000+0800"))
+        # Valid with different timezone offsets
+        self.assertIsNotNone(pm.TIMESTAMP_RE.match("2026-12-31T235959+0000"))
+        self.assertIsNotNone(pm.TIMESTAMP_RE.match("2026-01-01T000000-1200"))
+
 
 class TestJsonHelpers(unittest.TestCase):
     def test_load_json_missing(self):
