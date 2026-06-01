@@ -1031,6 +1031,21 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_null_confidence(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "null_conf", False)
+            json_path = tmp / "profiles" / "past_life_null_conf.json"
+            payload = pm.load_json(json_path)
+            payload["confidence"] = None
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "null_conf")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_null_slug(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
