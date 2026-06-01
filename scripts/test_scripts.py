@@ -2208,6 +2208,51 @@ class TestMainFunction(unittest.TestCase):
             code = pm.main()
         self.assertEqual(code, 1)
 
+    def test_main_snapshot(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "main_snap", False)
+            import unittest.mock
+            with unittest.mock.patch("sys.argv", ["profile-manager", "--root", str(tmp), "snapshot", "--skill", "past_life", "--slug", "main_snap", "--timestamp", "2026-01-01T100000+0800"]):
+                code = pm.main()
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_main_delete(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "main_del", False)
+            import unittest.mock
+            with unittest.mock.patch("sys.argv", ["profile-manager", "--root", str(tmp), "delete", "--skill", "past_life", "--slug", "main_del", "--yes"]):
+                code = pm.main()
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_main_list_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "main_lj", False)
+            import unittest.mock
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                with unittest.mock.patch("sys.argv", ["profile-manager", "--root", str(tmp), "list", "--format", "json"]):
+                    code = pm.main()
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertIsInstance(result, list)
+        finally:
+            shutil.rmtree(tmp)
+
 
 if __name__ == "__main__":
     unittest.main()
