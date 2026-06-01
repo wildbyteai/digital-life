@@ -2023,6 +2023,14 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
                 bullet_count = sum(1 for line in content.splitlines() if line.strip().startswith("- "))
                 self.assertGreaterEqual(bullet_count, 3, f"Layer0 file {skill['layer0_path']} has too few rules")
 
+    def test_contract_version_format(self):
+        """Contract version should be semver format."""
+        root = Path(__file__).resolve().parent.parent
+        contract_path = root / "profiles" / "contracts" / "skill-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        version = contract.get("version", "")
+        self.assertRegex(version, r"^\d+\.\d+\.\d+$")
+
 
 class TestBuildParser(unittest.TestCase):
     """Test build_parser argument parser configuration."""
