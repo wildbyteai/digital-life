@@ -3455,6 +3455,20 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
             self.assertIsInstance(required, list)
             self.assertGreater(len(required), 0, f"Skill {skill['slug']} has empty required_top_level_keys")
 
+    def test_template_confidence_placeholder(self):
+        """Template confidence should be a valid placeholder value."""
+        root = Path(__file__).resolve().parent.parent
+        contract_path = root / "profiles" / "contracts" / "skill-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        valid_placeholders = ("high", "medium", "low", "high|medium|low")
+        for skill in contract["skills"]:
+            template_path = root / skill["template_path"]
+            if template_path.exists():
+                template = json.loads(template_path.read_text(encoding="utf-8"))
+                if "confidence" in template:
+                    self.assertIn(template["confidence"], valid_placeholders,
+                        f"Template confidence invalid: {skill['template_path']}")
+
     def test_template_updated_at_placeholder(self):
         """Template updated_at should be {ISO8601} placeholder."""
         root = Path(__file__).resolve().parent.parent
