@@ -307,6 +307,9 @@ def main() -> int:
                             # Validate evidence_count is int
                             if "evidence_count" in ss and not isinstance(ss["evidence_count"], int):
                                 errors.append(f"Example source_summary 'evidence_count' must be int: {relative_path}")
+                            # Validate evidence_count is non-negative
+                            if "evidence_count" in ss and isinstance(ss["evidence_count"], int) and ss["evidence_count"] < 0:
+                                errors.append(f"Example source_summary 'evidence_count' must be non-negative: {relative_path}")
 
                     # Validate updated_at is valid ISO 8601 in example
                     if "updated_at" in example:
