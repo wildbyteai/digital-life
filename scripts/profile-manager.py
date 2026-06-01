@@ -416,22 +416,31 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
     return 0
 
 
-def doctor(contract: dict, skill_map: dict[str, dict], root: Path) -> int:
+def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "text") -> int:
     """Validate all current profiles and templates."""
     failed = 0
     templates_checked = 0
+    errors: list[str] = []
 
     # Validate templates
     for slug, item in sorted(skill_map.items()):
         template_path = root / item["template_path"]
         if not template_path.exists():
-            print(f"Missing template: {item['template_path']}")
+            msg = f"Missing template: {item['template_path']}"
+            if fmt == "json":
+                errors.append(msg)
+            else:
+                print(msg)
             failed += 1
             continue
         try:
             template = load_json(template_path)
         except json.JSONDecodeError as exc:
-            print(f"Invalid template JSON: {item['template_path']}: {exc}")
+            msg = f"Invalid template JSON: {item['template_path']}: {exc}"
+            if fmt == "json":
+                errors.append(msg)
+            else:
+                print(msg)
             failed += 1
             continue
 
@@ -439,31 +448,51 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path) -> int:
         required_keys = item.get("required_top_level_keys") or []
         for key in required_keys:
             if key not in template:
-                print(f"Template {item['template_path']} missing required key: {key}")
+                msg = f"Template {item['template_path']} missing required key: {key}"
+                if fmt == "json":
+                    errors.append(msg)
+                else:
+                    print(msg)
                 failed += 1
 
         if template.get("skill") != slug:
-            print(f"Template {item['template_path']} skill mismatch: expected {slug}, got {template.get('skill')}")
+            msg = f"Template {item['template_path']} skill mismatch: expected {slug}, got {template.get('skill')}"
+            if fmt == "json":
+                errors.append(msg)
+            else:
+                print(msg)
             failed += 1
 
     # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
-    if not rows:
+    profiles_checked = 0
+    if rows:
+        for skill, slug, _, _ in rows:
+            code = validate_profile(contract, skill_map, root, skill, slug)
+            if code != 0:
+                failed += 1
+                errors.append(f"Validation failed: {skill}_{slug}")
+            profiles_checked += 1
+
+    if fmt == "json":
+        result = {
+            "status": "ok" if failed == 0 else "fail",
+            "templates_checked": templates_checked,
+            "profiles_checked": profiles_checked,
+            "failures": failed,
+        }
+        if errors:
+            result["errors"] = errors
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
         if failed:
             print(f"Doctor finished with failures: {failed}")
-            return 1
-        print(f"Templates checked: {templates_checked}. No current profiles found.")
-        return 0
+        elif not rows:
+            print(f"Templates checked: {templates_checked}. No current profiles found.")
+        else:
+            print(f"Doctor finished successfully. Templates: {templates_checked}, Profiles: {len(rows)}")
 
-    for skill, slug, _, _ in rows:
-        code = validate_profile(contract, skill_map, root, skill, slug)
-        if code != 0:
-            failed += 1
-    if failed:
-        print(f"Doctor finished with failures: {failed}")
-        return 1
-    print(f"Doctor finished successfully. Templates: {templates_checked}, Profiles: {len(rows)}")
-    return 0
+    return 1 if failed else 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -505,7 +534,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_validate.add_argument("--slug", required=True, help="Profile slug.")
     p_validate.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
 
-    sub.add_parser("doctor", help="Validate all current profiles in profiles/ root.")
+    p_doctor = sub.add_parser("doctor", help="Validate all current profiles in profiles/ root.")
+    p_doctor.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
     return parser
 
 
@@ -533,7 +563,7 @@ def main() -> int:
     if args.command == "validate":
         return validate_profile(contract, skill_map, root, args.skill, args.slug, args.format)
     if args.command == "doctor":
-        return doctor(contract, skill_map, root)
+        return doctor(contract, skill_map, root, args.format)
 
     parser.print_help()
     return 2
