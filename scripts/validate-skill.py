@@ -171,6 +171,11 @@ def main() -> int:
             if "confidence" not in template:
                 errors.append(f"Template missing 'confidence' field: {template_path.as_posix()}")
 
+            if "source_summary" not in template:
+                errors.append(f"Template missing 'source_summary' field: {template_path.as_posix()}")
+            elif not isinstance(template["source_summary"], dict):
+                errors.append(f"Template 'source_summary' must be an object: {template_path.as_posix()}")
+
             if "version" not in template:
                 errors.append(f"Template missing 'version' field: {template_path.as_posix()}")
 
