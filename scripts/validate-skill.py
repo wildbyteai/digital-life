@@ -190,6 +190,15 @@ def main() -> int:
             if not (root / relative_path).exists():
                 errors.append(f"Missing file or directory: {relative_path}")
 
+        # Validate layer0 file has rules section
+        layer0_path = root / str(item["layer0_path"])
+        if layer0_path.exists():
+            layer0_content = layer0_path.read_text(encoding="utf-8")
+            if "## " not in layer0_content:
+                errors.append(f"Layer0 file missing section headers: {item['layer0_path']}")
+            if len(layer0_content.strip()) < 100:
+                errors.append(f"Layer0 file seems too short (< 100 chars): {item['layer0_path']}")
+
         template_path = root / str(item["template_path"])
         if template_path.exists():
             try:
