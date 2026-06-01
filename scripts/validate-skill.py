@@ -134,6 +134,8 @@ def main() -> int:
         errors.append("Contract missing 'version' field")
     elif not isinstance(version, str):
         errors.append(f"Contract 'version' must be a string, got: {type(version).__name__}")
+    elif not re.match(r"^\d+\.\d+\.\d+$", str(version)):
+        errors.append(f"Contract 'version' must be semver format (e.g. 1.0.0), got: {version!r}")
 
     naming = contract.get("naming")
     if not isinstance(naming, dict):
