@@ -201,6 +201,11 @@ def main() -> int:
                     if layer not in persona:
                         errors.append(f"Template persona missing '{layer}': {template_path.as_posix()}")
 
+            has_question = "existential_question" in template
+            has_questions = "existential_questions" in template
+            if not has_question and not has_questions:
+                errors.append(f"Template missing 'existential_question' or 'existential_questions': {template_path.as_posix()}")
+
             if isinstance(required_keys, list):
                 for key in required_keys:
                     if key not in template:
