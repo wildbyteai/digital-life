@@ -120,6 +120,12 @@
       "interpretation": "你当时真的在乎这件事"
     }
   ],
+  "mask_turning_point": {
+    "period": "2013-2015",
+    "trigger": "推断的触发事件",
+    "before": "想说就说",
+    "after": "学会体面"
+  },
   "lost_things": [
     "你不再用的表达方式",
     "你不再相信的东西",
