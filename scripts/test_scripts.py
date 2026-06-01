@@ -83,6 +83,265 @@ class TestJsonHelpers(unittest.TestCase):
             self.assertEqual(pm.load_json(path), data)
 
 
+class TestInitEdgeCases(unittest.TestCase):
+    def test_init_invalid_skill(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            code = pm.init_profile(contract, sm, tmp, "nonexistent", "test", False)
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_init_invalid_slug(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            code = pm.init_profile(contract, sm, tmp, "past_life", "bad-slug", False)
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_init_invalid_skill_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.init_profile(contract, sm, tmp, "nonexistent", "test", False, "json")
+            self.assertEqual(code, 2)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "error")
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_init_cleans_placeholders(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "epitaph", "holder", False)
+            json_path = tmp / "profiles" / "epitaph_holder.json"
+            payload = json.loads(json_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["slug"], "holder")
+            self.assertIn(payload["confidence"], ("high", "medium", "low"))
+            self.assertNotEqual(payload["updated_at"], "{ISO8601}")
+        finally:
+            shutil.rmtree(tmp)
+
+
+class TestSnapshotEdgeCases(unittest.TestCase):
+    def test_snapshot_missing_profile(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            code = pm.snapshot_profile(contract, tmp, "past_life", "ghost", None)
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_snapshot_invalid_timestamp(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "ts_test", False)
+            code = pm.snapshot_profile(contract, tmp, "past_life", "ts_test", "bad-format")
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_snapshot_custom_timestamp(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "cts", False)
+            code = pm.snapshot_profile(contract, tmp, "past_life", "cts", "2026-01-01T120000+0800")
+            self.assertEqual(code, 0)
+            history = list((tmp / "profiles" / "history").glob("past_life_cts_*.json"))
+            self.assertEqual(len(history), 1)
+            self.assertIn("2026-01-01T120000+0800", history[0].name)
+        finally:
+            shutil.rmtree(tmp)
+
+
+class TestRollbackEdgeCases(unittest.TestCase):
+    def test_rollback_no_history(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "nohist", False)
+            code = pm.rollback_profile(contract, tmp, "past_life", "nohist", None)
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_rollback_specific_timestamp(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "rts", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "rts", "2026-01-01T100000+0800")
+
+            json_path = tmp / "profiles" / "past_life_rts.json"
+            payload = pm.load_json(json_path)
+            payload["confidence"] = "high"
+            pm.dump_json(json_path, payload)
+            pm.snapshot_profile(contract, tmp, "past_life", "rts", "2026-02-01T100000+0800")
+
+            # Rollback to first snapshot
+            code = pm.rollback_profile(contract, tmp, "past_life", "rts", "2026-01-01T100000+0800")
+            self.assertEqual(code, 0)
+            restored = pm.load_json(json_path)
+            self.assertEqual(restored["confidence"], "low")
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_rollback_nonexistent_timestamp(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "rbts", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "rbts", "2026-01-01T100000+0800")
+            code = pm.rollback_profile(contract, tmp, "past_life", "rbts", "2099-01-01T000000+0000")
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
+
+class TestDeleteEdgeCases(unittest.TestCase):
+    def test_delete_with_history(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "dwh", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "dwh", "2026-01-01T100000+0800")
+            pm.snapshot_profile(contract, tmp, "past_life", "dwh", "2026-02-01T100000+0800")
+
+            code = pm.delete_profile(contract, tmp, "past_life", "dwh", True, True)
+            self.assertEqual(code, 0)
+
+            # Verify all files removed
+            self.assertFalse((tmp / "profiles" / "past_life_dwh.json").exists())
+            self.assertFalse((tmp / "profiles" / "past_life_dwh.md").exists())
+            history = list((tmp / "profiles" / "history").glob("past_life_dwh_*"))
+            self.assertEqual(len(history), 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_delete_nonexistent(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            code = pm.delete_profile(contract, tmp, "past_life", "ghost", False, True)
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
+
+class TestValidateEdgeCases(unittest.TestCase):
+    def test_validate_missing_profile(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "ghost")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_invalid_skill(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            code = pm.validate_profile(contract, sm, tmp, "nonexistent", "test")
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_empty_markdown(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "empty_md", False)
+            md_path = tmp / "profiles" / "past_life_empty_md.md"
+            md_path.write_text("", encoding="utf-8")
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "empty_md")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
+
+class TestListEdgeCases(unittest.TestCase):
+    def test_list_filtered_by_skill(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "a", False)
+            pm.init_profile(contract, sm, tmp, "epitaph", "b", False)
+            rows = pm.discover_current_profiles(contract, sm, tmp)
+            rows = [r for r in rows if r[0] == "past_life"]
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0][0], "past_life")
+        finally:
+            shutil.rmtree(tmp)
+
+
+class TestHelperFunctions(unittest.TestCase):
+    def test_now_iso_format(self):
+        result = pm.now_iso()
+        self.assertRegex(result, r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
+
+    def test_now_timestamp_format(self):
+        result = pm.now_timestamp()
+        self.assertRegex(result, r"^\d{4}-\d{2}-\d{2}T\d{6}[+-]\d{4}$")
+
+    def test_current_paths(self):
+        root = Path(__file__).resolve().parent.parent
+        contract, _ = pm.load_contract(root)
+        json_path, md_path = pm.current_paths(contract, root, "past_life", "test")
+        self.assertEqual(json_path.name, "past_life_test.json")
+        self.assertEqual(md_path.name, "past_life_test.md")
+
+
+class TestDoctorEdgeCases(unittest.TestCase):
+    def test_doctor_json_with_failures(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "bad", False)
+            # Corrupt the json
+            json_path = tmp / "profiles" / "past_life_bad.json"
+            json_path.write_text("not json", encoding="utf-8")
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "json")
+            self.assertEqual(code, 1)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "fail")
+            self.assertGreater(result["failures"], 0)
+        finally:
+            shutil.rmtree(tmp)
+
+
 class TestLoadContract(unittest.TestCase):
     def test_load_contract(self):
         root = Path(__file__).resolve().parent.parent
