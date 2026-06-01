@@ -435,8 +435,12 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Manage digital-life profiles.")
+    parser = argparse.ArgumentParser(
+        prog="profile-manager",
+        description="Manage digital-life profiles: init, list, snapshot, rollback, delete, validate, doctor.",
+    )
     parser.add_argument("--root", default=None, help="Repository root path. Defaults to script parent.")
+    parser.add_argument("--version", action="version", version="%(prog)s 1.0.0")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_list = sub.add_parser("list", help="List current profiles.")
@@ -444,29 +448,29 @@ def build_parser() -> argparse.ArgumentParser:
     p_list.add_argument("--format", choices=["table", "json"], default="table", help="Output format.")
 
     p_init = sub.add_parser("init", help="Initialize a profile from template.")
-    p_init.add_argument("--skill", required=True)
-    p_init.add_argument("--slug", required=True)
-    p_init.add_argument("--force", action="store_true")
+    p_init.add_argument("--skill", required=True, help="Skill slug (e.g. past_life, legacy_audit).")
+    p_init.add_argument("--slug", required=True, help="Profile slug identifier.")
+    p_init.add_argument("--force", action="store_true", help="Overwrite existing profile.")
 
     p_snapshot = sub.add_parser("snapshot", help="Create a history snapshot from current profile.")
-    p_snapshot.add_argument("--skill", required=True)
-    p_snapshot.add_argument("--slug", required=True)
+    p_snapshot.add_argument("--skill", required=True, help="Skill slug.")
+    p_snapshot.add_argument("--slug", required=True, help="Profile slug.")
     p_snapshot.add_argument("--timestamp", help="Override timestamp with YYYY-MM-DDTHHMMSS+0800.")
 
     p_rollback = sub.add_parser("rollback", help="Rollback current profile from history snapshot.")
-    p_rollback.add_argument("--skill", required=True)
-    p_rollback.add_argument("--slug", required=True)
+    p_rollback.add_argument("--skill", required=True, help="Skill slug.")
+    p_rollback.add_argument("--slug", required=True, help="Profile slug.")
     p_rollback.add_argument("--timestamp", help="Snapshot timestamp. Default: latest.")
 
     p_delete = sub.add_parser("delete", help="Delete current profile and optionally history.")
-    p_delete.add_argument("--skill", required=True)
-    p_delete.add_argument("--slug", required=True)
-    p_delete.add_argument("--with-history", action="store_true")
-    p_delete.add_argument("--yes", action="store_true")
+    p_delete.add_argument("--skill", required=True, help="Skill slug.")
+    p_delete.add_argument("--slug", required=True, help="Profile slug.")
+    p_delete.add_argument("--with-history", action="store_true", help="Also delete history snapshots.")
+    p_delete.add_argument("--yes", action="store_true", help="Skip confirmation prompt.")
 
     p_validate = sub.add_parser("validate", help="Validate one current profile.")
-    p_validate.add_argument("--skill", required=True)
-    p_validate.add_argument("--slug", required=True)
+    p_validate.add_argument("--skill", required=True, help="Skill slug.")
+    p_validate.add_argument("--slug", required=True, help="Profile slug.")
 
     sub.add_parser("doctor", help="Validate all current profiles in profiles/ root.")
     return parser
@@ -479,11 +483,8 @@ def main() -> int:
 
     try:
         contract, skill_map = load_contract(root)
-    except FileNotFoundError as exc:
-        print(f"Error: {exc}")
-        return 1
-    except ValueError as exc:
-        print(f"Error: {exc}")
+    except (FileNotFoundError, json.JSONDecodeError, ValueError) as exc:
+        print(f"Error loading contract: {exc}")
         return 1
 
     if args.command == "list":
