@@ -85,11 +85,34 @@
 ```json
 {
   "skill": "epitaph",
-  "timestamp": "2026-04-01T12:00:00+08:00",
-  "life_status": "一句话描述",
-  "proudest_thing": "最骄傲的事",
-  "biggest_regret": "最大的遗憾",
-  "how_to_be_remembered": "想被记住的方式",
+  "version": 1,
+  "slug": "demo",
+  "updated_at": "2026-04-01T12:00:00+08:00",
+  "confidence": "medium",
+  "source_summary": {
+    "input_modes": ["text"],
+    "evidence_count": 3,
+    "notes": "用户口述人生状态"
+  },
+  "persona": {
+    "layer0_rules": [],
+    "layer1_identity": {
+      "alias": "",
+      "life_status": ""
+    },
+    "layer2_expression": {
+      "how_the_user_describes_themself": "",
+      "how_others_might_describe_them": ""
+    },
+    "layer3_decision_model": {
+      "proudest_choice": "",
+      "biggest_regret": ""
+    },
+    "layer4_boundaries": {
+      "unlived_desires": [],
+      "remember_me_as": []
+    }
+  },
   "digital_tombstone": {
     "posts": 0,
     "likes": 0,
@@ -103,7 +126,8 @@
     "worker": "打工人版墓志铭",
     "philosophical": "哲思版墓志铭"
   },
-  "existential_questions": ["追问1", "追问2", "追问3"]
+  "existential_questions": ["追问1", "追问2", "追问3"],
+  "corrections": []
 }
 ```
 

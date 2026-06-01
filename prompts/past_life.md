@@ -114,29 +114,61 @@
 ```json
 {
   "skill": "past_life",
-  "timestamp": "2026-04-01T12:00:00+08:00",
+  "version": 1,
+  "slug": "demo",
+  "updated_at": "2026-04-01T12:00:00+08:00",
+  "confidence": "medium",
+  "source_summary": {
+    "input_modes": ["text"],
+    "evidence_count": 3,
+    "notes": "用户口述行为模式"
+  },
+  "persona": {
+    "layer0_rules": [],
+    "layer1_identity": {
+      "alias": "",
+      "primary_platform": "",
+      "years_active": 0
+    },
+    "layer2_expression": {
+      "catchphrases": [],
+      "style_summary": "",
+      "scene_examples": []
+    },
+    "layer3_decision_model": {
+      "priorities": [],
+      "approach_triggers": [],
+      "avoidance_triggers": []
+    },
+    "layer4_boundaries": {
+      "taboos": [],
+      "emotion_triggers": [],
+      "silence_triggers": []
+    }
+  },
   "past_life": {
     "identity": "书店老板",
     "era": "明末",
     "place": "杭州",
     "death_cause": "大火烧毁书铺",
-    "core_imprint": "拥有≠掌握"
+    "core_imprint": "拥有≠掌握",
+    "causal_chain": [
+      "囤书 300 本但只读完 20 本",
+      "→ 前世书铺毁于大火，未读之书成为终身遗憾",
+      "→ 核心信念：只要拥有就不会失去",
+      "→ 今生行为：用囤积对抗焦虑"
+    ],
+    "karmic_debts": [
+      {
+        "habit": "囤书",
+        "annual_cost": "¥9000",
+        "life_equivalent": "2 个月房租"
+      }
+    ],
+    "first_break_action": "本周读完一本标记超 6 个月的书"
   },
-  "causal_chain": [
-    "囤书 300 本但只读完 20 本",
-    "→ 前世书铺毁于大火，未读之书成为终身遗憾",
-    "→ 核心信念：只要拥有就不会失去",
-    "→ 今生行为：用囤积对抗焦虑"
-  ],
-  "karmic_debts": [
-    {
-      "habit": "囤书",
-      "annual_cost": "¥9000",
-      "life_equivalent": "2 个月房租"
-    }
-  ],
-  "first_break_action": "本周读完一本标记超 6 个月的书",
-  "existential_question": "你囤了 300 本书，读完的几本？剩下的想带到哪辈子去？"
+  "existential_question": "你囤了 300 本书，读完的几本？剩下的想带到哪辈子去？",
+  "corrections": []
 }
 ```
 
