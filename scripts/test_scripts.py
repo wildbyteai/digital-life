@@ -1726,6 +1726,36 @@ class TestDoctor(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_doctor_multiple_profiles(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "a", False)
+            pm.init_profile(contract, sm, tmp, "epitaph", "b", False)
+            pm.init_profile(contract, sm, tmp, "ai_clone", "c", False)
+            code = pm.doctor(contract, sm, tmp)
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_doctor_text_output(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "dtxt", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "text")
+            self.assertEqual(code, 0)
+            output = buf.getvalue()
+            self.assertIn("successfully", output)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestValidateJsonOutput(unittest.TestCase):
     """Test validate and doctor JSON output format."""
