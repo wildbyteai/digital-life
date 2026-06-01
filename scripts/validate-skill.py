@@ -225,6 +225,10 @@ def main() -> int:
                 elif not isinstance(template[field], expected_type):
                     errors.append(f"Template '{field}' must be a {expected_type.__name__}: {template_path.as_posix()}")
 
+            # Validate version is positive
+            if "version" in template and isinstance(template["version"], int) and template["version"] < 1:
+                errors.append(f"Template 'version' must be >= 1: {template_path.as_posix()}")
+
             if "persona" in template and isinstance(template["persona"], dict):
                 persona = template["persona"]
                 for layer in REQUIRED_PERSONA_LAYERS:
