@@ -44,11 +44,11 @@ def setup_temp_repo(root: Path, skill_map: dict) -> tuple[Path, dict]:
 
 class TestSlugValidation(unittest.TestCase):
     def test_valid_slugs(self):
-        for slug in ("demo", "test_user", "abc123", "a"):
+        for slug in ("demo", "test_user", "abc123", "a", "demo-xu", "past_life"):
             self.assertTrue(pm.is_valid_slug(slug))
 
     def test_invalid_slugs(self):
-        for slug in ("", "test-user", "Test", "test user", "test@user", "测试"):
+        for slug in ("", "Test", "test user", "test@user", "测试", ".hidden"):
             self.assertFalse(pm.is_valid_slug(slug))
 
 
@@ -99,7 +99,7 @@ class TestInitEdgeCases(unittest.TestCase):
         _, skill_map = pm.load_contract(root)
         tmp, contract, sm = setup_temp_repo(root, skill_map)
         try:
-            code = pm.init_profile(contract, sm, tmp, "past_life", "bad-slug", False)
+            code = pm.init_profile(contract, sm, tmp, "past_life", "bad slug", False)
             self.assertEqual(code, 2)
         finally:
             shutil.rmtree(tmp)

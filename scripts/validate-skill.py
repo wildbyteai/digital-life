@@ -7,7 +7,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-SLUG_RE = re.compile(r"^[a-z0-9_]+$")
+SLUG_RE = re.compile(r"^[a-z0-9_-]+$")
 CONTRACT_PATH = "profiles/contracts/skill-contract.json"
 
 REQUIRED_CONTRACT_KEYS = {
@@ -256,6 +256,11 @@ def main() -> int:
                     filename_prefix = Path(relative_path).stem.replace("_demo", "")
                     if skill_slug != filename_prefix:
                         errors.append(f"Example skill '{skill_slug}' doesn't match filename prefix '{filename_prefix}': {relative_path}")
+
+                    # Validate slug format
+                    slug = str(example["slug"])
+                    if not SLUG_RE.match(slug):
+                        errors.append(f"Example 'slug' invalid format: {slug!r}: {relative_path}")
 
                     skill_entry = next((s for s in skills if s.get("slug") == skill_slug), None)
                     if skill_entry:
