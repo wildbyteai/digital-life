@@ -45,11 +45,11 @@ def setup_temp_repo(root: Path, skill_map: dict) -> tuple[Path, dict]:
 class TestSlugValidation(unittest.TestCase):
     def test_valid_slugs(self):
         for slug in ("demo", "test_user", "abc123", "a"):
-            self.assertTrue(pm.validate_slug(slug))
+            self.assertTrue(pm.is_valid_slug(slug))
 
     def test_invalid_slugs(self):
         for slug in ("", "test-user", "Test", "test user", "test@user", "测试"):
-            self.assertFalse(pm.validate_slug(slug))
+            self.assertFalse(pm.is_valid_slug(slug))
 
 
 class TestTimestampRegex(unittest.TestCase):

@@ -146,7 +146,8 @@ def init_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: 
             print(f"Unknown skill: {skill}")
         return 2
 
-    if not validate_slug(slug):
+    if not is_valid_slug(slug):
+        print_slug_error(slug, fmt)
         return 2
 
     json_path, md_path = current_paths(contract, root, skill, slug)
@@ -218,17 +219,24 @@ def init_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: 
     return 0
 
 
-def validate_slug(slug: str) -> bool:
-    """Validate slug format. Returns True if valid."""
-    if not SLUG_RE.match(slug):
-        print(f"Invalid slug format: {slug}. Must match {SLUG_RE.pattern}")
-        return False
-    return True
+def is_valid_slug(slug: str) -> bool:
+    """Check if slug format is valid."""
+    return bool(SLUG_RE.match(slug))
+
+
+def print_slug_error(slug: str, fmt: str) -> None:
+    """Print slug validation error in the appropriate format."""
+    msg = f"Invalid slug format: {slug}. Must match {SLUG_RE.pattern}"
+    if fmt == "json":
+        print(json.dumps({"status": "error", "message": msg}, ensure_ascii=False))
+    else:
+        print(msg)
 
 
 def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None, fmt: str = "text") -> int:
     """Create a history snapshot of the current profile."""
-    if not validate_slug(slug):
+    if not is_valid_slug(slug):
+        print_slug_error(slug, fmt)
         return 2
 
     json_path, md_path = current_paths(contract, root, skill, slug)
@@ -285,7 +293,8 @@ def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -
 
 def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None, fmt: str = "text") -> int:
     """Rollback current profile to a history snapshot."""
-    if not validate_slug(slug):
+    if not is_valid_slug(slug):
+        print_slug_error(slug, fmt)
         return 2
 
     candidates = find_history_candidates(contract, root, skill, slug)
@@ -339,7 +348,8 @@ def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_histo
             print("Refused to delete without --yes.")
         return 2
 
-    if not validate_slug(slug):
+    if not is_valid_slug(slug):
+        print_slug_error(slug, fmt)
         return 2
 
     removed = 0
@@ -381,7 +391,8 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
             print(f"Unknown skill: {skill}")
         return 2
 
-    if not validate_slug(slug):
+    if not is_valid_slug(slug):
+        print_slug_error(slug, fmt)
         return 2
 
     json_path, md_path = current_paths(contract, root, skill, slug)
