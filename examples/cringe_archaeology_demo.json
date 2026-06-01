@@ -1,0 +1,108 @@
+{
+  "skill": "cringe_archaeology",
+  "version": 1,
+  "slug": "demo-xu",
+  "updated_at": "2026-04-01T14:30:00+08:00",
+  "confidence": "high",
+  "source_summary": {
+    "input_modes": [
+      "text",
+      "browser"
+    ],
+    "platforms_scanned": [
+      "qq_zones",
+      "weibo"
+    ],
+    "evidence_count": 8,
+    "notes": "演示样例，仅展示脱敏后的社死分析"
+  },
+  "persona": {
+    "layer0_rules": [
+      "每条内容必须同时打社死指数和本真指数",
+      "面具转折点必须用具体时间和事件锚定",
+      "温暖的毒舌≠嘲笑——指出尴尬的同时必须指出真实",
+      "引用用户原文，不概括、不替换"
+    ],
+    "layer1_identity": {
+      "alias": "小许",
+      "primary_platform": "qq_zones",
+      "years_active": 12
+    },
+    "layer2_expression": {
+      "before_mask": "想说就说，爱用感叹号和省略号，转发心灵鸡汤",
+      "after_mask": "克制、短句、偶尔发风景照配一个emoji",
+      "style_shift": "从'啊啊啊太开心了！！！'到'还行吧'"
+    },
+    "layer3_decision_model": {
+      "mask_turning_point": "2014年春天，一条动态被同学截图群发嘲笑",
+      "social_pressure_sources": [
+        "同龄人的成熟化压力",
+        "被截图经历带来的自我审查"
+      ]
+    },
+    "layer4_boundaries": {
+      "taboos": [
+        "不再公开写情绪化内容",
+        "不再公开表达对具体人的喜欢"
+      ],
+      "emotion_triggers": [
+        "看到自己旧帖会本能想删"
+      ]
+    }
+  },
+  "top_cringe": [
+    {
+      "excerpt": "莪旳丗堺裏洧伱就夠了♡",
+      "platform": "qq_zones",
+      "year": 2011,
+      "cringe_score": 96,
+      "authenticity_score": 93,
+      "interpretation": "你当时真的在爱一个人，爱到不在乎标点符号"
+    },
+    {
+      "excerpt": "今天被人说了一句话，哭了很久，为什么那么疼啊",
+      "platform": "qq_zones",
+      "year": 2012,
+      "cringe_score": 82,
+      "authenticity_score": 95,
+      "interpretation": "你允许自己痛，并且把痛说出来——现在你还允许吗？"
+    },
+    {
+      "excerpt": "如果你知道我在说你，那你知道。如果你不知道，那就算了。",
+      "platform": "weibo",
+      "year": 2013,
+      "cringe_score": 75,
+      "authenticity_score": 91,
+      "interpretation": "被转发 0 次、评论 0 条、点赞 1 个。但你还是发了。"
+    },
+    {
+      "excerpt": "分享了《真正爱你的人会做的10件事》",
+      "platform": "qq_zones",
+      "year": 2012,
+      "cringe_score": 65,
+      "authenticity_score": 40,
+      "interpretation": "你当时真的相信这些判据——现在你什么标准都不信了"
+    },
+    {
+      "excerpt": "加油！明天一定会更好的！💪",
+      "platform": "weibo",
+      "year": 2013,
+      "cringe_score": 55,
+      "authenticity_score": 60,
+      "interpretation": "你在认真鼓励自己——现在你连'加油'都懒得说了"
+    }
+  ],
+  "mask_turning_point": {
+    "period": "2014年春",
+    "trigger": "一条深夜动态被同学截图转发到班级群，引发嘲笑。之后三个月发帖频率下降 70%",
+    "before": "想说就说，感叹号密度高，情绪不过滤",
+    "after": "克制、短句、发之前先想'会不会被截图'"
+  },
+  "lost_things": [
+    "你不再用感叹号了——曾经一条动态能有 5 个",
+    "你不再公开说'喜欢'——连食物都只说'还行'",
+    "你不再转发任何东西——怕暴露审美和判断力"
+  ],
+  "existential_question": "你上一次在网上毫无保留地表达喜欢一个东西，是什么时候？",
+  "corrections": []
+}
