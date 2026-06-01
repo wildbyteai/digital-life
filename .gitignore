@@ -5,3 +5,5 @@ profiles/*.md
 !profiles/README.md
 profiles/history/*
 !profiles/history/.gitkeep
+*.png
+topify_screenshots*/
