@@ -229,6 +229,19 @@ class TestInitEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_init_missing_template(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            # Remove the template file
+            template_path = tmp / "profiles" / "templates" / "past_life.json"
+            template_path.unlink()
+            code = pm.init_profile(contract, sm, tmp, "past_life", "miss", False)
+            self.assertEqual(code, 2)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestSnapshotEdgeCases(unittest.TestCase):
     def test_snapshot_missing_profile(self):
