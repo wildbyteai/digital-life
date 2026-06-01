@@ -152,7 +152,16 @@ def init_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: 
         return 2
 
     template_path = root / skill_map[skill]["template_path"]
-    template = load_json(template_path)
+    if not template_path.exists():
+        print(f"Template not found: {template_path}")
+        return 2
+
+    try:
+        template = load_json(template_path)
+    except json.JSONDecodeError as exc:
+        print(f"Invalid template JSON: {exc}")
+        return 2
+
     template["skill"] = skill
     template["slug"] = slug
     template["updated_at"] = now_iso()
@@ -160,7 +169,7 @@ def init_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: 
         template["version"] = 1
     if "corrections" not in template or not isinstance(template["corrections"], list):
         template["corrections"] = []
-    if "confidence" not in template:
+    if "confidence" not in template or template["confidence"] not in ("high", "medium", "low"):
         template["confidence"] = "low"
     if "source_summary" not in template or not isinstance(template["source_summary"], dict):
         template["source_summary"] = {
@@ -168,6 +177,11 @@ def init_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: 
             "evidence_count": 0,
             "notes": "初始化自动生成，尚未填入真实数据",
         }
+    # Clean template placeholder values
+    if template.get("updated_at") == "{ISO8601}":
+        template["updated_at"] = now_iso()
+    if template.get("slug") == "{slug}":
+        template["slug"] = slug
 
     dump_json(json_path, template)
     md_title = skill_map[skill].get("display_name", skill)
