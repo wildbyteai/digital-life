@@ -126,12 +126,20 @@ def print_rows(rows: List[Tuple[str, str, str, str]]) -> None:
         print(fmt.format(*row))
 
 
-def list_profiles(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str | None) -> int:
+def list_profiles(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str | None, fmt: str) -> int:
     """List current profiles, optionally filtered by skill."""
     rows = discover_current_profiles(contract, skill_map, root)
     if skill:
         rows = [r for r in rows if r[0] == skill]
-    print_rows(rows)
+
+    if fmt == "json":
+        entries = [
+            {"skill": r[0], "slug": r[1], "updated_at": r[2], "status": r[3]}
+            for r in rows
+        ]
+        print(json.dumps(entries, ensure_ascii=False, indent=2))
+    else:
+        print_rows(rows)
     return 0
 
 
@@ -398,6 +406,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_list = sub.add_parser("list", help="List current profiles.")
     p_list.add_argument("--skill", help="Filter by skill slug.")
+    p_list.add_argument("--format", choices=["table", "json"], default="table", help="Output format.")
 
     p_init = sub.add_parser("init", help="Initialize a profile from template.")
     p_init.add_argument("--skill", required=True)
@@ -443,7 +452,7 @@ def main() -> int:
         return 1
 
     if args.command == "list":
-        return list_profiles(contract, skill_map, root, args.skill)
+        return list_profiles(contract, skill_map, root, args.skill, args.format)
     if args.command == "init":
         return init_profile(contract, skill_map, root, args.skill, args.slug, args.force)
     if args.command == "snapshot":
