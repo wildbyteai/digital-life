@@ -1928,6 +1928,20 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_layer0_too_few_rules(self):
+        """Validation should fail when layer0 has too few rules."""
+        root = Path(__file__).resolve().parent.parent
+        vs = importlib.import_module("validate-skill")
+        # Check that all layer0 files have at least 3 bullet points
+        contract_path = root / "profiles" / "contracts" / "skill-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        for skill in contract["skills"]:
+            layer0_path = root / skill["layer0_path"]
+            if layer0_path.exists():
+                content = layer0_path.read_text(encoding="utf-8")
+                bullet_count = sum(1 for line in content.splitlines() if line.strip().startswith("- "))
+                self.assertGreaterEqual(bullet_count, 3, f"Layer0 file {skill['layer0_path']} has too few rules")
+
 
 class TestBuildParser(unittest.TestCase):
     """Test build_parser argument parser configuration."""
