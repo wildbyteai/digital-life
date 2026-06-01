@@ -84,7 +84,7 @@ def read_updated_at(path: Path) -> str:
     """Read the updated_at field from a profile JSON file."""
     try:
         payload = load_json(path)
-    except Exception:
+    except (FileNotFoundError, json.JSONDecodeError):
         return "-"
     return str(payload.get("updated_at", "-"))
 
