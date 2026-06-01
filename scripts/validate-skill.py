@@ -199,6 +199,10 @@ def main() -> int:
                 errors.append(f"Layer0 file missing section headers: {item['layer0_path']}")
             if len(layer0_content.strip()) < 100:
                 errors.append(f"Layer0 file seems too short (< 100 chars): {item['layer0_path']}")
+            # Check for bullet points indicating rules
+            bullet_count = sum(1 for line in layer0_content.splitlines() if line.strip().startswith("- "))
+            if bullet_count < 3:
+                errors.append(f"Layer0 file has too few rules (< 3 bullet points): {item['layer0_path']}")
 
         template_path = root / str(item["template_path"])
         if template_path.exists():
