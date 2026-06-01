@@ -2283,6 +2283,26 @@ class TestValidateSkillEdgeCases(unittest.TestCase):
             self.assertIsInstance(required, list)
             self.assertGreater(len(required), 0, f"Skill {skill['slug']} has empty required_top_level_keys")
 
+    def test_gitignore_rules_present(self):
+        """All required gitignore rules should be present."""
+        root = Path(__file__).resolve().parent.parent
+        vs = importlib.import_module("validate-skill")
+        gitignore_path = root / ".gitignore"
+        if gitignore_path.exists():
+            lines = gitignore_path.read_text(encoding="utf-8").splitlines()
+            for rule in vs.GITIGNORE_RULES:
+                self.assertIn(rule, lines, f".gitignore missing rule: {rule}")
+
+    def test_gitattributes_rules_present(self):
+        """All required gitattributes rules should be present."""
+        root = Path(__file__).resolve().parent.parent
+        vs = importlib.import_module("validate-skill")
+        gitattributes_path = root / ".gitattributes"
+        if gitattributes_path.exists():
+            lines = gitattributes_path.read_text(encoding="utf-8").splitlines()
+            for rule in vs.GITATTRIBUTES_RULES:
+                self.assertIn(rule, lines, f".gitattributes missing rule: {rule}")
+
 
 class TestBuildParser(unittest.TestCase):
     """Test build_parser argument parser configuration."""
