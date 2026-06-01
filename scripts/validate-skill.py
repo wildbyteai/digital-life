@@ -54,6 +54,12 @@ GITIGNORE_RULES = [
     "!profiles/history/.gitkeep",
 ]
 
+GITATTRIBUTES_RULES = [
+    "* text=auto",
+    "*.md text eol=lf",
+    "*.json text eol=lf",
+]
+
 
 def main() -> int:
     root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent
@@ -189,6 +195,13 @@ def main() -> int:
         for rule in GITIGNORE_RULES:
             if rule not in gitignore_lines:
                 errors.append(f".gitignore missing rule: {rule}")
+
+    gitattributes_path = root / ".gitattributes"
+    if gitattributes_path.exists():
+        gitattributes_lines = gitattributes_path.read_text(encoding="utf-8").splitlines()
+        for rule in GITATTRIBUTES_RULES:
+            if rule not in gitattributes_lines:
+                errors.append(f".gitattributes missing rule: {rule}")
 
     if errors:
         print("Validation failed:")
