@@ -985,6 +985,29 @@ class TestHelperFunctions(unittest.TestCase):
             candidates = pm.find_history_candidates(contract, Path(tmp), "past_life", "ghost")
             self.assertEqual(candidates, [])
 
+    def test_discover_current_profiles_empty(self):
+        root = Path(__file__).resolve().parent.parent
+        contract, skill_map = pm.load_contract(root)
+        with tempfile.TemporaryDirectory() as tmp:
+            rows = pm.discover_current_profiles(contract, skill_map, Path(tmp))
+            self.assertEqual(rows, [])
+
+    def test_discover_current_profiles_multiple(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "a", False)
+            pm.init_profile(contract, sm, tmp, "epitaph", "b", False)
+            pm.init_profile(contract, sm, tmp, "past_life", "c", False)
+            rows = pm.discover_current_profiles(contract, sm, tmp)
+            self.assertEqual(len(rows), 3)
+            skills = [r[0] for r in rows]
+            self.assertEqual(skills.count("past_life"), 2)
+            self.assertEqual(skills.count("epitaph"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_find_history_candidates_with_data(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
