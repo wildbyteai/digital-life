@@ -548,6 +548,28 @@ class TestHelperFunctions(unittest.TestCase):
             result = pm.read_updated_at(path)
             self.assertEqual(result, "2026-01-01T12:00:00+08:00")
 
+    def test_find_history_candidates_empty(self):
+        root = Path(__file__).resolve().parent.parent
+        contract, _ = pm.load_contract(root)
+        with tempfile.TemporaryDirectory() as tmp:
+            candidates = pm.find_history_candidates(contract, Path(tmp), "past_life", "ghost")
+            self.assertEqual(candidates, [])
+
+    def test_find_history_candidates_with_data(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "fhc", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "fhc", "2026-01-01T100000+0800")
+            pm.snapshot_profile(contract, tmp, "past_life", "fhc", "2026-02-01T100000+0800")
+            candidates = pm.find_history_candidates(contract, tmp, "past_life", "fhc")
+            self.assertEqual(len(candidates), 2)
+            self.assertEqual(candidates[0][0], "2026-01-01T100000+0800")
+            self.assertEqual(candidates[1][0], "2026-02-01T100000+0800")
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestDoctorEdgeCases(unittest.TestCase):
     def test_doctor_json_with_failures(self):
