@@ -1031,6 +1031,21 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_medium_confidence(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "med_conf", False)
+            json_path = tmp / "profiles" / "past_life_med_conf.json"
+            payload = pm.load_json(json_path)
+            payload["confidence"] = "medium"
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "med_conf")
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_high_confidence(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
