@@ -610,6 +610,15 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
                             print(msg)
                         failed += 1
 
+        # Validate corrections is list
+        if "corrections" in template and not isinstance(template["corrections"], list):
+            msg = f"Template {item['template_path']} 'corrections' must be list"
+            if fmt == "json":
+                errors.append(msg)
+            else:
+                print(msg)
+            failed += 1
+
     # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
     profiles_checked = 0
