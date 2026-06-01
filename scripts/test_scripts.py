@@ -1373,6 +1373,35 @@ class TestLoadContract(unittest.TestCase):
         for slug in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
             self.assertIn(slug, skill_map)
 
+    def test_load_contract_duplicate_slug(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            # Add a duplicate skill entry
+            contract_path = tmp / "profiles" / "contracts" / "skill-contract.json"
+            contract_data = json.loads(contract_path.read_text(encoding="utf-8"))
+            contract_data["skills"].append(contract_data["skills"][0])
+            contract_path.write_text(json.dumps(contract_data, ensure_ascii=False, indent=2), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                pm.load_contract(tmp)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_load_contract_missing_slug(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            contract_path = tmp / "profiles" / "contracts" / "skill-contract.json"
+            contract_data = json.loads(contract_path.read_text(encoding="utf-8"))
+            del contract_data["skills"][0]["slug"]
+            contract_path.write_text(json.dumps(contract_data, ensure_ascii=False, indent=2), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                pm.load_contract(tmp)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestInitAndValidate(unittest.TestCase):
     def test_init_and_validate(self):
