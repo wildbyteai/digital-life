@@ -367,6 +367,12 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
         if "persona" in payload and not isinstance(payload["persona"], dict):
             errors.append("'persona' must be an object")
 
+        if "existential_question" in payload and not isinstance(payload["existential_question"], str):
+            errors.append("'existential_question' must be a string")
+
+        if "existential_questions" in payload and not isinstance(payload["existential_questions"], list):
+            errors.append("'existential_questions' must be a list")
+
         if "version" in payload and not isinstance(payload["version"], int):
             errors.append(f"'version' must be an integer, got: {type(payload['version']).__name__}")
 
