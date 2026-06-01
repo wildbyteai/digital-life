@@ -134,6 +134,40 @@ class TestInitEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_init_invalid_slug_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.init_profile(contract, sm, tmp, "past_life", "bad slug", False, "json")
+            self.assertEqual(code, 2)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "error")
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_init_existing_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "dup", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.init_profile(contract, sm, tmp, "past_life", "dup", False, "json")
+            self.assertEqual(code, 2)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "error")
+            self.assertIn("already exists", result["message"])
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestSnapshotEdgeCases(unittest.TestCase):
     def test_snapshot_missing_profile(self):
