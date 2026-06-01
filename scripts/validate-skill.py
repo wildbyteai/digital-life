@@ -254,6 +254,10 @@ def main() -> int:
                         for layer in REQUIRED_PERSONA_LAYERS:
                             if layer not in persona:
                                 errors.append(f"Example persona missing '{layer}': {relative_path}")
+                            elif isinstance(persona[layer], dict) and not persona[layer]:
+                                errors.append(f"Example persona '{layer}' is empty dict: {relative_path}")
+                            elif isinstance(persona[layer], list) and not persona[layer]:
+                                errors.append(f"Example persona '{layer}' is empty list: {relative_path}")
 
                     # Validate confidence value in example
                     if "confidence" in example:
