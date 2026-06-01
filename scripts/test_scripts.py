@@ -703,6 +703,38 @@ class TestValidateSkill(unittest.TestCase):
         vs = importlib.import_module("validate-skill")
         self.assertEqual(len(vs.REQUIRED_PERSONA_LAYERS), 5)
 
+    def test_naming_keys_defined(self):
+        """REQUIRED_NAMING_KEYS should have exactly 4 keys."""
+        vs = importlib.import_module("validate-skill")
+        self.assertEqual(len(vs.REQUIRED_NAMING_KEYS), 4)
+
+    def test_example_json_files_defined(self):
+        """EXAMPLE_JSON_FILES should have exactly 5 files."""
+        vs = importlib.import_module("validate-skill")
+        self.assertEqual(len(vs.EXAMPLE_JSON_FILES), 5)
+
+    def test_gitignore_rules_defined(self):
+        """GITIGNORE_RULES should be non-empty."""
+        vs = importlib.import_module("validate-skill")
+        self.assertTrue(len(vs.GITIGNORE_RULES) > 0)
+
+    def test_gitattributes_rules_defined(self):
+        """GITATTRIBUTES_RULES should be non-empty."""
+        vs = importlib.import_module("validate-skill")
+        self.assertTrue(len(vs.GITATTRIBUTES_RULES) > 0)
+
+    def test_slug_re_matches_valid(self):
+        """SLUG_RE should match valid slugs."""
+        vs = importlib.import_module("validate-skill")
+        for slug in ("past_life", "demo-wei", "abc123"):
+            self.assertRegex(slug, vs.SLUG_RE)
+
+    def test_slug_re_rejects_invalid(self):
+        """SLUG_RE should reject invalid slugs."""
+        vs = importlib.import_module("validate-skill")
+        for slug in ("", "Test", "test user", "test@user"):
+            self.assertNotRegex(slug, vs.SLUG_RE)
+
 
 if __name__ == "__main__":
     unittest.main()
