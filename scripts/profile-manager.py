@@ -207,19 +207,25 @@ def validate_slug(slug: str) -> bool:
     return True
 
 
-def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None) -> int:
+def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None, fmt: str = "text") -> int:
     """Create a history snapshot of the current profile."""
     if not validate_slug(slug):
         return 2
 
     json_path, md_path = current_paths(contract, root, skill, slug)
     if not json_path.exists() or not md_path.exists():
-        print("Current profile files not found. Snapshot aborted.")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": "Current profile files not found"}, ensure_ascii=False))
+        else:
+            print("Current profile files not found. Snapshot aborted.")
         return 2
 
     ts = timestamp or now_timestamp()
     if not TIMESTAMP_RE.match(ts):
-        print("Invalid timestamp format. Expected: YYYY-MM-DDTHHMMSS+0800")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": "Invalid timestamp format"}, ensure_ascii=False))
+        else:
+            print("Invalid timestamp format. Expected: YYYY-MM-DDTHHMMSS+0800")
         return 2
 
     h_root = history_root(contract, root)
@@ -230,8 +236,15 @@ def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestam
     shutil.copy2(json_path, history_json)
     shutil.copy2(md_path, history_md)
 
-    print(f"Snapshot created: {history_json.name}")
-    print(f"Snapshot created: {history_md.name}")
+    if fmt == "json":
+        print(json.dumps({
+            "status": "ok",
+            "timestamp": ts,
+            "files": [history_json.name, history_md.name],
+        }, ensure_ascii=False, indent=2))
+    else:
+        print(f"Snapshot created: {history_json.name}")
+        print(f"Snapshot created: {history_md.name}")
     return 0
 
 
@@ -525,6 +538,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_snapshot.add_argument("--skill", required=True, help="Skill slug.")
     p_snapshot.add_argument("--slug", required=True, help="Profile slug.")
     p_snapshot.add_argument("--timestamp", help="Override timestamp with YYYY-MM-DDTHHMMSS+0800.")
+    p_snapshot.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
 
     p_rollback = sub.add_parser("rollback", help="Rollback current profile from history snapshot.")
     p_rollback.add_argument("--skill", required=True, help="Skill slug.")
@@ -563,7 +577,7 @@ def main() -> int:
     if args.command == "init":
         return init_profile(contract, skill_map, root, args.skill, args.slug, args.force)
     if args.command == "snapshot":
-        return snapshot_profile(contract, root, args.skill, args.slug, args.timestamp)
+        return snapshot_profile(contract, root, args.skill, args.slug, args.timestamp, args.format)
     if args.command == "rollback":
         return rollback_profile(contract, root, args.skill, args.slug, args.timestamp)
     if args.command == "delete":
