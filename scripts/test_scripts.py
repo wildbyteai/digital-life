@@ -251,5 +251,42 @@ class TestDoctor(unittest.TestCase):
             shutil.rmtree(tmp)
 
 
+class TestValidateSkill(unittest.TestCase):
+    """Test validate-skill.py against the real repo."""
+
+    def test_validate_real_repo(self):
+        """validate-skill.py should pass on the real repo."""
+        root = Path(__file__).resolve().parent.parent
+        vs = importlib.import_module("validate-skill")
+        code = vs.main.__code__
+        # Run with the real root
+        import unittest.mock
+        with unittest.mock.patch("sys.argv", ["validate-skill", str(root)]):
+            result = vs.main()
+        self.assertEqual(result, 0)
+
+    def test_required_root_files_exist(self):
+        """All REQUIRED_ROOT_FILES should exist."""
+        root = Path(__file__).resolve().parent.parent
+        vs = importlib.import_module("validate-skill")
+        for rel_path in vs.REQUIRED_ROOT_FILES:
+            self.assertTrue((root / rel_path).exists(), f"Missing: {rel_path}")
+
+    def test_contract_keys_defined(self):
+        """REQUIRED_CONTRACT_KEYS should be non-empty."""
+        vs = importlib.import_module("validate-skill")
+        self.assertTrue(len(vs.REQUIRED_CONTRACT_KEYS) > 0)
+
+    def test_template_fields_defined(self):
+        """REQUIRED_TEMPLATE_FIELDS should be non-empty."""
+        vs = importlib.import_module("validate-skill")
+        self.assertTrue(len(vs.REQUIRED_TEMPLATE_FIELDS) > 0)
+
+    def test_persona_layers_defined(self):
+        """REQUIRED_PERSONA_LAYERS should have exactly 5 layers."""
+        vs = importlib.import_module("validate-skill")
+        self.assertEqual(len(vs.REQUIRED_PERSONA_LAYERS), 5)
+
+
 if __name__ == "__main__":
     unittest.main()
