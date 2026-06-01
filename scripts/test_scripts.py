@@ -1316,6 +1316,18 @@ class TestHelperFunctions(unittest.TestCase):
             pm._report("test error", "json", None)
         self.assertIn("test error", buf.getvalue())
 
+    def test_report_empty_message(self):
+        errors: list[str] = []
+        pm._report("", "json", errors)
+        self.assertEqual(errors, [""])
+
+    def test_report_multiple_messages(self):
+        errors: list[str] = []
+        pm._report("error 1", "json", errors)
+        pm._report("error 2", "json", errors)
+        pm._report("error 3", "json", errors)
+        self.assertEqual(errors, ["error 1", "error 2", "error 3"])
+
 
 class TestDoctorEdgeCases(unittest.TestCase):
     def test_doctor_json_with_failures(self):
