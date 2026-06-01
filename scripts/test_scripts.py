@@ -344,6 +344,19 @@ class TestInitEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_init_all_skills(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+                code = pm.init_profile(contract, sm, tmp, skill, "test_all", False)
+                self.assertEqual(code, 0)
+                json_path = tmp / "profiles" / f"{skill}_test_all.json"
+                self.assertTrue(json_path.exists())
+        finally:
+            shutil.rmtree(tmp)
+
     def test_init_slug_starting_with_hyphen(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
