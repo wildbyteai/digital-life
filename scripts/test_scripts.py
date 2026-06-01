@@ -1031,6 +1031,22 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_empty_existential_questions(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "epitaph", "empty_eqs", False)
+            json_path = tmp / "profiles" / "epitaph_empty_eqs.json"
+            payload = pm.load_json(json_path)
+            payload["existential_questions"] = []
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "epitaph", "empty_eqs")
+            # Empty list is valid list type
+            self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_empty_existential_question(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
