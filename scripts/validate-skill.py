@@ -251,6 +251,10 @@ def main() -> int:
             elif has_questions and not isinstance(template["existential_questions"], list):
                 errors.append(f"Template 'existential_questions' must be a list: {template_path.as_posix()}")
 
+            # Validate corrections is empty list in template
+            if "corrections" in template and isinstance(template["corrections"], list) and template["corrections"]:
+                errors.append(f"Template 'corrections' should be empty list: {template_path.as_posix()}")
+
             if isinstance(required_keys, list):
                 for key in required_keys:
                     if key not in template:
