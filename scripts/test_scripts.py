@@ -252,7 +252,7 @@ class TestDoctor(unittest.TestCase):
 
 
 class TestValidateJsonOutput(unittest.TestCase):
-    """Test validate command JSON output format."""
+    """Test validate and doctor JSON output format."""
 
     def test_validate_json_ok(self):
         root = Path(__file__).resolve().parent.parent
@@ -269,6 +269,43 @@ class TestValidateJsonOutput(unittest.TestCase):
             result = json.loads(buf.getvalue())
             self.assertEqual(result["status"], "ok")
             self.assertEqual(result["profile"], "past_life_vjson")
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_doctor_json_empty(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["templates_checked"], 5)
+            self.assertEqual(result["profiles_checked"], 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_doctor_json_with_profiles(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "djson", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["templates_checked"], 5)
+            self.assertEqual(result["profiles_checked"], 1)
         finally:
             shutil.rmtree(tmp)
 

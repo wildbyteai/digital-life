@@ -468,7 +468,15 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
     profiles_checked = 0
     if rows:
         for skill, slug, _, _ in rows:
-            code = validate_profile(contract, skill_map, root, skill, slug)
+            # In JSON mode, suppress validate_profile text output
+            if fmt == "json":
+                import io
+                from contextlib import redirect_stdout
+                buf = io.StringIO()
+                with redirect_stdout(buf):
+                    code = validate_profile(contract, skill_map, root, skill, slug)
+            else:
+                code = validate_profile(contract, skill_map, root, skill, slug)
             if code != 0:
                 failed += 1
                 errors.append(f"Validation failed: {skill}_{slug}")
