@@ -664,6 +664,19 @@ class TestRollbackEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_rollback_all_skills(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+                pm.init_profile(contract, sm, tmp, skill, "rb_all", False)
+                pm.snapshot_profile(contract, tmp, skill, "rb_all", "2026-01-01T100000+0800")
+                code = pm.rollback_profile(contract, tmp, skill, "rb_all", "2026-01-01T100000+0800")
+                self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestDeleteEdgeCases(unittest.TestCase):
     def test_delete_with_history(self):
