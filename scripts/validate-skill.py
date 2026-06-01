@@ -168,6 +168,9 @@ def main() -> int:
             if "updated_at" not in template:
                 errors.append(f"Template missing 'updated_at' field: {template_path.as_posix()}")
 
+            if "confidence" not in template:
+                errors.append(f"Template missing 'confidence' field: {template_path.as_posix()}")
+
             if "version" not in template:
                 errors.append(f"Template missing 'version' field: {template_path.as_posix()}")
 
