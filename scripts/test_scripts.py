@@ -963,6 +963,21 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_invalid_existential_questions_type(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "epitaph", "bad_eqs", False)
+            json_path = tmp / "profiles" / "epitaph_bad_eqs.json"
+            payload = pm.load_json(json_path)
+            payload["existential_questions"] = "not a list"  # Should be list
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "epitaph", "bad_eqs")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_validate_multiple_errors(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
