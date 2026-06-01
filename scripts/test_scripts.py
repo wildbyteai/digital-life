@@ -2463,6 +2463,23 @@ class TestDoctorEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_doctor_profile_all_fields_valid(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "valid_doc", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "json")
+            self.assertEqual(code, 0)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "ok")
+        finally:
+            shutil.rmtree(tmp)
+
     def test_doctor_multiple_template_failures(self):
         root = Path(__file__).resolve().parent.parent
         _, skill_map = pm.load_contract(root)
