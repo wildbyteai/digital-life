@@ -285,6 +285,41 @@ class TestRollbackEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_rollback_no_history_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "nhj", False)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.rollback_profile(contract, tmp, "past_life", "nhj", None, "json")
+            self.assertEqual(code, 2)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "error")
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_rollback_nonexistent_timestamp_json(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "rbj", False)
+            pm.snapshot_profile(contract, tmp, "past_life", "rbj", "2026-01-01T100000+0800")
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.rollback_profile(contract, tmp, "past_life", "rbj", "2099-01-01T000000+0000", "json")
+            self.assertEqual(code, 2)
+            result = json.loads(buf.getvalue())
+            self.assertEqual(result["status"], "error")
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestDeleteEdgeCases(unittest.TestCase):
     def test_delete_with_history(self):
