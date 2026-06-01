@@ -575,6 +575,21 @@ class TestValidateEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_validate_invalid_confidence(self):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        try:
+            pm.init_profile(contract, sm, tmp, "past_life", "bad_conf", False)
+            json_path = tmp / "profiles" / "past_life_bad_conf.json"
+            payload = pm.load_json(json_path)
+            payload["confidence"] = "invalid"
+            pm.dump_json(json_path, payload)
+            code = pm.validate_profile(contract, sm, tmp, "past_life", "bad_conf")
+            self.assertEqual(code, 1)
+        finally:
+            shutil.rmtree(tmp)
+
 
 class TestListEdgeCases(unittest.TestCase):
     def test_list_filtered_by_skill(self):
