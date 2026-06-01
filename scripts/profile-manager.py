@@ -106,6 +106,7 @@ def discover_current_profiles(contract: dict, skill_map: Dict[str, dict], root: 
 
 
 def print_rows(rows: List[Tuple[str, str, str, str]]) -> None:
+    """Print profile rows in a formatted table."""
     if not rows:
         print("No current profile files found in profiles/ root.")
         return
@@ -126,6 +127,7 @@ def print_rows(rows: List[Tuple[str, str, str, str]]) -> None:
 
 
 def list_profiles(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str | None) -> int:
+    """List current profiles, optionally filtered by skill."""
     rows = discover_current_profiles(contract, skill_map, root)
     if skill:
         rows = [r for r in rows if r[0] == skill]
@@ -134,6 +136,7 @@ def list_profiles(contract: dict, skill_map: Dict[str, dict], root: Path, skill:
 
 
 def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str, slug: str, force: bool) -> int:
+    """Initialize a new profile from template."""
     if skill not in skill_map:
         print(f"Unknown skill: {skill}")
         return 2
@@ -181,6 +184,7 @@ def validate_slug(slug: str) -> bool:
 
 
 def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None) -> int:
+    """Create a history snapshot of the current profile."""
     if not validate_slug(slug):
         return 2
 
@@ -208,6 +212,7 @@ def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestam
 
 
 def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -> List[Tuple[str, Path, Path]]:
+    """Find all history snapshots for a given skill and slug."""
     h_root = history_root(contract, root)
     candidates: List[Tuple[str, Path, Path]] = []
 
@@ -223,6 +228,7 @@ def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -
 
 
 def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None) -> int:
+    """Rollback current profile to a history snapshot."""
     if not validate_slug(slug):
         return 2
 
@@ -257,6 +263,7 @@ def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestam
 
 
 def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_history: bool, yes: bool) -> int:
+    """Delete current profile and optionally its history snapshots."""
     if not yes:
         print("Refused to delete without --yes.")
         return 2
@@ -285,6 +292,7 @@ def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_histo
 
 
 def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str, slug: str) -> int:
+    """Validate a single profile against its template and contract."""
     if skill not in skill_map:
         print(f"Unknown skill: {skill}")
         return 2
@@ -349,6 +357,7 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
 
 
 def doctor(contract: dict, skill_map: Dict[str, dict], root: Path) -> int:
+    """Validate all current profiles in profiles/ root."""
     rows = discover_current_profiles(contract, skill_map, root)
     if not rows:
         print("No current profiles found. Nothing to validate.")
