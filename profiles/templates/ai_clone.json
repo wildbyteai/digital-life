@@ -36,8 +36,16 @@
     }
   },
   "similarity_score": 0,
-  "public_persona": {},
-  "private_persona": {},
+  "public_persona": {
+    "speech_style": "",
+    "core_strategy": "",
+    "typical_phrases": []
+  },
+  "private_persona": {
+    "speech_style": "",
+    "core_need": "",
+    "typical_phrases": []
+  },
   "existential_question": "",
   "corrections": []
 }

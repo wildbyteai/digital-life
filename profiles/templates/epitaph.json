@@ -15,11 +15,13 @@
     "layer0_rules": [],
     "layer1_identity": {
       "alias": "",
+      "primary_platform": "",
       "life_status": ""
     },
     "layer2_expression": {
       "how_the_user_describes_themself": "",
-      "how_others_might_describe_them": ""
+      "how_others_might_describe_them": "",
+      "typical_phrases": []
     },
     "layer3_decision_model": {
       "proudest_choice": "",

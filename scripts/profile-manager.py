@@ -7,11 +7,10 @@ import re
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{6}[+-]\d{4}$")
-SLUG_RE = re.compile(r"^[a-z0-9_]+$")
+SLUG_RE = re.compile(r"^[a-z0-9_-]+$")
 
 
 def repo_root() -> Path:
@@ -44,13 +43,13 @@ def now_timestamp() -> str:
     return datetime.now().astimezone().strftime("%Y-%m-%dT%H%M%S%z")
 
 
-def load_contract(root: Path) -> Tuple[dict, Dict[str, dict]]:
+def load_contract(root: Path) -> tuple[dict, dict[str, dict]]:
     """Load skill-contract.json and build a slug-to-skill mapping."""
     contract_path = root / "profiles" / "contracts" / "skill-contract.json"
     contract = load_json(contract_path)
 
     skills = contract.get("skills", [])
-    skill_map: Dict[str, dict] = {}
+    skill_map: dict[str, dict] = {}
     for item in skills:
         slug = item.get("slug")
         if not slug:
@@ -71,7 +70,7 @@ def history_root(contract: dict, root: Path) -> Path:
     return root / contract.get("history_root", "profiles/history")
 
 
-def current_paths(contract: dict, root: Path, skill: str, slug: str) -> Tuple[Path, Path]:
+def current_paths(contract: dict, root: Path, skill: str, slug: str) -> tuple[Path, Path]:
     """Return (json_path, md_path) for the current profile."""
     p_root = profile_root(contract, root)
     return (
@@ -89,10 +88,10 @@ def read_updated_at(path: Path) -> str:
     return str(payload.get("updated_at", "-"))
 
 
-def discover_current_profiles(contract: dict, skill_map: Dict[str, dict], root: Path) -> List[Tuple[str, str, str, str]]:
+def discover_current_profiles(contract: dict, skill_map: dict[str, dict], root: Path) -> list[tuple[str, str, str, str]]:
     """Scan profiles root for current profile files and return (skill, slug, updated_at, status) rows."""
     p_root = profile_root(contract, root)
-    rows: List[Tuple[str, str, str, str]] = []
+    rows: list[tuple[str, str, str, str]] = []
 
     for skill in sorted(skill_map.keys()):
         for json_path in sorted(p_root.glob(f"{skill}_*.json")):
@@ -105,20 +104,15 @@ def discover_current_profiles(contract: dict, skill_map: Dict[str, dict], root: 
     return rows
 
 
-def print_rows(rows: List[Tuple[str, str, str, str]]) -> None:
+def print_rows(rows: list[tuple[str, str, str, str]]) -> None:
     """Print profile rows in a formatted table."""
     if not rows:
         print("No current profile files found in profiles/ root.")
         return
 
     headers = ("skill", "slug", "updated_at", "status")
-    widths = [
-        max(len(headers[0]), max(len(r[0]) for r in rows)),
-        max(len(headers[1]), max(len(r[1]) for r in rows)),
-        max(len(headers[2]), max(len(r[2]) for r in rows)),
-        max(len(headers[3]), max(len(r[3]) for r in rows)),
-    ]
-    fmt = f"{{:<{widths[0]}}}  {{:<{widths[1]}}}  {{:<{widths[2]}}}  {{:<{widths[3]}}}"
+    widths = [max(len(h), max(len(r[i]) for r in rows)) for i, h in enumerate(headers)]
+    fmt = "  ".join(f"{{:<{w}}}" for w in widths)
 
     print(fmt.format(*headers))
     print(fmt.format(*("-" * w for w in widths)))
@@ -126,7 +120,7 @@ def print_rows(rows: List[Tuple[str, str, str, str]]) -> None:
         print(fmt.format(*row))
 
 
-def list_profiles(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str | None, fmt: str) -> int:
+def list_profiles(contract: dict, skill_map: dict[str, dict], root: Path, skill: str | None, fmt: str) -> int:
     """List current profiles, optionally filtered by skill."""
     rows = discover_current_profiles(contract, skill_map, root)
     if skill:
@@ -143,22 +137,44 @@ def list_profiles(contract: dict, skill_map: Dict[str, dict], root: Path, skill:
     return 0
 
 
-def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str, slug: str, force: bool) -> int:
+def init_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: str, slug: str, force: bool, fmt: str = "text") -> int:
     """Initialize a new profile from template."""
     if skill not in skill_map:
-        print(f"Unknown skill: {skill}")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": f"Unknown skill: {skill}"}, ensure_ascii=False))
+        else:
+            print(f"Unknown skill: {skill}")
         return 2
 
-    if not validate_slug(slug):
+    if not is_valid_slug(slug):
+        print_slug_error(slug, fmt)
         return 2
 
     json_path, md_path = current_paths(contract, root, skill, slug)
     if not force and (json_path.exists() or md_path.exists()):
-        print(f"Profile already exists: {json_path.name} / {md_path.name}. Use --force to overwrite.")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": "Profile already exists. Use --force to overwrite."}, ensure_ascii=False))
+        else:
+            print(f"Profile already exists: {json_path.name} / {md_path.name}. Use --force to overwrite.")
         return 2
 
     template_path = root / skill_map[skill]["template_path"]
-    template = load_json(template_path)
+    if not template_path.exists():
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": f"Template not found: {template_path}"}, ensure_ascii=False))
+        else:
+            print(f"Template not found: {template_path}")
+        return 2
+
+    try:
+        template = load_json(template_path)
+    except json.JSONDecodeError as exc:
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": f"Invalid template JSON: {exc}"}, ensure_ascii=False))
+        else:
+            print(f"Invalid template JSON: {exc}")
+        return 2
+
     template["skill"] = skill
     template["slug"] = slug
     template["updated_at"] = now_iso()
@@ -166,7 +182,7 @@ def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: 
         template["version"] = 1
     if "corrections" not in template or not isinstance(template["corrections"], list):
         template["corrections"] = []
-    if "confidence" not in template:
+    if "confidence" not in template or template["confidence"] not in ("high", "medium", "low"):
         template["confidence"] = "low"
     if "source_summary" not in template or not isinstance(template["source_summary"], dict):
         template["source_summary"] = {
@@ -174,6 +190,11 @@ def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: 
             "evidence_count": 0,
             "notes": "初始化自动生成，尚未填入真实数据",
         }
+    # Clean template placeholder values
+    if template.get("updated_at") == "{ISO8601}":
+        template["updated_at"] = now_iso()
+    if template.get("slug") == "{slug}":
+        template["slug"] = slug
 
     dump_json(json_path, template)
     md_title = skill_map[skill].get("display_name", skill)
@@ -186,32 +207,52 @@ def init_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: 
     )
     md_path.write_text(md_payload, encoding="utf-8")
 
-    print(f"Initialized profile: {json_path}")
-    print(f"Initialized report:  {md_path}")
+    if fmt == "json":
+        print(json.dumps({
+            "status": "ok",
+            "json_path": str(json_path),
+            "md_path": str(md_path),
+        }, ensure_ascii=False, indent=2))
+    else:
+        print(f"Initialized profile: {json_path}")
+        print(f"Initialized report:  {md_path}")
     return 0
 
 
-def validate_slug(slug: str) -> bool:
-    """Validate slug format. Returns True if valid."""
-    if not SLUG_RE.match(slug):
-        print(f"Invalid slug format: {slug}. Must match {SLUG_RE.pattern}")
-        return False
-    return True
+def is_valid_slug(slug: str) -> bool:
+    """Check if slug format is valid."""
+    return bool(SLUG_RE.match(slug))
 
 
-def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None) -> int:
+def print_slug_error(slug: str, fmt: str) -> None:
+    """Print slug validation error in the appropriate format."""
+    msg = f"Invalid slug format: {slug}. Must match {SLUG_RE.pattern}"
+    if fmt == "json":
+        print(json.dumps({"status": "error", "message": msg}, ensure_ascii=False))
+    else:
+        print(msg)
+
+
+def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None, fmt: str = "text") -> int:
     """Create a history snapshot of the current profile."""
-    if not validate_slug(slug):
+    if not is_valid_slug(slug):
+        print_slug_error(slug, fmt)
         return 2
 
     json_path, md_path = current_paths(contract, root, skill, slug)
     if not json_path.exists() or not md_path.exists():
-        print("Current profile files not found. Snapshot aborted.")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": "Current profile files not found"}, ensure_ascii=False))
+        else:
+            print("Current profile files not found. Snapshot aborted.")
         return 2
 
     ts = timestamp or now_timestamp()
     if not TIMESTAMP_RE.match(ts):
-        print("Invalid timestamp format. Expected: YYYY-MM-DDTHHMMSS+0800")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": "Invalid timestamp format"}, ensure_ascii=False))
+        else:
+            print("Invalid timestamp format. Expected: YYYY-MM-DDTHHMMSS+0800")
         return 2
 
     h_root = history_root(contract, root)
@@ -222,15 +263,22 @@ def snapshot_profile(contract: dict, root: Path, skill: str, slug: str, timestam
     shutil.copy2(json_path, history_json)
     shutil.copy2(md_path, history_md)
 
-    print(f"Snapshot created: {history_json.name}")
-    print(f"Snapshot created: {history_md.name}")
+    if fmt == "json":
+        print(json.dumps({
+            "status": "ok",
+            "timestamp": ts,
+            "files": [history_json.name, history_md.name],
+        }, ensure_ascii=False, indent=2))
+    else:
+        print(f"Snapshot created: {history_json.name}")
+        print(f"Snapshot created: {history_md.name}")
     return 0
 
 
-def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -> List[Tuple[str, Path, Path]]:
+def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -> list[tuple[str, Path, Path]]:
     """Find all history snapshots for a given skill and slug."""
     h_root = history_root(contract, root)
-    candidates: List[Tuple[str, Path, Path]] = []
+    candidates: list[tuple[str, Path, Path]] = []
 
     for json_path in sorted(h_root.glob(f"{skill}_{slug}_*.json")):
         stem = json_path.stem
@@ -243,14 +291,18 @@ def find_history_candidates(contract: dict, root: Path, skill: str, slug: str) -
     return sorted(candidates, key=lambda x: x[0])
 
 
-def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None) -> int:
+def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestamp: str | None, fmt: str = "text") -> int:
     """Rollback current profile to a history snapshot."""
-    if not validate_slug(slug):
+    if not is_valid_slug(slug):
+        print_slug_error(slug, fmt)
         return 2
 
     candidates = find_history_candidates(contract, root, skill, slug)
     if not candidates:
-        print("No history snapshots found for this profile.")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": "No history snapshots found"}, ensure_ascii=False))
+        else:
+            print("No history snapshots found for this profile.")
         return 2
 
     chosen = None
@@ -260,31 +312,44 @@ def rollback_profile(contract: dict, root: Path, skill: str, slug: str, timestam
                 chosen = item
                 break
         if not chosen:
-            print(f"Snapshot timestamp not found: {timestamp}")
+            if fmt == "json":
+                print(json.dumps({"status": "error", "message": f"Snapshot timestamp not found: {timestamp}"}, ensure_ascii=False))
+            else:
+                print(f"Snapshot timestamp not found: {timestamp}")
             return 2
     else:
         chosen = candidates[-1]
 
     ts, history_json, history_md = chosen
     if not history_md.exists():
-        print(f"History markdown missing for snapshot: {ts}")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": f"History markdown missing for snapshot: {ts}"}, ensure_ascii=False))
+        else:
+            print(f"History markdown missing for snapshot: {ts}")
         return 2
 
     current_json, current_md = current_paths(contract, root, skill, slug)
     shutil.copy2(history_json, current_json)
     shutil.copy2(history_md, current_md)
 
-    print(f"Rolled back profile to snapshot: {ts}")
+    if fmt == "json":
+        print(json.dumps({"status": "ok", "timestamp": ts}, ensure_ascii=False, indent=2))
+    else:
+        print(f"Rolled back profile to snapshot: {ts}")
     return 0
 
 
-def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_history: bool, yes: bool) -> int:
+def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_history: bool, yes: bool, fmt: str = "text") -> int:
     """Delete current profile and optionally its history snapshots."""
     if not yes:
-        print("Refused to delete without --yes.")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "message": "Refused to delete without --yes"}, ensure_ascii=False))
+        else:
+            print("Refused to delete without --yes.")
         return 2
 
-    if not validate_slug(slug):
+    if not is_valid_slug(slug):
+        print_slug_error(slug, fmt)
         return 2
 
     removed = 0
@@ -294,30 +359,44 @@ def delete_profile(contract: dict, root: Path, skill: str, slug: str, with_histo
             path.unlink()
             removed += 1
 
+    history_files = []
     if with_history:
         for _, history_json, history_md in find_history_candidates(contract, root, skill, slug):
             if history_json.exists():
                 history_json.unlink()
                 removed += 1
+                history_files.append(history_json.name)
             if history_md.exists():
                 history_md.unlink()
                 removed += 1
+                history_files.append(history_md.name)
 
-    print(f"Removed files: {removed}")
+    if fmt == "json":
+        print(json.dumps({
+            "status": "ok",
+            "removed": removed,
+            "with_history": with_history,
+        }, ensure_ascii=False, indent=2))
+    else:
+        print(f"Removed files: {removed}")
     return 0
 
 
-def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, skill: str, slug: str) -> int:
+def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, skill: str, slug: str, fmt: str = "text") -> int:
     """Validate a single profile against its template and contract."""
     if skill not in skill_map:
-        print(f"Unknown skill: {skill}")
+        if fmt == "json":
+            print(json.dumps({"status": "error", "errors": [f"Unknown skill: {skill}"]}, ensure_ascii=False))
+        else:
+            print(f"Unknown skill: {skill}")
         return 2
 
-    if not validate_slug(slug):
+    if not is_valid_slug(slug):
+        print_slug_error(slug, fmt)
         return 2
 
     json_path, md_path = current_paths(contract, root, skill, slug)
-    errors: List[str] = []
+    errors: list[str] = []
 
     if not json_path.exists():
         errors.append(f"Missing profile json: {json_path}")
@@ -353,28 +432,23 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
         if payload.get("slug") not in (None, slug):
             errors.append(f"'slug' mismatch: expected {slug}, got {payload.get('slug')}")
 
-        if "corrections" in payload and not isinstance(payload["corrections"], list):
-            errors.append("'corrections' must be a list")
+        typed_fields = {
+            "corrections": list,
+            "source_summary": dict,
+            "persona": dict,
+            "existential_question": str,
+            "existential_questions": list,
+            "version": int,
+        }
 
-        if "source_summary" in payload and not isinstance(payload["source_summary"], dict):
-            errors.append("'source_summary' must be an object")
+        for field, expected_type in typed_fields.items():
+            if field in payload and not isinstance(payload[field], expected_type):
+                errors.append(f"'{field}' must be a {expected_type.__name__}")
 
         if "confidence" in payload:
             valid_confidence = ("high", "medium", "low")
             if payload["confidence"] not in valid_confidence:
                 errors.append(f"'confidence' must be one of {valid_confidence}, got: {payload['confidence']!r}")
-
-        if "persona" in payload and not isinstance(payload["persona"], dict):
-            errors.append("'persona' must be an object")
-
-        if "existential_question" in payload and not isinstance(payload["existential_question"], str):
-            errors.append("'existential_question' must be a string")
-
-        if "existential_questions" in payload and not isinstance(payload["existential_questions"], list):
-            errors.append("'existential_questions' must be a list")
-
-        if "version" in payload and not isinstance(payload["version"], int):
-            errors.append(f"'version' must be an integer, got: {type(payload['version']).__name__}")
 
         if "updated_at" in payload:
             ua = str(payload["updated_at"])
@@ -384,70 +458,180 @@ def validate_profile(contract: dict, skill_map: Dict[str, dict], root: Path, ski
                 except (ValueError, TypeError):
                     errors.append(f"'updated_at' is not a valid ISO 8601 string: {ua!r}")
 
+        if "persona" in payload and isinstance(payload["persona"], dict):
+            persona = payload["persona"]
+            required_layers = ("layer0_rules", "layer1_identity", "layer2_expression", "layer3_decision_model", "layer4_boundaries")
+            for layer in required_layers:
+                if layer not in persona:
+                    errors.append(f"persona missing required layer: {layer}")
+
     if md_path.exists() and md_path.stat().st_size == 0:
         errors.append("Markdown report is empty")
 
     if errors:
-        print("Validation failed:")
-        for item in errors:
-            print(f"- {item}")
+        if fmt == "json":
+            print(json.dumps({"status": "fail", "profile": f"{skill}_{slug}", "errors": errors}, ensure_ascii=False, indent=2))
+        else:
+            print("Validation failed:")
+            for item in errors:
+                print(f"- {item}")
         return 1
 
-    print(f"Validation passed: {skill}_{slug}")
+    if fmt == "json":
+        print(json.dumps({"status": "ok", "profile": f"{skill}_{slug}"}, ensure_ascii=False, indent=2))
+    else:
+        print(f"Validation passed: {skill}_{slug}")
     return 0
 
 
-def doctor(contract: dict, skill_map: Dict[str, dict], root: Path) -> int:
+def _report(msg: str, fmt: str, errors: list[str] | None = None) -> None:
+    """Report a message, appending to errors list in JSON mode or printing in text mode."""
+    if fmt == "json" and errors is not None:
+        errors.append(msg)
+    else:
+        print(msg)
+
+
+def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "text") -> int:
     """Validate all current profiles and templates."""
     failed = 0
+    templates_checked = 0
+    errors: list[str] = []
 
     # Validate templates
     for slug, item in sorted(skill_map.items()):
         template_path = root / item["template_path"]
         if not template_path.exists():
-            print(f"Missing template: {item['template_path']}")
+            _report(f"Missing template: {item['template_path']}", fmt, errors)
             failed += 1
             continue
         try:
             template = load_json(template_path)
         except json.JSONDecodeError as exc:
-            print(f"Invalid template JSON: {item['template_path']}: {exc}")
+            _report(f"Invalid template JSON: {item['template_path']}: {exc}", fmt, errors)
             failed += 1
             continue
 
+        templates_checked += 1
         required_keys = item.get("required_top_level_keys") or []
         for key in required_keys:
             if key not in template:
-                print(f"Template {item['template_path']} missing required key: {key}")
+                _report(f"Template {item['template_path']} missing required key: {key}", fmt, errors)
                 failed += 1
 
         if template.get("skill") != slug:
-            print(f"Template {item['template_path']} skill mismatch: expected {slug}, got {template.get('skill')}")
+            _report(f"Template {item['template_path']} skill mismatch: expected {slug}, got {template.get('skill')}", fmt, errors)
+            failed += 1
+
+        # Validate persona layers in template
+        if "persona" in template and isinstance(template["persona"], dict):
+            persona = template["persona"]
+            required_layers = ("layer0_rules", "layer1_identity", "layer2_expression", "layer3_decision_model", "layer4_boundaries")
+            for layer in required_layers:
+                if layer not in persona:
+                    _report(f"Template {item['template_path']} persona missing layer: {layer}", fmt, errors)
+                    failed += 1
+
+        # Validate template version is integer
+        if "version" in template and not isinstance(template["version"], int):
+            _report(f"Template {item['template_path']} 'version' must be int, got {type(template['version']).__name__}", fmt, errors)
+            failed += 1
+
+        # Validate template confidence placeholder
+        if "confidence" in template:
+            conf = template["confidence"]
+            valid_placeholders = ("high", "medium", "low", "high|medium|low")
+            if conf not in valid_placeholders:
+                _report(f"Template {item['template_path']} 'confidence' unexpected value: {conf!r}", fmt, errors)
+                failed += 1
+
+        # Validate existential question fields
+        has_question = "existential_question" in template
+        has_questions = "existential_questions" in template
+        if not has_question and not has_questions:
+            _report(f"Template {item['template_path']} missing 'existential_question' or 'existential_questions'", fmt, errors)
+            failed += 1
+        elif has_question and not isinstance(template["existential_question"], str):
+            _report(f"Template {item['template_path']} 'existential_question' must be str", fmt, errors)
+            failed += 1
+        elif has_questions and not isinstance(template["existential_questions"], list):
+            _report(f"Template {item['template_path']} 'existential_questions' must be list", fmt, errors)
+            failed += 1
+
+        # Validate source_summary structure
+        if "source_summary" in template:
+            ss = template["source_summary"]
+            if not isinstance(ss, dict):
+                _report(f"Template {item['template_path']} 'source_summary' must be dict", fmt, errors)
+                failed += 1
+            else:
+                for field in ("input_modes", "evidence_count", "notes"):
+                    if field not in ss:
+                        _report(f"Template {item['template_path']} source_summary missing '{field}'", fmt, errors)
+                        failed += 1
+
+        # Validate corrections is list
+        if "corrections" in template and not isinstance(template["corrections"], list):
+            _report(f"Template {item['template_path']} 'corrections' must be list", fmt, errors)
+            failed += 1
+
+        # Validate slug placeholder in template
+        if "slug" in template and template["slug"] != "{slug}":
+            _report(f"Template {item['template_path']} 'slug' should be '{{slug}}' placeholder, got {template['slug']!r}", fmt, errors)
+            failed += 1
+
+        # Validate updated_at placeholder in template
+        if "updated_at" in template and template["updated_at"] != "{ISO8601}":
+            _report(f"Template {item['template_path']} 'updated_at' should be '{{ISO8601}}' placeholder, got {template['updated_at']!r}", fmt, errors)
             failed += 1
 
     # Validate profiles
     rows = discover_current_profiles(contract, skill_map, root)
-    if not rows:
+    profiles_checked = 0
+    if rows:
+        for skill, slug, _, _ in rows:
+            # In JSON mode, suppress validate_profile text output
+            if fmt == "json":
+                import io
+                from contextlib import redirect_stdout
+                buf = io.StringIO()
+                with redirect_stdout(buf):
+                    code = validate_profile(contract, skill_map, root, skill, slug)
+            else:
+                code = validate_profile(contract, skill_map, root, skill, slug)
+            if code != 0:
+                failed += 1
+                errors.append(f"Validation failed: {skill}_{slug}")
+            profiles_checked += 1
+
+    if fmt == "json":
+        result = {
+            "status": "ok" if failed == 0 else "fail",
+            "templates_checked": templates_checked,
+            "profiles_checked": profiles_checked,
+            "failures": failed,
+        }
+        if errors:
+            result["errors"] = errors
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
         if failed:
             print(f"Doctor finished with failures: {failed}")
-            return 1
-        print("No current profiles found. Nothing to validate.")
-        return 0
+        elif not rows:
+            print(f"Templates checked: {templates_checked}. No current profiles found.")
+        else:
+            print(f"Doctor finished successfully. Templates: {templates_checked}, Profiles: {len(rows)}")
 
-    for skill, slug, _, _ in rows:
-        code = validate_profile(contract, skill_map, root, skill, slug)
-        if code != 0:
-            failed += 1
-    if failed:
-        print(f"Doctor finished with failures: {failed}")
-        return 1
-    print(f"Doctor finished successfully. Profiles checked: {len(rows)}")
-    return 0
+    return 1 if failed else 0
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Manage digital-life profiles.")
+    parser = argparse.ArgumentParser(
+        prog="profile-manager",
+        description="Manage digital-life profiles: init, list, snapshot, rollback, delete, validate, doctor.",
+    )
     parser.add_argument("--root", default=None, help="Repository root path. Defaults to script parent.")
+    parser.add_argument("--version", action="version", version="%(prog)s 1.0.0")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_list = sub.add_parser("list", help="List current profiles.")
@@ -455,31 +639,37 @@ def build_parser() -> argparse.ArgumentParser:
     p_list.add_argument("--format", choices=["table", "json"], default="table", help="Output format.")
 
     p_init = sub.add_parser("init", help="Initialize a profile from template.")
-    p_init.add_argument("--skill", required=True)
-    p_init.add_argument("--slug", required=True)
-    p_init.add_argument("--force", action="store_true")
+    p_init.add_argument("--skill", required=True, help="Skill slug (e.g. past_life, legacy_audit).")
+    p_init.add_argument("--slug", required=True, help="Profile slug identifier.")
+    p_init.add_argument("--force", action="store_true", help="Overwrite existing profile.")
+    p_init.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
 
     p_snapshot = sub.add_parser("snapshot", help="Create a history snapshot from current profile.")
-    p_snapshot.add_argument("--skill", required=True)
-    p_snapshot.add_argument("--slug", required=True)
+    p_snapshot.add_argument("--skill", required=True, help="Skill slug.")
+    p_snapshot.add_argument("--slug", required=True, help="Profile slug.")
     p_snapshot.add_argument("--timestamp", help="Override timestamp with YYYY-MM-DDTHHMMSS+0800.")
+    p_snapshot.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
 
     p_rollback = sub.add_parser("rollback", help="Rollback current profile from history snapshot.")
-    p_rollback.add_argument("--skill", required=True)
-    p_rollback.add_argument("--slug", required=True)
+    p_rollback.add_argument("--skill", required=True, help="Skill slug.")
+    p_rollback.add_argument("--slug", required=True, help="Profile slug.")
     p_rollback.add_argument("--timestamp", help="Snapshot timestamp. Default: latest.")
+    p_rollback.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
 
     p_delete = sub.add_parser("delete", help="Delete current profile and optionally history.")
-    p_delete.add_argument("--skill", required=True)
-    p_delete.add_argument("--slug", required=True)
-    p_delete.add_argument("--with-history", action="store_true")
-    p_delete.add_argument("--yes", action="store_true")
+    p_delete.add_argument("--skill", required=True, help="Skill slug.")
+    p_delete.add_argument("--slug", required=True, help="Profile slug.")
+    p_delete.add_argument("--with-history", action="store_true", help="Also delete history snapshots.")
+    p_delete.add_argument("--yes", action="store_true", help="Skip confirmation prompt.")
+    p_delete.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
 
     p_validate = sub.add_parser("validate", help="Validate one current profile.")
-    p_validate.add_argument("--skill", required=True)
-    p_validate.add_argument("--slug", required=True)
+    p_validate.add_argument("--skill", required=True, help="Skill slug.")
+    p_validate.add_argument("--slug", required=True, help="Profile slug.")
+    p_validate.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
 
-    sub.add_parser("doctor", help="Validate all current profiles in profiles/ root.")
+    p_doctor = sub.add_parser("doctor", help="Validate all current profiles in profiles/ root.")
+    p_doctor.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
     return parser
 
 
@@ -490,27 +680,24 @@ def main() -> int:
 
     try:
         contract, skill_map = load_contract(root)
-    except FileNotFoundError as exc:
-        print(f"Error: {exc}")
-        return 1
-    except ValueError as exc:
-        print(f"Error: {exc}")
+    except (FileNotFoundError, json.JSONDecodeError, ValueError) as exc:
+        print(f"Error loading contract: {exc}")
         return 1
 
     if args.command == "list":
         return list_profiles(contract, skill_map, root, args.skill, args.format)
     if args.command == "init":
-        return init_profile(contract, skill_map, root, args.skill, args.slug, args.force)
+        return init_profile(contract, skill_map, root, args.skill, args.slug, args.force, args.format)
     if args.command == "snapshot":
-        return snapshot_profile(contract, root, args.skill, args.slug, args.timestamp)
+        return snapshot_profile(contract, root, args.skill, args.slug, args.timestamp, args.format)
     if args.command == "rollback":
-        return rollback_profile(contract, root, args.skill, args.slug, args.timestamp)
+        return rollback_profile(contract, root, args.skill, args.slug, args.timestamp, args.format)
     if args.command == "delete":
-        return delete_profile(contract, root, args.skill, args.slug, args.with_history, args.yes)
+        return delete_profile(contract, root, args.skill, args.slug, args.with_history, args.yes, args.format)
     if args.command == "validate":
-        return validate_profile(contract, skill_map, root, args.skill, args.slug)
+        return validate_profile(contract, skill_map, root, args.skill, args.slug, args.format)
     if args.command == "doctor":
-        return doctor(contract, skill_map, root)
+        return doctor(contract, skill_map, root, args.format)
 
     parser.print_help()
     return 2
