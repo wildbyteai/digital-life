@@ -139,6 +139,96 @@ def _extract_skill_frontmatter_version(content: str) -> str | None:
     return None
 
 
+def _extract_skill_allowed_tools(content: str) -> set[str]:
+    """Read allowed-tools from SKILL.md frontmatter."""
+    if not content.startswith("---"):
+        return set()
+    for line in content.splitlines()[1:]:
+        if line.strip() == "---":
+            return set()
+        if line.startswith("allowed-tools:"):
+            raw = line.split(":", 1)[1]
+            return {item.strip() for item in raw.split(",") if item.strip()}
+    return set()
+
+
+def _contains_bare_python_command(content: str) -> bool:
+    """Return True when docs use python for repo scripts instead of python3."""
+    return re.search(r"(?<![\w.-])python\s+(?:scripts/|-m\s+(?:py_compile|unittest))", content) is not None
+
+
+def _count_readme_skill_rows(content: str) -> int:
+    return sum(1 for line in content.splitlines() if re.match(r"^\|\s*\d+\s*\|", line))
+
+
+def _count_skill_trigger_rows(content: str) -> int:
+    return sum(1 for line in content.splitlines() if re.match(r"^\|\s*\d+\s*\|", line))
+
+
+def validate_doc_consistency(root: Path, skills: list[dict], errors: list[str]) -> None:
+    """Validate docs, tool declarations, skill counts, and CI command examples stay aligned."""
+    skill_count = len(skills)
+    docs_to_check = [
+        "README.md",
+        "SKILL.md",
+        "profiles/README.md",
+        "prompts/evolution.md",
+        ".github/workflows/validate.yml",
+    ]
+    for relative_path in docs_to_check:
+        path = root / relative_path
+        if path.exists() and _contains_bare_python_command(path.read_text(encoding="utf-8")):
+            errors.append(f"{relative_path} contains bare python command; use python3")
+
+    skill_path = root / "SKILL.md"
+    skill_doc = skill_path.read_text(encoding="utf-8") if skill_path.exists() else ""
+    allowed_tools = _extract_skill_allowed_tools(skill_doc)
+    if skill_doc and "WebFetch" in skill_doc and "WebFetch" not in allowed_tools:
+        errors.append("SKILL.md references WebFetch but allowed-tools does not include WebFetch")
+    if skill_doc and "web_fetch" in skill_doc:
+        errors.append("SKILL.md should use canonical WebFetch tool spelling, not web_fetch")
+    if skill_doc and "browser" in skill_doc and "browser" not in allowed_tools:
+        conditional_browser_phrases = (
+            "仅在运行环境提供 browser 工具时",
+            "取决于运行环境是否提供该工具",
+        )
+        if not any(phrase in skill_doc for phrase in conditional_browser_phrases):
+            errors.append("SKILL.md references browser as an unconditional tool but allowed-tools does not include browser")
+
+    readme_path = root / "README.md"
+    if readme_path.exists():
+        readme = readme_path.read_text(encoding="utf-8")
+        if f"[{skill_count} 个工具]" not in readme:
+            errors.append(f"README.md navigation should reference {skill_count} 个工具")
+        if f"## {skill_count} 个数字人生工具" not in readme:
+            errors.append(f"README.md skill heading should reference {skill_count} 个数字人生工具")
+        readme_rows = _count_readme_skill_rows(readme)
+        if readme_rows != skill_count:
+            errors.append(f"README.md skill table row count mismatch: expected {skill_count}, got {readme_rows}")
+        if "browser" in readme and "如果运行环境提供 browser 工具" not in readme:
+            errors.append("README.md browser capability must be documented as conditional on runtime support")
+
+    if skill_doc:
+        trigger_rows = _count_skill_trigger_rows(skill_doc)
+        if trigger_rows != skill_count:
+            errors.append(f"SKILL.md trigger table row count mismatch: expected {skill_count}, got {trigger_rows}")
+
+    workflow_path = root / ".github" / "workflows" / "validate.yml"
+    if workflow_path.exists():
+        workflow = workflow_path.read_text(encoding="utf-8")
+        expected_commands = (
+            "python3 -m py_compile scripts/*.py",
+            "python3 scripts/validate-skill.py",
+            "python3 scripts/profile-manager.py doctor",
+            "python3 -m unittest discover -s scripts -p 'test_scripts.py'",
+            "python3 scripts/profile-manager.py --version",
+            "python3 scripts/validate-skill.py --version",
+        )
+        for command in expected_commands:
+            if command not in workflow:
+                errors.append(f".github/workflows/validate.yml missing command: {command}")
+
+
 def validate_version_consistency(root: Path, errors: list[str]) -> str:
     version = package_version(root)
     if not version or version == "unknown":
@@ -240,6 +330,8 @@ def main() -> int:
         skills = []
 
     seen_slugs: set[str] = set()
+
+    validate_doc_consistency(root, skills, errors)
 
     for item in skills:
         if not isinstance(item, dict):

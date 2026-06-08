@@ -4,13 +4,13 @@ description: >
   数字人生.skills — 6 个以数字痕迹为证据的自我考古与经验蒸馏工具，用来照见真实的自己，也复用自己的经验。
   触发词：遗产清算、社死考古、AI替身、前世、墓志铭、蒸馏人生、决策分身、数字人生、考古工具箱、digital life
 argument-hint: "[skill-name-or-slug]"
-version: 1.5.3-beta
+version: 1.5.4-beta
 license: MIT
 metadata:
   openclaw:
     homepage: https://github.com/wildbyteai/digital-life
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash
+allowed-tools: Read, Write, Edit, Bash, WebFetch
 ---
 
 # 数字人生.skills
@@ -49,7 +49,7 @@ allowed-tools: Read, Write, Edit, Bash
 | 方式 | 能力 | 说明 |
 |------|------|------|
 | 文字描述 | ✅ | 直接口述行为、习惯、经历——最低门槛 |
-| 浏览器代操作 | ✅ 谨慎使用 | 仅在用户明确需要并确认范围后，agent 才查看用户指定页面；优先最小必要数据 |
+| 浏览器代操作 | ✅ 谨慎使用（仅在运行环境提供 browser 工具时） | 仅在用户明确需要并确认范围后，agent 才查看用户指定页面；优先最小必要数据 |
 | 文件/截图 | ✅ 读取 | 聊天记录导出、平台年度报告截图、照片等 |
 | 公开 URL | ⚠️ 谨慎 | 公开页面存在同名风险，必须先确认是用户本人再抓取 |
 
@@ -57,20 +57,20 @@ allowed-tools: Read, Write, Edit, Bash
 
 ```text
 1. 用户在自己的浏览器里打开目标平台并确认已登录
-2. agent 用 browser(profile="user") 连接用户浏览器
+2. 如果运行环境提供 browser 工具，agent 用 browser(profile="user") 连接用户浏览器
 3. agent 导航到用户主页/个人页面
 4. agent 用 snapshot/screenshot 获取页面内容
 5. agent 提取行为特征，不保存原始数据
 ```
 
-**支持的平台：**
+**支持的平台（browser 取决于运行环境是否提供该工具）：**
 
 | 平台 | 方式 | 能拿到什么 |
 |------|------|-----------|
 | 微博 | browser | 个人主页、发帖记录、关注列表 |
 | 知乎 | browser | 回答列表、关注话题、赞同内容 |
 | 豆瓣 | browser | 书影音标记、日记、小组 |
-| GitHub | web_fetch 或 browser | repos、contributions、star 列表 |
+| GitHub | WebFetch 或 browser | repos、contributions、star 列表 |
 | 小红书 | browser 截图 | 笔记内容、收藏列表 |
 | 微信 | 聊天记录导出 | 聊天记录 txt/html |
 
@@ -116,8 +116,8 @@ allowed-tools: Read, Write, Edit, Bash
 
 支持三种数据获取方式：
 - 用户直接口述（最低门槛，3 句话启动）
-- 用户给 URL → 确认是本人后 `web_fetch` 抓取
-- 用户在浏览器登录 → `browser(profile="user")` 代操作
+- 用户给 URL → 确认是本人后 `WebFetch` 抓取
+- 用户在浏览器登录 → 仅在运行环境提供 browser 工具时，按确认范围代操作
 
 ### Step 3：读取规则
 
@@ -172,12 +172,12 @@ profiles/history/{skill}_{slug}_{timestamp}.md    # 追加/纠正前的历史快
 
 | 命令 | 说明 |
 |------|------|
-| `python scripts/profile-manager.py list` | 扫描 `profiles/` 根目录，列出当前生效的 profile |
-| `python scripts/profile-manager.py init --skill {skill} --slug {slug}` | 按模板初始化 profile |
-| `python scripts/profile-manager.py snapshot --skill {skill} --slug {slug}` | 保存当前版本到 history |
-| `python scripts/profile-manager.py rollback --skill {skill} --slug {slug}` | 回滚到最近快照（或 `--timestamp`） |
-| `python scripts/profile-manager.py delete --skill {skill} --slug {slug} --yes` | 删除当前 profile |
-| `python scripts/profile-manager.py doctor` | 批量巡检所有当前 profile |
+| `python3 scripts/profile-manager.py list` | 扫描 `profiles/` 根目录，列出当前生效的 profile |
+| `python3 scripts/profile-manager.py init --skill {skill} --slug {slug}` | 按模板初始化 profile |
+| `python3 scripts/profile-manager.py snapshot --skill {skill} --slug {slug}` | 保存当前版本到 history |
+| `python3 scripts/profile-manager.py rollback --skill {skill} --slug {slug}` | 回滚到最近快照（或 `--timestamp`） |
+| `python3 scripts/profile-manager.py delete --skill {skill} --slug {slug} --yes --with-history` | 删除当前 profile，并可选删除历史快照 |
+| `python3 scripts/profile-manager.py doctor` | 批量巡检所有当前 profile |
 
 ---
 

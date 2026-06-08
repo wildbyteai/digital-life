@@ -6,7 +6,8 @@
 
 1. 读取用户提供的新内容（文件/文本/截图）
 2. 读取现有的 profile 文件（`profiles/{skill}_{slug}.json` 和 `.md`）
-   - 先执行：`python scripts/profile-manager.py validate --skill {skill} --slug {slug}`
+   - 先执行：`python3 scripts/profile-manager.py validate --skill {skill} --slug {slug}`
+   - 在准备写入任何追加/纠正前，必须先执行安全快照：`python3 scripts/profile-manager.py snapshot --skill {skill} --slug {slug}`
 3. 分析新内容与现有 profile 的关系：
    - **新增**：是否有之前没覆盖的维度？
    - **修正**：是否有与现有结论矛盾的证据？
@@ -26,17 +27,17 @@
    - 新增 → 追加到对应字段
    - 修正 → 覆盖旧值，记录修正原因
    - 深化 → 扩充已有字段
-6. 在写入新版本前，执行 snapshot：
-   - `python scripts/profile-manager.py snapshot --skill {skill} --slug {slug}`
+6. 在写入新版本前，确认 snapshot 已完成：
+   - `python3 scripts/profile-manager.py snapshot --skill {skill} --slug {slug}`
 7. 更新当前 profile 中的 `updated_at` 和 `version`
 8. 更新后再次校验：
-   - `python scripts/profile-manager.py validate --skill {skill} --slug {slug}`
+   - `python3 scripts/profile-manager.py validate --skill {skill} --slug {slug}`
 
 ### 版本管理
 
-每次追加自动递增版本号（v1 → v2 → v3）。  
-保留历史版本的快照，路径：`profiles/history/{skill}_{slug}_{timestamp}.json`  
-需要回滚时使用：`python scripts/profile-manager.py rollback --skill {skill} --slug {slug} --timestamp {timestamp}`
+每次追加自动递增版本号（v1 → v2 → v3）。
+保留历史版本的快照，路径：`profiles/history/{skill}_{slug}_{timestamp}.json` 和 `profiles/history/{skill}_{slug}_{timestamp}.md`
+需要回滚时使用：`python3 scripts/profile-manager.py rollback --skill {skill} --slug {slug} --timestamp {timestamp}`
 
 ---
 
@@ -59,7 +60,7 @@
 }
 ```
 
-3. 应用修正到 profile 文件
+3. 应用修正到 profile 文件前，先执行 snapshot：`python3 scripts/profile-manager.py snapshot --skill {skill} --slug {slug}`
 4. 在 profile 末尾追加 correction 记录
 5. 向用户确认：
 
@@ -72,7 +73,7 @@
 ```
 
 6. 修正后执行：
-   - `python scripts/profile-manager.py validate --skill {skill} --slug {slug}`
+   - `python3 scripts/profile-manager.py validate --skill {skill} --slug {slug}`
 
 ---
 

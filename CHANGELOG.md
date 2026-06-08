@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.4-beta - 2026-06-09
+
+### Improvements
+
+- Standardized README, SKILL, profiles, evolution, and CI command examples on `python3`.
+- Clarified `WebFetch` and conditional browser tool capabilities in SKILL/README so published docs do not overclaim host runtime support.
+- Added a publish checklist covering version alignment, command consistency, tool contracts, and privacy-safe examples.
+- Added repository validation for documented command consistency, allowed-tools references, skill counts, trigger table counts, and expected CI commands.
+
+### Testing
+
+- Added doc consistency tests for bare `python` commands, missing tool declarations, stale skill counts, stale trigger rows, and missing CI commands.
+
 ## 1.5.3-beta - 2026-06-09
 
 ### Improvements

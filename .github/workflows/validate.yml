@@ -31,13 +31,18 @@ jobs:
           python-version: "3.11"
 
       - name: Compile Python scripts
-        run: python -m py_compile scripts/*.py
+        run: python3 -m py_compile scripts/*.py
 
       - name: Validate skill contract and repository layout
-        run: python scripts/validate-skill.py
+        run: python3 scripts/validate-skill.py
 
       - name: Run profile doctor
-        run: python scripts/profile-manager.py doctor
+        run: python3 scripts/profile-manager.py doctor
 
       - name: Run Python unit tests
-        run: python -m unittest discover -s scripts -p 'test_scripts.py'
+        run: python3 -m unittest discover -s scripts -p 'test_scripts.py'
+
+      - name: Check CLI versions for publish readiness
+        run: |
+          python3 scripts/profile-manager.py --version
+          python3 scripts/validate-skill.py --version

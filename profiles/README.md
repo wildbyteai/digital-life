@@ -48,9 +48,11 @@ profiles/history/legacy_audit_zhangsan_2026-04-01T120000+0800.md
 ## 运维命令
 
 ```bash
-python scripts/profile-manager.py list
-python scripts/profile-manager.py init --skill legacy_audit --slug demo
-python scripts/profile-manager.py snapshot --skill legacy_audit --slug demo
-python scripts/profile-manager.py rollback --skill legacy_audit --slug demo
-python scripts/profile-manager.py doctor
+python3 scripts/profile-manager.py list
+python3 scripts/profile-manager.py init --skill legacy_audit --slug demo
+python3 scripts/profile-manager.py snapshot --skill legacy_audit --slug demo
+python3 scripts/profile-manager.py rollback --skill legacy_audit --slug demo
+python3 scripts/profile-manager.py validate --skill legacy_audit --slug demo
+python3 scripts/profile-manager.py delete --skill legacy_audit --slug demo --yes --with-history
+python3 scripts/profile-manager.py doctor
 ```

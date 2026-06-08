@@ -12,6 +12,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent))
 import importlib
 pm = importlib.import_module("profile-manager")
+vs = importlib.import_module("validate-skill")
 
 
 def setup_temp_repo(root: Path, skill_map: dict) -> tuple[Path, dict]:
@@ -4178,6 +4179,76 @@ class TestMainFunction(unittest.TestCase):
                 with unittest.mock.patch("sys.argv", ["profile-manager", "--root", str(tmp), "init", "--skill", skill, "--slug", "main_all"]):
                     code = pm.main()
                 self.assertEqual(code, 0)
+        finally:
+            shutil.rmtree(tmp)
+
+
+class TestDocConsistencyValidation(unittest.TestCase):
+    """Test documentation/tool/CI consistency validation."""
+
+    def _errors(self, root: Path) -> list[str]:
+        contract = json.loads((root / "profiles" / "contracts" / "skill-contract.json").read_text(encoding="utf-8"))
+        errors: list[str] = []
+        vs.validate_doc_consistency(root, contract["skills"], errors)
+        return errors
+
+    def _copy_repo(self) -> Path:
+        root = Path(__file__).resolve().parent.parent
+        tmp_parent = Path(tempfile.mkdtemp())
+        tmp = tmp_parent / "repo"
+        shutil.copytree(root, tmp, ignore=shutil.ignore_patterns(".git", "profiles/*.json", "profiles/*.md"))
+        return tmp
+
+    def test_current_repo_doc_consistency_passes(self):
+        root = Path(__file__).resolve().parent.parent
+        self.assertEqual(self._errors(root), [])
+
+    def test_bare_python_command_rejected(self):
+        tmp = self._copy_repo()
+        try:
+            readme = tmp / "README.md"
+            readme.write_text(readme.read_text(encoding="utf-8") + "\n```bash\npython scripts/validate-skill.py\n```\n", encoding="utf-8")
+            self.assertTrue(any("bare python command" in e for e in self._errors(tmp)))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_missing_allowed_tool_reference_rejected(self):
+        tmp = self._copy_repo()
+        try:
+            skill = tmp / "SKILL.md"
+            content = skill.read_text(encoding="utf-8")
+            skill.write_text(content.replace("allowed-tools: Read, Write, Edit, Bash, WebFetch", "allowed-tools: Read, Write, Edit, Bash"), encoding="utf-8")
+            self.assertTrue(any("references WebFetch" in e for e in self._errors(tmp)))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_stale_readme_skill_count_rejected(self):
+        tmp = self._copy_repo()
+        try:
+            readme = tmp / "README.md"
+            content = readme.read_text(encoding="utf-8").replace("## 6 个数字人生工具", "## 5 个数字人生工具")
+            readme.write_text(content, encoding="utf-8")
+            self.assertTrue(any("README.md skill heading" in e for e in self._errors(tmp)))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_stale_skill_trigger_table_count_rejected(self):
+        tmp = self._copy_repo()
+        try:
+            skill = tmp / "SKILL.md"
+            lines = [line for line in skill.read_text(encoding="utf-8").splitlines() if "| 6 | 🧪 蒸馏人生" not in line]
+            skill.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            self.assertTrue(any("trigger table row count" in e for e in self._errors(tmp)))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_missing_ci_command_rejected(self):
+        tmp = self._copy_repo()
+        try:
+            workflow = tmp / ".github" / "workflows" / "validate.yml"
+            content = workflow.read_text(encoding="utf-8").replace("          python3 scripts/validate-skill.py --version\n", "")
+            workflow.write_text(content, encoding="utf-8")
+            self.assertTrue(any("missing command: python3 scripts/validate-skill.py --version" in e for e in self._errors(tmp)))
         finally:
             shutil.rmtree(tmp)
 
