@@ -66,6 +66,8 @@ REQUIRED_ROOT_FILES = [
     "examples/legacy_audit_demo.md",
     "examples/epitaph_demo.json",
     "examples/epitaph_demo.md",
+    "examples/distilled_life_demo.json",
+    "examples/distilled_life_demo.md",
     "scripts/profile-manager.py",
     "scripts/validate-skill.py",
 ]
@@ -76,6 +78,7 @@ EXAMPLE_JSON_FILES = [
     "examples/ai_clone_demo.json",
     "examples/legacy_audit_demo.json",
     "examples/epitaph_demo.json",
+    "examples/distilled_life_demo.json",
 ]
 
 GITIGNORE_RULES = [

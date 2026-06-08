@@ -1,0 +1,70 @@
+{
+  "skill": "distilled_life",
+  "version": 1,
+  "slug": "{slug}",
+  "updated_at": "{ISO8601}",
+  "confidence": "low",
+  "source_summary": {
+    "input_modes": [],
+    "evidence_count": 0,
+    "notes": "初始化模板：尚未填入真实经历、表达样本或决策记录"
+  },
+  "persona": {
+    "layer0_rules": [
+      "不冒充用户本人",
+      "证据不足时标注低置信度",
+      "对外表达必须由用户确认",
+      "敏感内容默认仅 owner self-use"
+    ],
+    "layer1_identity": {
+      "self_description": "",
+      "roles": [],
+      "stable_facts": [],
+      "current_state": {
+        "summary": "",
+        "last_verified_at": "",
+        "freshness": "unknown"
+      }
+    },
+    "layer2_expression": {
+      "tone": [],
+      "signature_phrases": [],
+      "drafting_rules": [],
+      "not_like_me": []
+    },
+    "layer3_decision_model": {
+      "default_sequence": [],
+      "priority_order": [],
+      "risk_posture": "",
+      "people_to_consult": [],
+      "decision_blind_spots": []
+    },
+    "layer4_boundaries": {
+      "owner_only": [],
+      "shareable": [],
+      "requires_confirmation": [],
+      "never_answer": []
+    }
+  },
+  "decision_model": {
+    "core_pattern": "",
+    "decision_sequence": [],
+    "tradeoff_style": [],
+    "uncertainty_behavior": "",
+    "smallest_next_action": ""
+  },
+  "expression_model": {
+    "summary": "",
+    "preferred_formats": [],
+    "audience_variants": [],
+    "draft_only_rules": []
+  },
+  "life_stories": [],
+  "skill_assets": [],
+  "boundary_rules": [],
+  "evidence_trace": [],
+  "eval_cases": [],
+  "next_questions": [],
+  "existential_questions": [],
+  "corrections": []
+}

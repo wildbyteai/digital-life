@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.5.0-beta - 2026-06-08
+
+### Features
+
+- Added `distilled_life` / 蒸馏人生 as the 6th digital-life skill.
+- Added decision replay, expression drafting, evidence trace, boundary rules, eval cases, and reusable Skill Asset concepts for experience distillation.
+- Added `prompts/distilled_life.md`, `layer0/distilled_life.md`, `references/distilled_life.md`, and `profiles/templates/distilled_life.json`.
+- Added fictional/desensitized `distilled_life_demo.json` and `distilled_life_demo.md` examples.
+
+### Documentation
+
+- Updated README, SKILL metadata, examples README, and version files for the new mode.
+- Clarified that 蒸馏人生 helps users reuse themselves through evidence-backed judgment and expression models, not impersonate themselves.
+
+### Testing
+
+- Updated validation/test fixtures to include the 6th skill and example set.
+
 ## 1.4.1-beta - 2026-06-02
 
 ### Improvements

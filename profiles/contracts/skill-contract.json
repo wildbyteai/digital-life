@@ -136,6 +136,41 @@
         "existential_questions",
         "corrections"
       ]
+    },
+    {
+      "slug": "distilled_life",
+      "display_name": "蒸馏人生",
+      "triggers": [
+        "蒸馏人生",
+        "决策分身",
+        "decision twin",
+        "distilled life",
+        "帮我复盘我的判断方式",
+        "帮我写得更像我但不要冒充我"
+      ],
+      "prompt_path": "prompts/distilled_life.md",
+      "layer0_path": "layer0/distilled_life.md",
+      "reference_path": "references/distilled_life.md",
+      "template_path": "profiles/templates/distilled_life.json",
+      "required_top_level_keys": [
+        "skill",
+        "version",
+        "slug",
+        "updated_at",
+        "confidence",
+        "source_summary",
+        "persona",
+        "decision_model",
+        "expression_model",
+        "life_stories",
+        "skill_assets",
+        "boundary_rules",
+        "evidence_trace",
+        "eval_cases",
+        "next_questions",
+        "existential_questions",
+        "corrections"
+      ]
     }
   ]
 }

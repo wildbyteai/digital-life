@@ -349,7 +349,7 @@ class TestInitEdgeCases(unittest.TestCase):
         _, skill_map = pm.load_contract(root)
         tmp, contract, sm = setup_temp_repo(root, skill_map)
         try:
-            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph", "distilled_life"):
                 code = pm.init_profile(contract, sm, tmp, skill, "test_all", False)
                 self.assertEqual(code, 0)
                 json_path = tmp / "profiles" / f"{skill}_test_all.json"
@@ -516,7 +516,7 @@ class TestSnapshotEdgeCases(unittest.TestCase):
         _, skill_map = pm.load_contract(root)
         tmp, contract, sm = setup_temp_repo(root, skill_map)
         try:
-            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph", "distilled_life"):
                 pm.init_profile(contract, sm, tmp, skill, "snap_all", False)
                 code = pm.snapshot_profile(contract, tmp, skill, "snap_all", "2026-01-01T100000+0800")
                 self.assertEqual(code, 0)
@@ -669,7 +669,7 @@ class TestRollbackEdgeCases(unittest.TestCase):
         _, skill_map = pm.load_contract(root)
         tmp, contract, sm = setup_temp_repo(root, skill_map)
         try:
-            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph", "distilled_life"):
                 pm.init_profile(contract, sm, tmp, skill, "rb_all", False)
                 pm.snapshot_profile(contract, tmp, skill, "rb_all", "2026-01-01T100000+0800")
                 code = pm.rollback_profile(contract, tmp, skill, "rb_all", "2026-01-01T100000+0800")
@@ -798,7 +798,7 @@ class TestDeleteEdgeCases(unittest.TestCase):
         _, skill_map = pm.load_contract(root)
         tmp, contract, sm = setup_temp_repo(root, skill_map)
         try:
-            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph", "distilled_life"):
                 pm.init_profile(contract, sm, tmp, skill, "del_all", False)
                 code = pm.delete_profile(contract, tmp, skill, "del_all", False, True)
                 self.assertEqual(code, 0)
@@ -1504,7 +1504,7 @@ class TestValidateEdgeCases(unittest.TestCase):
         _, skill_map = pm.load_contract(root)
         tmp, contract, sm = setup_temp_repo(root, skill_map)
         try:
-            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph", "distilled_life"):
                 pm.init_profile(contract, sm, tmp, skill, "valid_all", False)
                 code = pm.validate_profile(contract, sm, tmp, skill, "valid_all")
                 self.assertEqual(code, 0)
@@ -2135,7 +2135,7 @@ class TestDoctorEdgeCases(unittest.TestCase):
             self.assertEqual(code, 0)
             result = json.loads(buf.getvalue())
             self.assertEqual(result["status"], "ok")
-            self.assertEqual(result["templates_checked"], 5)
+            self.assertEqual(result["templates_checked"], 6)
         finally:
             shutil.rmtree(tmp)
 
@@ -2818,8 +2818,8 @@ class TestLoadContract(unittest.TestCase):
     def test_load_contract(self):
         root = Path(__file__).resolve().parent.parent
         contract, skill_map = pm.load_contract(root)
-        self.assertEqual(len(skill_map), 5)
-        for slug in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+        self.assertEqual(len(skill_map), 6)
+        for slug in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph", "distilled_life"):
             self.assertIn(slug, skill_map)
 
     def test_load_contract_duplicate_slug(self):
@@ -3030,12 +3030,12 @@ class TestListProfiles(unittest.TestCase):
         _, skill_map = pm.load_contract(root)
         tmp, contract, sm = setup_temp_repo(root, skill_map)
         try:
-            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph", "distilled_life"):
                 pm.init_profile(contract, sm, tmp, skill, "list_all", False)
             rows = pm.discover_current_profiles(contract, sm, tmp)
-            self.assertEqual(len(rows), 5)
+            self.assertEqual(len(rows), 6)
             skills_found = {r[0] for r in rows}
-            self.assertEqual(skills_found, {"past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"})
+            self.assertEqual(skills_found, {"past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph", "distilled_life"})
         finally:
             shutil.rmtree(tmp)
 
@@ -3112,7 +3112,7 @@ class TestDoctor(unittest.TestCase):
         _, skill_map = pm.load_contract(root)
         tmp, contract, sm = setup_temp_repo(root, skill_map)
         try:
-            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph", "distilled_life"):
                 pm.init_profile(contract, sm, tmp, skill, "doc_all", False)
             import io
             from contextlib import redirect_stdout
@@ -3122,7 +3122,7 @@ class TestDoctor(unittest.TestCase):
             self.assertEqual(code, 0)
             result = json.loads(buf.getvalue())
             self.assertEqual(result["status"], "ok")
-            self.assertEqual(result["profiles_checked"], 5)
+            self.assertEqual(result["profiles_checked"], 6)
         finally:
             shutil.rmtree(tmp)
 
@@ -3161,7 +3161,7 @@ class TestValidateJsonOutput(unittest.TestCase):
             self.assertEqual(code, 0)
             result = json.loads(buf.getvalue())
             self.assertEqual(result["status"], "ok")
-            self.assertEqual(result["templates_checked"], 5)
+            self.assertEqual(result["templates_checked"], 6)
             self.assertEqual(result["profiles_checked"], 0)
         finally:
             shutil.rmtree(tmp)
@@ -3180,7 +3180,7 @@ class TestValidateJsonOutput(unittest.TestCase):
             self.assertEqual(code, 0)
             result = json.loads(buf.getvalue())
             self.assertEqual(result["status"], "ok")
-            self.assertEqual(result["templates_checked"], 5)
+            self.assertEqual(result["templates_checked"], 6)
             self.assertEqual(result["profiles_checked"], 1)
         finally:
             shutil.rmtree(tmp)
@@ -3283,9 +3283,9 @@ class TestValidateSkill(unittest.TestCase):
         self.assertEqual(len(vs.REQUIRED_NAMING_KEYS), 4)
 
     def test_example_json_files_defined(self):
-        """EXAMPLE_JSON_FILES should have exactly 5 files."""
+        """EXAMPLE_JSON_FILES should have exactly 6 files."""
         vs = importlib.import_module("validate-skill")
-        self.assertEqual(len(vs.EXAMPLE_JSON_FILES), 5)
+        self.assertEqual(len(vs.EXAMPLE_JSON_FILES), 6)
 
     def test_gitignore_rules_defined(self):
         """GITIGNORE_RULES should be non-empty."""
@@ -3887,7 +3887,7 @@ class TestMainFunction(unittest.TestCase):
         tmp, contract, sm = setup_temp_repo(root, skill_map)
         try:
             import unittest.mock
-            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph"):
+            for skill in ("past_life", "cringe_archaeology", "ai_clone", "legacy_audit", "epitaph", "distilled_life"):
                 with unittest.mock.patch("sys.argv", ["profile-manager", "--root", str(tmp), "init", "--skill", skill, "--slug", "main_all"]):
                     code = pm.main()
                 self.assertEqual(code, 0)
