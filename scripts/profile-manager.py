@@ -641,12 +641,23 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
                 from contextlib import redirect_stdout
                 buf = io.StringIO()
                 with redirect_stdout(buf):
-                    code = validate_profile(contract, skill_map, root, skill, slug)
+                    code = validate_profile(contract, skill_map, root, skill, slug, "json")
+                if code != 0:
+                    try:
+                        result = json.loads(buf.getvalue())
+                    except json.JSONDecodeError:
+                        result = {}
+                    profile_errors = result.get("errors") if isinstance(result, dict) else None
+                    if isinstance(profile_errors, list):
+                        errors.extend(str(item) for item in profile_errors)
+                    else:
+                        errors.append(f"Validation failed: {skill}_{slug}")
             else:
                 code = validate_profile(contract, skill_map, root, skill, slug)
             if code != 0:
                 failed += 1
-                errors.append(f"Validation failed: {skill}_{slug}")
+                if fmt != "json":
+                    errors.append(f"Validation failed: {skill}_{slug}")
             profiles_checked += 1
 
     if fmt == "json":

@@ -18,9 +18,9 @@
 
 ## 3. 权限和隐私优先
 
-- 未经明确授权的私人材料，默认只能用于 owner self-use。
+- 未经明确授权的私人材料，默认只能用于 `private_only`。
 - 涉及家庭、亲密关系、财务、健康、职场冲突、私人聊天原文时，默认高敏感。
-- `private` 或 `never_share` 内容不得进入公开 Markdown 示例。
+- `private_only`、`user_review_required` 未复核内容、以及 `do_not_quote` 原文不得进入公开 Markdown 示例。
 - 公开示例必须是虚构、脱敏、不可回溯到真实个人。
 
 ## 4. 只生成草稿，不自动行动

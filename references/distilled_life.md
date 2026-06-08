@@ -91,6 +91,9 @@
 - 是原话、行为、用户复述，还是推测？
 - 证据新鲜吗？
 - confidence 是 high、medium 还是 low？
+- permission：这条 story/evidence 能否被复用或引用？
+- allowed_audience：谁可以查看 profile/report？
+- markdown_visibility：生成的 Markdown 是私有、复核后可分享，还是公开？
 
 建议口径：
 
@@ -98,14 +101,11 @@
 - `medium`：一个细节充分的案例，或少量一致信号
 - `low`：证据薄、只有用户概述、或主要来自推测
 
-permission 建议使用可执行标签：
+permission / audience / visibility 不要混用：
 
-- `private_only`：只能 owner 自用
-- `user_review_required`：分享前必须用户复核
-- `desensitized_shareable`：脱敏后可分享
-- `public_source`：来自公开来源
-- `do_not_quote`：可以提炼模式，但不能引用原文
-- 能给哪个 audience 看？
+- `permission` 控制证据/故事复用：`private_only`、`user_review_required`、`desensitized_shareable`、`public_source`、`do_not_quote`
+- `allowed_audience` 控制可见人群：`owner_only`、`trusted_private`、`desensitized_public`、`public`
+- `markdown_visibility` 控制报告状态：`private`、`shareable_after_review`、`public`
 
 ## 蒸馏流程
 

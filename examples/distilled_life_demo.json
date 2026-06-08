@@ -153,7 +153,7 @@
         "把长期合作放到 demo 反馈之后再谈"
       ],
       "lesson": "对模糊机会不要急着承诺，先把它变成可验证的小实验。",
-      "permission": "shareable_after_desensitization",
+      "permission": "desensitized_shareable",
       "options": [
         "直接答应合作",
         "直接拒绝合作",
@@ -211,14 +211,14 @@
       "source_type": "interview",
       "source_id": "demo_interview_001",
       "confidence": "medium",
-      "permission": "shareable_after_desensitization"
+      "permission": "desensitized_shareable"
     },
     {
       "claim": "不喜欢模糊长期消耗。",
       "source_type": "interview",
       "source_id": "demo_interview_001",
       "confidence": "medium",
-      "permission": "shareable_after_desensitization"
+      "permission": "desensitized_shareable"
     }
   ],
   "eval_cases": [
@@ -238,5 +238,10 @@
   "existential_questions": [
     "你是在选择一个机会，还是在选择允许谁消耗你的注意力？"
   ],
-  "corrections": []
+  "corrections": [],
+  "publication_policy": {
+    "allowed_audience": "desensitized_public",
+    "markdown_visibility": "public",
+    "exact_quote_policy": "demo_only_no_real_private_quotes"
+  }
 }

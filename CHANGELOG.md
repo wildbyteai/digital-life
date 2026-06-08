@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.5.3-beta - 2026-06-09
+
+### Improvements
+
+- Canonicalized `distilled_life` permission labels to `private_only`, `user_review_required`, `desensitized_shareable`, `public_source`, and `do_not_quote`.
+- Added `publication_policy` with `allowed_audience`, `markdown_visibility`, and `exact_quote_policy` to the `distilled_life` template and demo.
+- Added validation for permission enums, publication policy enums, and public Markdown visibility conflicts with private or do-not-quote evidence.
+- Updated prompts, Layer 0 rules, reference docs, and demo Markdown to distinguish `permission`, `allowed_audience`, and `markdown_visibility`.
+- Improved doctor JSON output so nested profile validation errors include precise field paths instead of only generic profile failure messages.
+
+### Testing
+
+- Added permission-policy tests for invalid story/evidence permissions, allowed canonical values, public/private visibility conflicts, fixture enum consistency, and nested doctor error reporting.
+
 ## 1.5.2-beta - 2026-06-09
 
 ### Improvements

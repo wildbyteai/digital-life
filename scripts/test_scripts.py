@@ -1708,6 +1708,110 @@ class TestDistilledLifeValidationRules(unittest.TestCase):
             shutil.rmtree(tmp)
 
 
+class TestDistilledLifePermissionPolicy(unittest.TestCase):
+    def _valid_distilled_payload(self) -> dict:
+        root = Path(__file__).resolve().parent.parent
+        return json.loads((root / "examples" / "distilled_life_demo.json").read_text(encoding="utf-8"))
+
+    def _write_profile(self, tmp: Path, payload: dict, slug: str) -> None:
+        payload["slug"] = slug
+        pm.dump_json(tmp / "profiles" / f"distilled_life_{slug}.json", payload)
+        (tmp / "profiles" / f"distilled_life_{slug}.md").write_text("# report\n", encoding="utf-8")
+
+    def _setup(self, slug: str = "perm"):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        self._write_profile(tmp, self._valid_distilled_payload(), slug)
+        return tmp, contract, sm
+
+    def test_life_story_permission_enum(self):
+        tmp, contract, sm = self._setup("bad_story_perm")
+        try:
+            path = tmp / "profiles" / "distilled_life_bad_story_perm.json"
+            payload = pm.load_json(path)
+            payload["life_stories"][0]["permission"] = "share_with_anyone"
+            pm.dump_json(path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_story_perm"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_evidence_permission_enum(self):
+        tmp, contract, sm = self._setup("bad_evidence_perm")
+        try:
+            path = tmp / "profiles" / "distilled_life_bad_evidence_perm.json"
+            payload = pm.load_json(path)
+            payload["evidence_trace"][0]["permission"] = "public"
+            pm.dump_json(path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_evidence_perm"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_permission_allowed_values_pass(self):
+        allowed = ("desensitized_shareable", "public_source")
+        for value in allowed:
+            tmp, contract, sm = self._setup(f"perm_{value}")
+            try:
+                path = tmp / "profiles" / f"distilled_life_perm_{value}.json"
+                payload = pm.load_json(path)
+                payload["life_stories"][0]["permission"] = value
+                for item in payload["evidence_trace"]:
+                    item["permission"] = value
+                payload["publication_policy"]["markdown_visibility"] = "public"
+                pm.dump_json(path, payload)
+                self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", f"perm_{value}"), 0)
+            finally:
+                shutil.rmtree(tmp)
+
+    def test_public_markdown_rejects_private_story(self):
+        tmp, contract, sm = self._setup("private_story")
+        try:
+            path = tmp / "profiles" / "distilled_life_private_story.json"
+            payload = pm.load_json(path)
+            payload["publication_policy"]["markdown_visibility"] = "public"
+            payload["life_stories"][0]["permission"] = "private_only"
+            pm.dump_json(path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "private_story"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_public_markdown_rejects_private_evidence(self):
+        tmp, contract, sm = self._setup("private_evidence")
+        try:
+            path = tmp / "profiles" / "distilled_life_private_evidence.json"
+            payload = pm.load_json(path)
+            payload["publication_policy"]["markdown_visibility"] = "public"
+            payload["evidence_trace"][0]["permission"] = "private_only"
+            pm.dump_json(path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "private_evidence"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_examples_use_canonical_permission_enum(self):
+        payload = self._valid_distilled_payload()
+        allowed = {"private_only", "user_review_required", "desensitized_shareable", "public_source", "do_not_quote"}
+        permissions = [s["permission"] for s in payload["life_stories"]] + [e["permission"] for e in payload["evidence_trace"]]
+        self.assertTrue(all(item in allowed for item in permissions))
+
+    def test_doctor_profile_reports_nested_permission_error(self):
+        tmp, contract, sm = self._setup("doctor_perm")
+        try:
+            path = tmp / "profiles" / "distilled_life_doctor_perm.json"
+            payload = pm.load_json(path)
+            payload["evidence_trace"][0]["permission"] = "invalid_permission"
+            pm.dump_json(path, payload)
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = pm.doctor(contract, sm, tmp, "json")
+            self.assertEqual(code, 1)
+            result = json.loads(buf.getvalue())
+            self.assertTrue(any("evidence_trace[0].permission" in e for e in result.get("errors", [])))
+        finally:
+            shutil.rmtree(tmp)
+
+
 class TestListEdgeCases(unittest.TestCase):
     def test_list_filtered_by_skill(self):
         root = Path(__file__).resolve().parent.parent

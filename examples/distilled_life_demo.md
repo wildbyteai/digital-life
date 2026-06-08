@@ -6,6 +6,10 @@
 
 一位产品工程师正在评估一个外部 AI 工具合作机会。对方愿景很大，但需求、投入边界和长期责任都不清楚。
 
+- allowed_audience: `desensitized_public`
+- markdown_visibility: `public`
+- exact_quote_policy: `demo_only_no_real_private_quotes`
+
 他不是完全不感兴趣，而是担心：
 
 - 一答应就变成长期消耗

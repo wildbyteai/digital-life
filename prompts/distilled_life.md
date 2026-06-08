@@ -137,7 +137,9 @@
 写入前必须确认：
 
 - 材料是否来自用户本人或已获授权
-- 允许的 audience 是 owner-only、可脱敏分享，还是 public
+- 允许的 `allowed_audience` 是 `owner_only`、`trusted_private`、`desensitized_public`，还是 `public`
+- 生成 Markdown 的 `markdown_visibility` 是 `private`、`shareable_after_review`，还是 `public`
+- 每条 story/evidence 的 `permission` 是 `private_only`、`user_review_required`、`desensitized_shareable`、`public_source`，还是 `do_not_quote`
 - 是否允许保存 exact quote；私人聊天原文默认不保存、不公开引用
 - Markdown 报告是私有版还是可分享版
 - 外部回复草稿是否包含承诺、报价、时间线或关系表态

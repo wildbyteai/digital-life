@@ -14,7 +14,7 @@
       "不冒充用户本人",
       "证据不足时标注低置信度",
       "对外表达必须由用户确认",
-      "敏感内容默认仅 owner self-use"
+      "敏感内容默认仅 private_only"
     ],
     "layer1_identity": {
       "self_description": "",
@@ -66,5 +66,10 @@
   "eval_cases": [],
   "next_questions": [],
   "existential_questions": [],
-  "corrections": []
+  "corrections": [],
+  "publication_policy": {
+    "allowed_audience": "owner_only",
+    "markdown_visibility": "private",
+    "exact_quote_policy": "no_exact_quotes_without_confirmation"
+  }
 }

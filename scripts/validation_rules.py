@@ -5,6 +5,16 @@ from typing import Any
 
 CONFIDENCE_VALUES = ("high", "medium", "low")
 SEVERITY_VALUES = ("high", "medium", "low")
+PERMISSION_VALUES = (
+    "private_only",
+    "user_review_required",
+    "desensitized_shareable",
+    "public_source",
+    "do_not_quote",
+)
+AUDIENCE_VALUES = ("owner_only", "trusted_private", "desensitized_public", "public")
+MARKDOWN_VISIBILITY_VALUES = ("private", "shareable_after_review", "public")
+PUBLIC_MARKDOWN_FORBIDDEN_PERMISSIONS = ("private_only", "user_review_required", "do_not_quote")
 
 PERSONA_LAYERS = (
     "layer0_rules",
@@ -157,6 +167,31 @@ def validate_persona(
         errors.append(f"{context} persona.layer4_boundaries must be an object")
 
 
+def validate_publication_policy(payload: dict[str, Any], context: str, errors: list[str], *, template_mode: bool = False) -> str | None:
+    policy = payload.get("publication_policy")
+    if not isinstance(policy, dict):
+        errors.append(f"{context} publication_policy must be an object")
+        return None
+
+    required_fields = ("allowed_audience", "markdown_visibility", "exact_quote_policy")
+    for field in required_fields:
+        if field not in policy:
+            errors.append(f"{context} publication_policy.{field} is required")
+
+    if "allowed_audience" in policy:
+        validate_enum(policy["allowed_audience"], AUDIENCE_VALUES, f"{context} publication_policy.allowed_audience", errors)
+    if "markdown_visibility" in policy:
+        validate_enum(policy["markdown_visibility"], MARKDOWN_VISIBILITY_VALUES, f"{context} publication_policy.markdown_visibility", errors)
+    if "exact_quote_policy" in policy:
+        validate_non_empty_string(
+            policy["exact_quote_policy"],
+            f"{context} publication_policy.exact_quote_policy",
+            errors,
+            allow_empty=template_mode,
+        )
+    return policy.get("markdown_visibility") if isinstance(policy.get("markdown_visibility"), str) else None
+
+
 def _validate_string_list_section(payload: dict[str, Any], field: str, context: str, errors: list[str]) -> None:
     if field in payload:
         validate_list_of_strings(payload[field], f"{context} {field}", errors)
@@ -172,8 +207,7 @@ def validate_distilled_life(
     """Validate distilled_life nested structures used by templates, examples, and profiles."""
     validate_source_summary(payload, context, errors, template_mode=template_mode)
 
-    if "persona" in payload:
-        validate_persona(payload["persona"], context, errors, strict_nested=True)
+    markdown_visibility = validate_publication_policy(payload, context, errors, template_mode=template_mode)
 
     decision_model = payload.get("decision_model")
     if not isinstance(decision_model, dict):
@@ -219,7 +253,14 @@ def validate_distilled_life(
                 if field not in item:
                     errors.append(f"{item_path}.{field} is required")
                 else:
-                    validate_non_empty_string(item[field], f"{item_path}.{field}", errors, allow_empty=True)
+                    validate_non_empty_string(item[field], f"{item_path}.{field}", errors, allow_empty=template_mode)
+                    if field == "permission" and isinstance(item[field], str):
+                        if item[field]:
+                            validate_enum(item[field], PERMISSION_VALUES, f"{item_path}.permission", errors)
+                            if markdown_visibility == "public" and item[field] in PUBLIC_MARKDOWN_FORBIDDEN_PERMISSIONS:
+                                errors.append(f"{item_path}.permission cannot be {item[field]!r} when publication_policy.markdown_visibility is public")
+                        elif not template_mode:
+                            errors.append(f"{item_path}.permission must be a non-empty string")
             for field in ("actions", "options", "reasoning", "quotes"):
                 if field not in item:
                     errors.append(f"{item_path}.{field} is required")
@@ -277,7 +318,14 @@ def validate_distilled_life(
                 if field not in item:
                     errors.append(f"{item_path}.{field} is required")
                 else:
-                    validate_non_empty_string(item[field], f"{item_path}.{field}", errors, allow_empty=(field != "source_id"))
+                    validate_non_empty_string(item[field], f"{item_path}.{field}", errors, allow_empty=template_mode)
+                    if field == "permission" and isinstance(item[field], str):
+                        if item[field]:
+                            validate_enum(item[field], PERMISSION_VALUES, f"{item_path}.permission", errors)
+                            if markdown_visibility == "public" and item[field] in PUBLIC_MARKDOWN_FORBIDDEN_PERMISSIONS:
+                                errors.append(f"{item_path}.permission cannot be {item[field]!r} when publication_policy.markdown_visibility is public")
+                        elif not template_mode:
+                            errors.append(f"{item_path}.permission must be a non-empty string")
             if "confidence" not in item:
                 errors.append(f"{item_path}.confidence is required")
             else:
