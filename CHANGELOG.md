@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.5.1-beta - 2026-06-08
+
+### Improvements
+
+- Added shared `validation_rules.py` helpers for source summary, persona, and `distilled_life` nested structures.
+- Added strict nested validation for `distilled_life` decision models, expression models, life stories, skill assets, boundary rules, evidence trace, eval cases, and medium/high confidence readiness.
+- Added GitHub Actions CI to run repository validation, profile doctor, and Python unit tests on pushes and pull requests.
+- Added 3 分钟启动 examples, Can/Cannot guidance, pre-write privacy checklist, confidence/permission definitions, and a correction-turn demo for 蒸馏人生.
+- Reframed privacy docs around local profile storage, `.gitignore`, cloud-model caveats, minimal necessary data, and third-party redaction.
+
+### Testing
+
+- Expanded unit coverage from 265 to 281 tests, including malformed `distilled_life` profile structures and safety-critical nested fields.
+
 ## 1.5.0-beta - 2026-06-08
 
 ### Features

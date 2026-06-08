@@ -1,0 +1,35 @@
+name: Validate digital-life
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate repository structure and scripts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate skill contract and repository layout
+        run: python scripts/validate-skill.py
+
+      - name: Run profile doctor
+        run: python scripts/profile-manager.py doctor
+
+      - name: Run Python unit tests
+        run: python -m unittest scripts/test_scripts.py

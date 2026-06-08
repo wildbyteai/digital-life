@@ -1525,6 +1525,195 @@ class TestValidateEdgeCases(unittest.TestCase):
             shutil.rmtree(tmp)
 
 
+class TestDistilledLifeValidationRules(unittest.TestCase):
+    def _init_distilled_life(self, profile_slug: str = "dl_bad"):
+        root = Path(__file__).resolve().parent.parent
+        _, skill_map = pm.load_contract(root)
+        tmp, contract, sm = setup_temp_repo(root, skill_map)
+        pm.init_profile(contract, sm, tmp, "distilled_life", profile_slug, False)
+        json_path = tmp / "profiles" / f"distilled_life_{profile_slug}.json"
+        return tmp, contract, sm, json_path
+
+    def test_validate_distilled_life_decision_model_must_be_object(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_dm")
+        try:
+            payload = pm.load_json(json_path)
+            payload["decision_model"] = []
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_dm"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_decision_sequence_must_be_list(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_seq")
+        try:
+            payload = pm.load_json(json_path)
+            payload["decision_model"]["decision_sequence"] = "not a list"
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_seq"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_expression_model_must_be_object(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_expr")
+        try:
+            payload = pm.load_json(json_path)
+            payload["expression_model"] = []
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_expr"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_audience_variant_requires_style(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_aud")
+        try:
+            payload = pm.load_json(json_path)
+            payload["expression_model"]["audience_variants"] = [{"audience": "合作方"}]
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_aud"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_life_story_requires_permission(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_story")
+        try:
+            payload = pm.load_json(json_path)
+            payload["life_stories"] = [{
+                "id": "s1", "title": "story", "context": "ctx", "stakes": "stakes",
+                "actions": ["act"], "lesson": "lesson", "options": ["a"],
+                "reasoning": ["why"], "outcome": "out", "quotes": ["quote"]
+            }]
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_story"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_story_list_fields_must_be_lists(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_story_lists")
+        try:
+            payload = pm.load_json(json_path)
+            payload["life_stories"] = [{
+                "id": "s1", "title": "story", "context": "ctx", "stakes": "stakes",
+                "actions": "act", "lesson": "lesson", "permission": "private_only",
+                "options": ["a"], "reasoning": ["why"], "outcome": "out", "quotes": ["quote"]
+            }]
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_story_lists"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_skill_asset_requires_method(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_asset")
+        try:
+            payload = pm.load_json(json_path)
+            payload["skill_assets"] = [{
+                "id": "a1", "name": "asset", "use_when": ["when"],
+                "counterexamples": ["no"], "eval_prompts": ["q"]
+            }]
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_asset"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_boundary_rule_severity_enum(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_boundary")
+        try:
+            payload = pm.load_json(json_path)
+            payload["boundary_rules"] = [{"rule": "不能代替承诺", "severity": "critical"}]
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_boundary"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_evidence_item_requires_source_id(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_evidence")
+        try:
+            payload = pm.load_json(json_path)
+            payload["evidence_trace"] = [{
+                "claim": "倾向先 demo", "source_type": "interview",
+                "confidence": "medium", "permission": "private_only"
+            }]
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_evidence"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_evidence_confidence_enum(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_econf")
+        try:
+            payload = pm.load_json(json_path)
+            payload["evidence_trace"] = [{
+                "claim": "倾向先 demo", "source_type": "interview", "source_id": "e1",
+                "confidence": "certain", "permission": "private_only"
+            }]
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_econf"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_eval_case_requires_expected_behavior(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_eval")
+        try:
+            payload = pm.load_json(json_path)
+            payload["eval_cases"] = [{"question": "直接替我答应吧"}]
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_eval"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_persona_current_state_required(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_state")
+        try:
+            payload = pm.load_json(json_path)
+            del payload["persona"]["layer1_identity"]["current_state"]
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_state"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_distilled_life_persona_tone_must_be_list(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_tone")
+        try:
+            payload = pm.load_json(json_path)
+            payload["persona"]["layer2_expression"]["tone"] = "short"
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_tone"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_profile_source_summary_input_modes_must_be_list(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_modes")
+        try:
+            payload = pm.load_json(json_path)
+            payload["source_summary"]["input_modes"] = "text"
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_modes"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_profile_source_summary_evidence_count_non_negative(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_count")
+        try:
+            payload = pm.load_json(json_path)
+            payload["source_summary"]["evidence_count"] = -1
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_count"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_validate_medium_confidence_requires_evidence(self):
+        tmp, contract, sm, json_path = self._init_distilled_life("bad_conf_ready")
+        try:
+            payload = pm.load_json(json_path)
+            payload["confidence"] = "medium"
+            payload["source_summary"]["evidence_count"] = 0
+            payload["evidence_trace"] = []
+            pm.dump_json(json_path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "bad_conf_ready"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+
 class TestListEdgeCases(unittest.TestCase):
     def test_list_filtered_by_skill(self):
         root = Path(__file__).resolve().parent.parent

@@ -91,6 +91,20 @@
 - 是原话、行为、用户复述，还是推测？
 - 证据新鲜吗？
 - confidence 是 high、medium 还是 low？
+
+建议口径：
+
+- `high`：多个用户确认过的案例反复出现，且近期没有明显反例
+- `medium`：一个细节充分的案例，或少量一致信号
+- `low`：证据薄、只有用户概述、或主要来自推测
+
+permission 建议使用可执行标签：
+
+- `private_only`：只能 owner 自用
+- `user_review_required`：分享前必须用户复核
+- `desensitized_shareable`：脱敏后可分享
+- `public_source`：来自公开来源
+- `do_not_quote`：可以提炼模式，但不能引用原文
 - 能给哪个 audience 看？
 
 ## 蒸馏流程

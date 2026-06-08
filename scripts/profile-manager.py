@@ -8,6 +8,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+from validation_rules import validate_distilled_life, validate_persona, validate_source_summary
+
 
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{6}[+-]\d{4}$")
 SLUG_RE = re.compile(r"^[a-z0-9_-]+$")
@@ -458,12 +460,16 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
                 except (ValueError, TypeError):
                     errors.append(f"'updated_at' is not a valid ISO 8601 string: {ua!r}")
 
-        if "persona" in payload and isinstance(payload["persona"], dict):
-            persona = payload["persona"]
-            required_layers = ("layer0_rules", "layer1_identity", "layer2_expression", "layer3_decision_model", "layer4_boundaries")
-            for layer in required_layers:
-                if layer not in persona:
-                    errors.append(f"persona missing required layer: {layer}")
+        if "persona" in payload:
+            validate_persona(
+                payload["persona"],
+                "profile",
+                errors,
+                strict_nested=(skill == "distilled_life"),
+            )
+
+        if skill == "distilled_life":
+            validate_distilled_life(payload, "profile", errors, template_mode=False)
 
     if md_path.exists() and md_path.stat().st_size == 0:
         errors.append("Markdown report is empty")
@@ -524,13 +530,15 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
             failed += 1
 
         # Validate persona layers in template
-        if "persona" in template and isinstance(template["persona"], dict):
-            persona = template["persona"]
-            required_layers = ("layer0_rules", "layer1_identity", "layer2_expression", "layer3_decision_model", "layer4_boundaries")
-            for layer in required_layers:
-                if layer not in persona:
-                    _report(f"Template {item['template_path']} persona missing layer: {layer}", fmt, errors)
-                    failed += 1
+        if "persona" in template:
+            before = len(errors)
+            validate_persona(
+                template["persona"],
+                f"Template {item['template_path']}",
+                errors,
+                strict_nested=(slug == "distilled_life"),
+            )
+            failed += len(errors) - before
 
         # Validate template version is integer
         if "version" in template and not isinstance(template["version"], int):
@@ -560,16 +568,24 @@ def doctor(contract: dict, skill_map: dict[str, dict], root: Path, fmt: str = "t
 
         # Validate source_summary structure
         if "source_summary" in template:
-            ss = template["source_summary"]
-            if not isinstance(ss, dict):
-                _report(f"Template {item['template_path']} 'source_summary' must be dict", fmt, errors)
-                failed += 1
-            else:
-                for field in ("input_modes", "evidence_count", "notes"):
-                    if field not in ss:
-                        _report(f"Template {item['template_path']} source_summary missing '{field}'", fmt, errors)
-                        failed += 1
+            before = len(errors)
+            validate_source_summary(
+                template,
+                f"Template {item['template_path']}",
+                errors,
+                template_mode=True,
+            )
+            failed += len(errors) - before
 
+        if slug == "distilled_life":
+            before = len(errors)
+            validate_distilled_life(
+                template,
+                f"Template {item['template_path']}",
+                errors,
+                template_mode=True,
+            )
+            failed += len(errors) - before
         # Validate corrections is list
         if "corrections" in template and not isinstance(template["corrections"], list):
             _report(f"Template {item['template_path']} 'corrections' must be list", fmt, errors)

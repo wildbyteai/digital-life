@@ -7,6 +7,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from validation_rules import validate_distilled_life, validate_persona, validate_source_summary
+
 SLUG_RE = re.compile(r"^[a-z0-9_-]+$")
 CONTRACT_PATH = "profiles/contracts/skill-contract.json"
 
@@ -49,6 +51,7 @@ REQUIRED_ROOT_FILES = [
     "CHANGELOG.md",
     ".gitignore",
     ".gitattributes",
+    ".github/workflows/validate.yml",
     "agents/openai.yaml",
     "assets/digital-life-small.svg",
     "assets/digital-life-large.svg",
@@ -245,11 +248,13 @@ def main() -> int:
                 if conf not in valid_placeholders:
                     errors.append(f"Template 'confidence' unexpected value: {conf!r}: {template_path.as_posix()}")
 
-            if "persona" in template and isinstance(template["persona"], dict):
-                persona = template["persona"]
-                for layer in REQUIRED_PERSONA_LAYERS:
-                    if layer not in persona:
-                        errors.append(f"Template persona missing '{layer}': {template_path.as_posix()}")
+            if "persona" in template:
+                validate_persona(
+                    template["persona"],
+                    f"Template {template_path.as_posix()}",
+                    errors,
+                    strict_nested=(slug == "distilled_life"),
+                )
 
             has_question = "existential_question" in template
             has_questions = "existential_questions" in template
@@ -264,24 +269,21 @@ def main() -> int:
             if "corrections" in template and isinstance(template["corrections"], list) and template["corrections"]:
                 errors.append(f"Template 'corrections' should be empty list: {template_path.as_posix()}")
 
-            # Validate source_summary structure in template
             if "source_summary" in template:
-                ss = template["source_summary"]
-                if not isinstance(ss, dict):
-                    errors.append(f"Template 'source_summary' must be dict: {template_path.as_posix()}")
-                else:
-                    for field in ("input_modes", "evidence_count", "notes"):
-                        if field not in ss:
-                            errors.append(f"Template source_summary missing '{field}': {template_path.as_posix()}")
-                    # Validate input_modes is list
-                    if "input_modes" in ss and not isinstance(ss["input_modes"], list):
-                        errors.append(f"Template source_summary 'input_modes' must be list: {template_path.as_posix()}")
-                    # Validate notes is string
-                    if "notes" in ss and not isinstance(ss["notes"], str):
-                        errors.append(f"Template source_summary 'notes' must be str: {template_path.as_posix()}")
-                    # Validate evidence_count is int
-                    if "evidence_count" in ss and not isinstance(ss["evidence_count"], int):
-                        errors.append(f"Template source_summary 'evidence_count' must be int: {template_path.as_posix()}")
+                validate_source_summary(
+                    template,
+                    f"Template {template_path.as_posix()}",
+                    errors,
+                    template_mode=True,
+                )
+
+            if slug == "distilled_life":
+                validate_distilled_life(
+                    template,
+                    f"Template {template_path.as_posix()}",
+                    errors,
+                    template_mode=True,
+                )
 
             if isinstance(required_keys, list):
                 for key in required_keys:
@@ -320,15 +322,13 @@ def main() -> int:
                                 errors.append(f"Example JSON missing required key '{key}': {relative_path}")
 
                     # Validate persona layers in example
-                    if "persona" in example and isinstance(example["persona"], dict):
-                        persona = example["persona"]
-                        for layer in REQUIRED_PERSONA_LAYERS:
-                            if layer not in persona:
-                                errors.append(f"Example persona missing '{layer}': {relative_path}")
-                            elif isinstance(persona[layer], dict) and not persona[layer]:
-                                errors.append(f"Example persona '{layer}' is empty dict: {relative_path}")
-                            elif isinstance(persona[layer], list) and not persona[layer]:
-                                errors.append(f"Example persona '{layer}' is empty list: {relative_path}")
+                    if "persona" in example:
+                        validate_persona(
+                            example["persona"],
+                            f"Example {relative_path}",
+                            errors,
+                            strict_nested=(skill_slug == "distilled_life"),
+                        )
 
                     # Validate confidence value in example
                     if "confidence" in example:
@@ -345,25 +345,20 @@ def main() -> int:
 
                     # Validate source_summary structure in example
                     if "source_summary" in example:
-                        ss = example["source_summary"]
-                        if not isinstance(ss, dict):
-                            errors.append(f"Example 'source_summary' must be dict: {relative_path}")
-                        else:
-                            for field in ("input_modes", "evidence_count", "notes"):
-                                if field not in ss:
-                                    errors.append(f"Example source_summary missing '{field}': {relative_path}")
-                            # Validate input_modes is list
-                            if "input_modes" in ss and not isinstance(ss["input_modes"], list):
-                                errors.append(f"Example source_summary 'input_modes' must be list: {relative_path}")
-                            # Validate evidence_count is int
-                            if "evidence_count" in ss and not isinstance(ss["evidence_count"], int):
-                                errors.append(f"Example source_summary 'evidence_count' must be int: {relative_path}")
-                            # Validate evidence_count is non-negative
-                            if "evidence_count" in ss and isinstance(ss["evidence_count"], int) and ss["evidence_count"] < 0:
-                                errors.append(f"Example source_summary 'evidence_count' must be non-negative: {relative_path}")
-                            # Validate notes is non-empty string
-                            if "notes" in ss and isinstance(ss["notes"], str) and not ss["notes"].strip():
-                                errors.append(f"Example source_summary 'notes' must be non-empty: {relative_path}")
+                        validate_source_summary(
+                            example,
+                            f"Example {relative_path}",
+                            errors,
+                            template_mode=False,
+                        )
+
+                    if skill_slug == "distilled_life":
+                        validate_distilled_life(
+                            example,
+                            f"Example {relative_path}",
+                            errors,
+                            template_mode=False,
+                        )
 
                     # Validate updated_at is valid ISO 8601 in example
                     if "updated_at" in example:
