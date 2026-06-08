@@ -189,7 +189,15 @@ def validate_publication_policy(payload: dict[str, Any], context: str, errors: l
             errors,
             allow_empty=template_mode,
         )
-    return policy.get("markdown_visibility") if isinstance(policy.get("markdown_visibility"), str) else None
+
+    allowed_audience = policy.get("allowed_audience")
+    markdown_visibility = policy.get("markdown_visibility")
+    if markdown_visibility == "public" and allowed_audience in ("owner_only", "trusted_private"):
+        errors.append(
+            f"{context} publication_policy.markdown_visibility cannot be public "
+            f"when allowed_audience is {allowed_audience}"
+        )
+    return markdown_visibility if isinstance(markdown_visibility, str) else None
 
 
 def _validate_string_list_section(payload: dict[str, Any], field: str, context: str, errors: list[str]) -> None:
@@ -208,6 +216,11 @@ def validate_distilled_life(
     validate_source_summary(payload, context, errors, template_mode=template_mode)
 
     markdown_visibility = validate_publication_policy(payload, context, errors, template_mode=template_mode)
+    publication_policy = payload.get("publication_policy") if isinstance(payload.get("publication_policy"), dict) else {}
+    exact_quote_policy = publication_policy.get("exact_quote_policy", "")
+    public_quote_policy_is_safe = isinstance(exact_quote_policy, str) and any(
+        marker in exact_quote_policy for marker in ("demo_only", "public_source_only")
+    )
 
     decision_model = payload.get("decision_model")
     if not isinstance(decision_model, dict):
@@ -266,6 +279,18 @@ def validate_distilled_life(
                     errors.append(f"{item_path}.{field} is required")
                 else:
                     validate_list_of_strings(item[field], f"{item_path}.{field}", errors)
+            quotes = item.get("quotes")
+            has_exact_quotes = isinstance(quotes, list) and any(isinstance(quote, str) and quote.strip() for quote in quotes)
+            if (
+                markdown_visibility == "public"
+                and has_exact_quotes
+                and item.get("permission") != "public_source"
+                and not public_quote_policy_is_safe
+            ):
+                errors.append(
+                    f"{item_path}.quotes cannot be non-empty when publication_policy.markdown_visibility is public "
+                    "unless permission is 'public_source' or exact_quote_policy explicitly allows demo/public-source quotes"
+                )
 
     assets = payload.get("skill_assets")
     if not isinstance(assets, list):

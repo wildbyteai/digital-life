@@ -1788,6 +1788,80 @@ class TestDistilledLifePermissionPolicy(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_public_markdown_rejects_owner_only_audience(self):
+        tmp, contract, sm = self._setup("owner_public")
+        try:
+            path = tmp / "profiles" / "distilled_life_owner_public.json"
+            payload = pm.load_json(path)
+            payload["publication_policy"]["markdown_visibility"] = "public"
+            payload["publication_policy"]["allowed_audience"] = "owner_only"
+            pm.dump_json(path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "owner_public"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_public_markdown_rejects_trusted_private_audience(self):
+        tmp, contract, sm = self._setup("trusted_public")
+        try:
+            path = tmp / "profiles" / "distilled_life_trusted_public.json"
+            payload = pm.load_json(path)
+            payload["publication_policy"]["markdown_visibility"] = "public"
+            payload["publication_policy"]["allowed_audience"] = "trusted_private"
+            pm.dump_json(path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "trusted_public"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_public_markdown_allows_public_safe_audiences(self):
+        for audience in ("desensitized_public", "public"):
+            tmp, contract, sm = self._setup(f"aud_{audience}")
+            try:
+                path = tmp / "profiles" / f"distilled_life_aud_{audience}.json"
+                payload = pm.load_json(path)
+                payload["publication_policy"]["markdown_visibility"] = "public"
+                payload["publication_policy"]["allowed_audience"] = audience
+                pm.dump_json(path, payload)
+                self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", f"aud_{audience}"), 0)
+            finally:
+                shutil.rmtree(tmp)
+
+    def test_public_markdown_rejects_desensitized_exact_quotes_without_safe_policy(self):
+        tmp, contract, sm = self._setup("quote_real")
+        try:
+            path = tmp / "profiles" / "distilled_life_quote_real.json"
+            payload = pm.load_json(path)
+            payload["publication_policy"]["markdown_visibility"] = "public"
+            payload["publication_policy"]["allowed_audience"] = "desensitized_public"
+            payload["publication_policy"]["exact_quote_policy"] = "no_exact_quotes_without_confirmation"
+            payload["life_stories"][0]["permission"] = "desensitized_shareable"
+            payload["life_stories"][0]["quotes"] = ["这是一句真实风格原话。"]
+            pm.dump_json(path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "quote_real"), 1)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_public_markdown_allows_public_source_quotes(self):
+        tmp, contract, sm = self._setup("quote_public_source")
+        try:
+            path = tmp / "profiles" / "distilled_life_quote_public_source.json"
+            payload = pm.load_json(path)
+            payload["publication_policy"]["markdown_visibility"] = "public"
+            payload["publication_policy"]["allowed_audience"] = "public"
+            payload["publication_policy"]["exact_quote_policy"] = "public_source_only"
+            payload["life_stories"][0]["permission"] = "public_source"
+            payload["life_stories"][0]["quotes"] = ["公开来源中的一句话。"]
+            pm.dump_json(path, payload)
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "quote_public_source"), 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_public_markdown_allows_demo_quote_policy(self):
+        tmp, contract, sm = self._setup("quote_demo")
+        try:
+            self.assertEqual(pm.validate_profile(contract, sm, tmp, "distilled_life", "quote_demo"), 0)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_examples_use_canonical_permission_enum(self):
         payload = self._valid_distilled_payload()
         allowed = {"private_only", "user_review_required", "desensitized_shareable", "public_source", "do_not_quote"}

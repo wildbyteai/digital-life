@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.5-beta - 2026-06-09
+
+### Improvements
+
+- Hardened `distilled_life` publication validation so public Markdown is only valid with `desensitized_public` or `public` audiences.
+- Added exact-quote guards for public `distilled_life` Markdown: non-empty story quotes now require `public_source` permission or an explicit demo/public-source quote policy.
+
+### Testing
+
+- Added publication-policy tests for public/private audience mismatches and exact-quote public-output safeguards.
+
 ## 1.5.4-beta - 2026-06-09
 
 ### Improvements

@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-Skill-blueviolet)](https://docs.openclaw.ai)
 [![clawhub](https://img.shields.io/badge/clawhub-published-green)](https://clawhub.com)
-[![Version](https://img.shields.io/badge/version-1.5.4--beta-1E6B5B)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.5.5--beta-1E6B5B)](CHANGELOG.md)
 
 用你的数字痕迹照见真实的自己  
 每个 skill 生成**结构化 Profile + 人话解读**，可迭代、可纠错、可回滚，也能把“发生了什么”翻译成“这说明了什么”
@@ -365,6 +365,7 @@ digital-life/
 
 ### 版本
 
+- v1.5.5-beta：强化蒸馏人生公开发布校验，要求 public Markdown 匹配 public-safe audience，并阻止未授权 exact quote 进入公开输出
 - v1.5.4-beta：统一文档和 CI 的 python3 命令，明确 WebFetch/browser 工具边界，新增发布前检查，并把文档一致性纳入 validate-skill 自检
 - v1.5.3-beta：规范蒸馏人生 permission/audience/visibility 标签，新增 publication_policy，并验证公开 Markdown 不混入 private_only / do_not_quote 证据
 - v1.5.2-beta：强化 profile 标量字段校验、source_summary 全技能校验、动态 CLI 版本与版本一致性检查，并修复发布元数据/CI 稳定性
