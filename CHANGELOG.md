@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.5.2-beta - 2026-06-09
+
+### Improvements
+
+- Fixed stale published agent metadata so `agents/openai.yaml` no longer describes only five archaeology modes.
+- Made `profile-manager.py --version` and `validate-skill.py --version` read the package `VERSION` dynamically.
+- Added release consistency checks for `VERSION`, `SKILL.md`, README badge/version section, CHANGELOG latest heading, and CLI version output.
+- Hardened profile validation for slug, updated_at, version, confidence, and source_summary fields across all skills.
+- Hardened GitHub Actions validation with Python compilation, unittest discovery, concurrency cancellation, and a job timeout.
+- Added `.yml` line-ending rule validation for workflow files.
+
+### Testing
+
+- Updated profile validation tests so malformed slug, updated_at, version, confidence readiness, and empty source_summary cases now fail instead of being documented as acceptable.
+
 ## 1.5.1-beta - 2026-06-08
 
 ### Improvements

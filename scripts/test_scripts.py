@@ -1147,7 +1147,7 @@ class TestValidateEdgeCases(unittest.TestCase):
             payload["confidence"] = "medium"
             pm.dump_json(json_path, payload)
             code = pm.validate_profile(contract, sm, tmp, "past_life", "med_conf")
-            self.assertEqual(code, 0)
+            self.assertEqual(code, 1)
         finally:
             shutil.rmtree(tmp)
 
@@ -1162,7 +1162,7 @@ class TestValidateEdgeCases(unittest.TestCase):
             payload["confidence"] = "high"
             pm.dump_json(json_path, payload)
             code = pm.validate_profile(contract, sm, tmp, "past_life", "high_conf")
-            self.assertEqual(code, 0)
+            self.assertEqual(code, 1)
         finally:
             shutil.rmtree(tmp)
 
@@ -1177,8 +1177,7 @@ class TestValidateEdgeCases(unittest.TestCase):
             payload["updated_at"] = "-"
             pm.dump_json(json_path, payload)
             code = pm.validate_profile(contract, sm, tmp, "past_life", "dash_ua")
-            # "-" is skipped (ua and ua != "-" check)
-            self.assertEqual(code, 0)
+            self.assertEqual(code, 1)
         finally:
             shutil.rmtree(tmp)
 
@@ -1323,8 +1322,7 @@ class TestValidateEdgeCases(unittest.TestCase):
             payload["version"] = -1
             pm.dump_json(json_path, payload)
             code = pm.validate_profile(contract, sm, tmp, "past_life", "neg_ver")
-            # Negative int is valid int type (validation only checks type)
-            self.assertEqual(code, 0)
+            self.assertEqual(code, 1)
         finally:
             shutil.rmtree(tmp)
 
@@ -1386,8 +1384,7 @@ class TestValidateEdgeCases(unittest.TestCase):
             payload["source_summary"] = {}
             pm.dump_json(json_path, payload)
             code = pm.validate_profile(contract, sm, tmp, "past_life", "empty_ss")
-            # Empty dict is valid (type check passes)
-            self.assertEqual(code, 0)
+            self.assertEqual(code, 1)
         finally:
             shutil.rmtree(tmp)
 
@@ -1432,8 +1429,7 @@ class TestValidateEdgeCases(unittest.TestCase):
             payload["version"] = 0
             pm.dump_json(json_path, payload)
             code = pm.validate_profile(contract, sm, tmp, "past_life", "zero_ver")
-            # version=0 is valid int type, validation only checks type not value
-            self.assertEqual(code, 0)
+            self.assertEqual(code, 1)
         finally:
             shutil.rmtree(tmp)
 
@@ -1463,8 +1459,7 @@ class TestValidateEdgeCases(unittest.TestCase):
             payload["slug"] = None
             pm.dump_json(json_path, payload)
             code = pm.validate_profile(contract, sm, tmp, "past_life", "null_slug")
-            # slug=None should pass (payload.get("slug") not in (None, slug) is False)
-            self.assertEqual(code, 0)
+            self.assertEqual(code, 1)
         finally:
             shutil.rmtree(tmp)
 
@@ -1479,8 +1474,7 @@ class TestValidateEdgeCases(unittest.TestCase):
             payload["updated_at"] = ""
             pm.dump_json(json_path, payload)
             code = pm.validate_profile(contract, sm, tmp, "past_life", "empty_ua")
-            # Empty string should pass (ua and ua != "-" check)
-            self.assertEqual(code, 0)
+            self.assertEqual(code, 1)
         finally:
             shutil.rmtree(tmp)
 

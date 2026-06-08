@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-Skill-blueviolet)](https://docs.openclaw.ai)
 [![clawhub](https://img.shields.io/badge/clawhub-published-green)](https://clawhub.com)
-[![Version](https://img.shields.io/badge/version-1.5.1--beta-1E6B5B)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.5.2--beta-1E6B5B)](CHANGELOG.md)
 
 用你的数字痕迹照见真实的自己  
 每个 skill 生成**结构化 Profile + 人话解读**，可迭代、可纠错、可回滚，也能把“发生了什么”翻译成“这说明了什么”
@@ -344,6 +344,7 @@ digital-life/
 
 ### 版本
 
+- v1.5.2-beta：强化 profile 标量字段校验、source_summary 全技能校验、动态 CLI 版本与版本一致性检查，并修复发布元数据/CI 稳定性
 - v1.5.1-beta：新增 distilled_life 嵌套结构校验、GitHub Actions 自动验证，并强化蒸馏人生的 3 分钟启动、隐私边界、Can/Cannot 和纠正示例
 - v1.5.0-beta：新增蒸馏人生 / distilled_life，把真实经历转成可复用的判断模型、表达模型和 Skill Assets
 - v1.4.0-beta：深化每个 skill 的 prompt 结构一致性，为全部 5 个 skill 补齐脱敏示例和纠正机制

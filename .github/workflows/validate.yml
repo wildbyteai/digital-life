@@ -11,10 +11,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     name: Validate repository structure and scripts
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Check out repository
@@ -25,6 +30,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Compile Python scripts
+        run: python -m py_compile scripts/*.py
+
       - name: Validate skill contract and repository layout
         run: python scripts/validate-skill.py
 
@@ -32,4 +40,4 @@ jobs:
         run: python scripts/profile-manager.py doctor
 
       - name: Run Python unit tests
-        run: python -m unittest scripts/test_scripts.py
+        run: python -m unittest discover -s scripts -p 'test_scripts.py'

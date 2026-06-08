@@ -20,6 +20,15 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
+def package_version(root: Path | None = None) -> str:
+    """Read the package version from VERSION."""
+    version_path = (root or repo_root()) / "VERSION"
+    try:
+        return version_path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return "unknown"
+
+
 def load_json(path: Path) -> dict:
     """Load and parse a JSON file. Raises FileNotFoundError or json.JSONDecodeError on failure."""
     if not path.exists():
@@ -431,8 +440,13 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
         if payload.get("skill") != skill:
             errors.append(f"'skill' mismatch: expected {skill}, got {payload.get('skill')}")
 
-        if payload.get("slug") not in (None, slug):
-            errors.append(f"'slug' mismatch: expected {slug}, got {payload.get('slug')}")
+        payload_slug = payload.get("slug")
+        if not isinstance(payload_slug, str) or not payload_slug:
+            errors.append("'slug' must be a non-empty string")
+        elif not is_valid_slug(payload_slug):
+            errors.append(f"'slug' invalid format: {payload_slug!r}")
+        elif payload_slug != slug:
+            errors.append(f"'slug' mismatch: expected {slug}, got {payload_slug}")
 
         typed_fields = {
             "corrections": list,
@@ -447,18 +461,25 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
             if field in payload and not isinstance(payload[field], expected_type):
                 errors.append(f"'{field}' must be a {expected_type.__name__}")
 
+        if "confidence" in required_keys and "confidence" not in payload:
+            errors.append("Missing required key: confidence")
         if "confidence" in payload:
             valid_confidence = ("high", "medium", "low")
             if payload["confidence"] not in valid_confidence:
                 errors.append(f"'confidence' must be one of {valid_confidence}, got: {payload['confidence']!r}")
 
+        if "version" in payload and isinstance(payload["version"], int) and payload["version"] < 1:
+            errors.append("'version' must be >= 1")
+
         if "updated_at" in payload:
-            ua = str(payload["updated_at"])
-            if ua and ua != "-":
+            ua_value = payload["updated_at"]
+            if not isinstance(ua_value, str) or not ua_value.strip() or ua_value == "-":
+                errors.append("'updated_at' must be a non-empty ISO 8601 string")
+            else:
                 try:
-                    datetime.fromisoformat(ua)
+                    datetime.fromisoformat(ua_value)
                 except (ValueError, TypeError):
-                    errors.append(f"'updated_at' is not a valid ISO 8601 string: {ua!r}")
+                    errors.append(f"'updated_at' is not a valid ISO 8601 string: {ua_value!r}")
 
         if "persona" in payload:
             validate_persona(
@@ -467,6 +488,14 @@ def validate_profile(contract: dict, skill_map: dict[str, dict], root: Path, ski
                 errors,
                 strict_nested=(skill == "distilled_life"),
             )
+
+        if "source_summary" in payload:
+            validate_source_summary(payload, "profile", errors, template_mode=False)
+            ss = payload["source_summary"]
+            if isinstance(ss, dict) and payload.get("confidence") in ("high", "medium"):
+                count = ss.get("evidence_count")
+                if isinstance(count, int) and count <= 0:
+                    errors.append(f"profile source_summary.evidence_count must be > 0 for {payload.get('confidence')} confidence")
 
         if skill == "distilled_life":
             validate_distilled_life(payload, "profile", errors, template_mode=False)
@@ -647,7 +676,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Manage digital-life profiles: init, list, snapshot, rollback, delete, validate, doctor.",
     )
     parser.add_argument("--root", default=None, help="Repository root path. Defaults to script parent.")
-    parser.add_argument("--version", action="version", version="%(prog)s 1.0.0")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {package_version()}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_list = sub.add_parser("list", help="List current profiles.")

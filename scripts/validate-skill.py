@@ -6,6 +6,8 @@ import json
 import re
 from datetime import datetime
 from pathlib import Path
+import subprocess
+import sys
 
 from validation_rules import validate_distilled_life, validate_persona, validate_source_summary
 
@@ -97,8 +99,23 @@ GITATTRIBUTES_RULES = [
     "*.md text eol=lf",
     "*.json text eol=lf",
     "*.yaml text eol=lf",
+    "*.yml text eol=lf",
     "*.svg text eol=lf",
 ]
+
+
+def repo_root() -> Path:
+    """Return the repository root directory."""
+    return Path(__file__).resolve().parent.parent
+
+
+def package_version(root: Path | None = None) -> str:
+    """Read the package version from VERSION."""
+    version_path = (root or repo_root()) / "VERSION"
+    try:
+        return version_path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return "unknown"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -107,16 +124,73 @@ def build_parser() -> argparse.ArgumentParser:
         description="Validate skill contract, templates, examples, and gitignore rules.",
     )
     parser.add_argument("root", nargs="?", default=None, help="Repository root path. Defaults to script parent.")
-    parser.add_argument("--version", action="version", version="%(prog)s 1.0.0")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {package_version()}")
     return parser
+
+
+def _extract_skill_frontmatter_version(content: str) -> str | None:
+    if not content.startswith("---"):
+        return None
+    for line in content.splitlines()[1:]:
+        if line.strip() == "---":
+            return None
+        if line.startswith("version:"):
+            return line.split(":", 1)[1].strip()
+    return None
+
+
+def validate_version_consistency(root: Path, errors: list[str]) -> str:
+    version = package_version(root)
+    if not version or version == "unknown":
+        errors.append("VERSION is missing or empty")
+        return version
+
+    skill_path = root / "SKILL.md"
+    if skill_path.exists():
+        skill_version = _extract_skill_frontmatter_version(skill_path.read_text(encoding="utf-8"))
+        if skill_version != version:
+            errors.append(f"SKILL.md version mismatch: expected {version}, got {skill_version!r}")
+
+    readme_path = root / "README.md"
+    if readme_path.exists():
+        readme = readme_path.read_text(encoding="utf-8")
+        badge_version = version.replace("-", "--")
+        if f"version-{badge_version}" not in readme:
+            errors.append(f"README.md version badge missing or mismatched for {version}")
+        if f"v{version}" not in readme:
+            errors.append(f"README.md version section missing v{version}")
+
+    changelog_path = root / "CHANGELOG.md"
+    if changelog_path.exists():
+        headings = [line for line in changelog_path.read_text(encoding="utf-8").splitlines() if line.startswith("## ")]
+        if not headings:
+            errors.append("CHANGELOG.md missing version heading")
+        elif not headings[0].startswith(f"## {version} "):
+            errors.append(f"CHANGELOG.md latest heading mismatch: expected {version}, got {headings[0]!r}")
+
+    script_versions = {
+        "scripts/profile-manager.py": [sys.executable, str(root / "scripts" / "profile-manager.py"), "--version"],
+        "scripts/validate-skill.py": [sys.executable, str(root / "scripts" / "validate-skill.py"), "--version"],
+    }
+    for label, command in script_versions.items():
+        try:
+            output = subprocess.check_output(command, text=True).strip()
+        except (OSError, subprocess.CalledProcessError) as exc:
+            errors.append(f"{label} --version failed: {exc}")
+            continue
+        if version not in output:
+            errors.append(f"{label} --version mismatch: expected {version}, got {output!r}")
+    return version
 
 
 def main() -> int:
     """Validate skill contract, templates, examples, and gitignore rules."""
     parser = build_parser()
     args = parser.parse_args()
-    root = Path(args.root).resolve() if args.root else Path(__file__).resolve().parent.parent
+    root = Path(args.root).resolve() if args.root else repo_root()
     errors: list[str] = []
+
+    validate_version_consistency(root, errors)
 
     for relative_path in REQUIRED_ROOT_FILES:
         if not (root / relative_path).exists():
