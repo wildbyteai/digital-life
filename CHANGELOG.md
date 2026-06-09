@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.6.0-beta - 2026-06-09
+
+### Features
+
+- Added portable `distilled_life` Life Skill Package MVP with a JSON Schema, spec doc, package validation CLI, and profile-to-package generator.
+- Added fictional public-safe `writing_style_demo` package with source hashes, evidence-backed writing skills, exports, and static eval cases.
+- Added generated `decision_principles_demo` package built from the fictional `distilled_life_demo.json` profile.
+
+### Improvements
+
+- Extended repository validation and CI to validate demo skill packages, package static tests, generated packages, and `package-manager.py --version`.
+- Documented the Life Story → Skill Asset → Evidence Trace → portable skill package loop in README and examples docs.
+
+### Testing
+
+- Added package validation tests for missing sections, duplicate ids, unknown sources, unsafe public permissions, hash mismatches, CLI version, CLI validate/test commands, and profile-to-package generation guardrails.
+
 ## 1.5.5-beta - 2026-06-09
 
 ### Improvements

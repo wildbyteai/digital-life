@@ -4,7 +4,7 @@ description: >
   数字人生.skills — 6 个以数字痕迹为证据的自我考古与经验蒸馏工具，用来照见真实的自己，也复用自己的经验。
   触发词：遗产清算、社死考古、AI替身、前世、墓志铭、蒸馏人生、决策分身、数字人生、考古工具箱、digital life
 argument-hint: "[skill-name-or-slug]"
-version: 1.5.5-beta
+version: 1.6.0-beta
 license: MIT
 metadata:
   openclaw:
