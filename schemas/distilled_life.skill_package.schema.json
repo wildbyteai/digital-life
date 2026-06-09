@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wildbyteai/digital-life/schemas/distilled_life.skill_package.schema.json",
+  "title": "Distilled Life Skill Package",
+  "description": "Portable, evidence-backed skill package distilled from a fictional or authorized distilled_life profile.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "package",
+    "scope",
+    "persona",
+    "skills",
+    "sources",
+    "evidence",
+    "exports",
+    "tests"
+  ],
+  "properties": {
+    "schema_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "package": {
+      "type": "object",
+      "required": ["id", "name", "description", "version", "license", "visibility", "language"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+        "name": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "license": {"type": "string", "minLength": 1},
+        "visibility": {"enum": ["private", "shareable_after_review", "public"]},
+        "language": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "required": ["domain", "use_cases", "limitations"],
+      "properties": {
+        "domain": {"type": "string", "minLength": 1},
+        "use_cases": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "persona": {
+      "type": "object",
+      "required": ["role", "tone", "preferences", "boundaries"],
+      "properties": {
+        "role": {"type": "string", "minLength": 1},
+        "tone": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "preferences": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "boundaries": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "skills": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "use_when", "method", "counterexamples", "eval_prompts"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+          "name": {"type": "string", "minLength": 1},
+          "use_when": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "method": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "counterexamples": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "eval_prompts": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "path", "sha256", "permission", "audience"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+          "type": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?![A-Za-z]:).+"},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "permission": {"enum": ["private_only", "user_review_required", "desensitized_shareable", "public_source", "do_not_quote"]},
+          "audience": {"enum": ["owner_only", "trusted_private", "desensitized_public", "public"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "claim", "source_ids", "confidence", "status", "permission"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+          "claim": {"type": "string", "minLength": 1},
+          "source_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "confidence": {"enum": ["high", "medium", "low"]},
+          "status": {"enum": ["human_confirmed", "demo_author_confirmed", "needs_review"]},
+          "permission": {"enum": ["private_only", "user_review_required", "desensitized_shareable", "public_source", "do_not_quote"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "exports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["format", "path"],
+        "properties": {
+          "format": {"enum": ["system_prompt", "markdown", "json"]},
+          "path": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "tests": {
+      "type": "object",
+      "required": ["path", "positive", "negative"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "positive": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "negative": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -9,7 +9,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from validation_rules import validate_distilled_life, validate_persona, validate_source_summary
+from validation_rules import validate_distilled_life, validate_persona, validate_skill_package, validate_skill_package_tests, validate_source_summary
 
 SLUG_RE = re.compile(r"^[a-z0-9_-]+$")
 CONTRACT_PATH = "profiles/contracts/skill-contract.json"
@@ -73,8 +73,14 @@ REQUIRED_ROOT_FILES = [
     "examples/epitaph_demo.md",
     "examples/distilled_life_demo.json",
     "examples/distilled_life_demo.md",
+    "examples/skill_packages/README.md",
+    "examples/skill_packages/writing_style_demo/manifest.json",
+    "examples/skill_packages/decision_principles_demo/manifest.json",
+    "schemas/distilled_life.skill_package.schema.json",
+    "docs/distilled_life_skill_package.md",
     "scripts/profile-manager.py",
     "scripts/validate-skill.py",
+    "scripts/package-manager.py",
 ]
 
 EXAMPLE_JSON_FILES = [
@@ -220,9 +226,14 @@ def validate_doc_consistency(root: Path, skills: list[dict], errors: list[str]) 
             "python3 -m py_compile scripts/*.py",
             "python3 scripts/validate-skill.py",
             "python3 scripts/profile-manager.py doctor",
+            "python3 scripts/package-manager.py validate examples/skill_packages/writing_style_demo",
+            "python3 scripts/package-manager.py validate examples/skill_packages/decision_principles_demo",
+            "python3 scripts/package-manager.py test examples/skill_packages/writing_style_demo",
+            "python3 scripts/package-manager.py test examples/skill_packages/decision_principles_demo",
             "python3 -m unittest discover -s scripts -p 'test_scripts.py'",
             "python3 scripts/profile-manager.py --version",
             "python3 scripts/validate-skill.py --version",
+            "python3 scripts/package-manager.py --version",
         )
         for command in expected_commands:
             if command not in workflow:
@@ -261,6 +272,7 @@ def validate_version_consistency(root: Path, errors: list[str]) -> str:
     script_versions = {
         "scripts/profile-manager.py": [sys.executable, str(root / "scripts" / "profile-manager.py"), "--version"],
         "scripts/validate-skill.py": [sys.executable, str(root / "scripts" / "validate-skill.py"), "--version"],
+        "scripts/package-manager.py": [sys.executable, str(root / "scripts" / "package-manager.py"), "--version"],
     }
     for label, command in script_versions.items():
         try:
@@ -457,6 +469,32 @@ def main() -> int:
                         errors.append(
                             f"Required key '{key}' missing in template: {template_path.as_posix()}"
                         )
+
+    skill_package_root = root / "examples" / "skill_packages"
+    if skill_package_root.exists():
+        for manifest_file in sorted(skill_package_root.glob("*/manifest.json")):
+            package_dir = manifest_file.parent
+            package_context = f"Skill package {manifest_file.relative_to(root).as_posix()}"
+            try:
+                manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                errors.append(f"Invalid skill package manifest JSON: {manifest_file.relative_to(root).as_posix()}")
+                continue
+            validate_skill_package(manifest, package_context, errors, package_dir=package_dir)
+            tests_config = manifest.get("tests") if isinstance(manifest.get("tests"), dict) else {}
+            tests_path = package_dir / str(tests_config.get("path", "tests.json"))
+            if tests_path.exists():
+                try:
+                    tests_payload = json.loads(tests_path.read_text(encoding="utf-8"))
+                except json.JSONDecodeError:
+                    errors.append(f"Invalid skill package tests JSON: {tests_path.relative_to(root).as_posix()}")
+                else:
+                    validate_skill_package_tests(
+                        tests_payload,
+                        manifest,
+                        f"Skill package tests {tests_path.relative_to(root).as_posix()}",
+                        errors,
+                    )
 
     for relative_path in EXAMPLE_JSON_FILES:
         full_path = root / relative_path

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import importlib
 pm = importlib.import_module("profile-manager")
 vs = importlib.import_module("validate-skill")
+pkg = importlib.import_module("package-manager")
 
 
 def setup_temp_repo(root: Path, skill_map: dict) -> tuple[Path, dict]:
@@ -4325,6 +4327,318 @@ class TestDocConsistencyValidation(unittest.TestCase):
             self.assertTrue(any("missing command: python3 scripts/validate-skill.py --version" in e for e in self._errors(tmp)))
         finally:
             shutil.rmtree(tmp)
+
+
+class TestSkillPackageManager(unittest.TestCase):
+    def package_dir(self) -> Path:
+        return Path(__file__).resolve().parent.parent / "examples" / "skill_packages" / "writing_style_demo"
+
+    def copy_package(self) -> Path:
+        tmp = Path(tempfile.mkdtemp())
+        shutil.copytree(self.package_dir(), tmp / "writing_style_demo")
+        return tmp / "writing_style_demo"
+
+    def test_valid_writing_style_package_passes(self):
+        code, errors, manifest = pkg.validate_package_dir(self.package_dir())
+        self.assertEqual(code, 0, errors)
+        self.assertEqual(manifest["package"]["id"], "writing_style_demo")
+
+    def test_package_static_tests_pass(self):
+        code, errors, manifest = pkg.validate_package_dir(self.package_dir())
+        self.assertEqual(code, 0, errors)
+        test_code, test_errors = pkg.validate_tests_file(self.package_dir(), manifest)
+        self.assertEqual(test_code, 0, test_errors)
+
+    def test_tests_extra_case_not_in_manifest_fails(self):
+        package_dir = self.copy_package()
+        try:
+            tests_path = package_dir / "tests.json"
+            tests = pkg.load_json(tests_path)
+            tests["positive"].append({
+                "id": "unlisted_extra_case",
+                "input": "extra",
+                "expected_traits": ["extra"],
+                "forbidden_traits": ["none"],
+            })
+            tests_path.write_text(json.dumps(tests, ensure_ascii=False, indent=2), encoding="utf-8")
+            code, errors, manifest = pkg.validate_package_dir(package_dir)
+            self.assertEqual(code, 0, errors)
+            test_code, test_errors = pkg.validate_tests_file(package_dir, manifest)
+            self.assertEqual(test_code, 1)
+            self.assertTrue(any("not listed in manifest" in e for e in test_errors))
+        finally:
+            shutil.rmtree(package_dir.parent)
+
+    def test_unknown_manifest_key_fails(self):
+        package_dir = self.copy_package()
+        try:
+            manifest_path = package_dir / "manifest.json"
+            manifest = pkg.load_json(manifest_path)
+            manifest["private_notes"] = "should not pass public package validation"
+            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+            code, errors, _ = pkg.validate_package_dir(package_dir)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("unknown keys" in e for e in errors))
+        finally:
+            shutil.rmtree(package_dir.parent)
+
+    def test_missing_required_manifest_section_fails(self):
+        package_dir = self.copy_package()
+        try:
+            manifest_path = package_dir / "manifest.json"
+            manifest = pkg.load_json(manifest_path)
+            del manifest["scope"]
+            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+            code, errors, _ = pkg.validate_package_dir(package_dir)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("manifest.scope is required" in e for e in errors))
+        finally:
+            shutil.rmtree(package_dir.parent)
+
+    def test_duplicate_source_id_fails(self):
+        package_dir = self.copy_package()
+        try:
+            manifest_path = package_dir / "manifest.json"
+            manifest = pkg.load_json(manifest_path)
+            manifest["sources"][1]["id"] = manifest["sources"][0]["id"]
+            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+            code, errors, _ = pkg.validate_package_dir(package_dir)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("duplicates source id" in e for e in errors))
+        finally:
+            shutil.rmtree(package_dir.parent)
+
+    def test_evidence_unknown_source_fails(self):
+        package_dir = self.copy_package()
+        try:
+            manifest_path = package_dir / "manifest.json"
+            manifest = pkg.load_json(manifest_path)
+            manifest["evidence"][0]["source_ids"] = ["missing_source"]
+            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+            code, errors, _ = pkg.validate_package_dir(package_dir)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("unknown source id" in e for e in errors))
+        finally:
+            shutil.rmtree(package_dir.parent)
+
+    def test_public_package_rejects_private_evidence(self):
+        package_dir = self.copy_package()
+        try:
+            manifest_path = package_dir / "manifest.json"
+            manifest = pkg.load_json(manifest_path)
+            manifest["evidence"][0]["permission"] = "private_only"
+            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+            code, errors, _ = pkg.validate_package_dir(package_dir)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("permission cannot be 'private_only'" in e for e in errors))
+        finally:
+            shutil.rmtree(package_dir.parent)
+
+    def test_wrong_source_hash_fails(self):
+        package_dir = self.copy_package()
+        try:
+            manifest_path = package_dir / "manifest.json"
+            manifest = pkg.load_json(manifest_path)
+            manifest["sources"][0]["sha256"] = "0" * 64
+            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+            code, errors, _ = pkg.validate_package_dir(package_dir)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("sha256 mismatch" in e for e in errors))
+        finally:
+            shutil.rmtree(package_dir.parent)
+
+    def test_absolute_source_path_fails(self):
+        package_dir = self.copy_package()
+        try:
+            manifest_path = package_dir / "manifest.json"
+            manifest = pkg.load_json(manifest_path)
+            manifest["sources"][0]["path"] = "/tmp/private.md"
+            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+            code, errors, _ = pkg.validate_package_dir(package_dir)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("relative package path" in e for e in errors))
+        finally:
+            shutil.rmtree(package_dir.parent)
+
+    def test_windows_absolute_source_path_fails(self):
+        package_dir = self.copy_package()
+        try:
+            manifest_path = package_dir / "manifest.json"
+            manifest = pkg.load_json(manifest_path)
+            manifest["sources"][0]["path"] = "C:\\tmp\\private.md"
+            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+            code, errors, _ = pkg.validate_package_dir(package_dir)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("backslashes" in e or "drive" in e for e in errors))
+        finally:
+            shutil.rmtree(package_dir.parent)
+
+    def test_invalid_package_id_fails(self):
+        package_dir = self.copy_package()
+        try:
+            manifest_path = package_dir / "manifest.json"
+            manifest = pkg.load_json(manifest_path)
+            manifest["package"]["id"] = "Bad Package"
+            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+            code, errors, _ = pkg.validate_package_dir(package_dir)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("package.id" in e and "must match" in e for e in errors))
+        finally:
+            shutil.rmtree(package_dir.parent)
+
+    def test_package_manager_version_contains_version_file(self):
+        root = Path(__file__).resolve().parent.parent
+        output = subprocess.check_output(
+            [sys.executable, str(root / "scripts" / "package-manager.py"), "--version"],
+            text=True,
+        )
+        self.assertIn((root / "VERSION").read_text(encoding="utf-8").strip(), output)
+
+    def test_package_manager_cli_validate_and_test(self):
+        root = Path(__file__).resolve().parent.parent
+        package_dir = root / "examples" / "skill_packages" / "writing_style_demo"
+        validate_code = subprocess.call([sys.executable, str(root / "scripts" / "package-manager.py"), "validate", str(package_dir)])
+        test_code = subprocess.call([sys.executable, str(root / "scripts" / "package-manager.py"), "test", str(package_dir)])
+        self.assertEqual(validate_code, 0)
+        self.assertEqual(test_code, 0)
+
+    def test_build_from_profile_creates_valid_package(self):
+        root = Path(__file__).resolve().parent.parent
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            out = tmp / "decision_demo"
+            code, errors = pkg.build_package_from_profile(
+                root / "examples" / "distilled_life_demo.json",
+                out,
+                "decision_demo",
+                "Decision Demo",
+                False,
+            )
+            self.assertEqual(code, 0, errors)
+            self.assertTrue((out / "manifest.json").exists())
+            self.assertTrue((out / "sources" / "profile_summary.md").exists())
+            validate_code, validate_errors, manifest = pkg.validate_package_dir(out)
+            self.assertEqual(validate_code, 0, validate_errors)
+            test_code, test_errors = pkg.validate_tests_file(out, manifest)
+            self.assertEqual(test_code, 0, test_errors)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_build_from_profile_rejects_unsafe_public_permissions(self):
+        root = Path(__file__).resolve().parent.parent
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            profile = pkg.load_json(root / "examples" / "distilled_life_demo.json")
+            profile["evidence_trace"][0]["permission"] = "private_only"
+            profile_path = tmp / "profile.json"
+            profile_path.write_text(json.dumps(profile, ensure_ascii=False, indent=2), encoding="utf-8")
+            code, errors = pkg.build_package_from_profile(profile_path, tmp / "out", "unsafe", "Unsafe", False)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("private_only" in e for e in errors))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_build_from_profile_rejects_non_distilled_life_input(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            profile_path = tmp / "profile.json"
+            profile_path.write_text(json.dumps({"skill": "past_life"}, ensure_ascii=False), encoding="utf-8")
+            code, errors = pkg.build_package_from_profile(profile_path, tmp / "out", "bad", "Bad", False)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("distilled_life" in e for e in errors))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_build_from_profile_rejects_invalid_package_id(self):
+        root = Path(__file__).resolve().parent.parent
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            code, errors = pkg.build_package_from_profile(
+                root / "examples" / "distilled_life_demo.json",
+                tmp / "out",
+                "Bad Package",
+                "Bad Package",
+                False,
+            )
+            self.assertEqual(code, 1)
+            self.assertTrue(any("package_id" in e and "must match" in e for e in errors))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_build_from_profile_refuses_existing_output_without_force(self):
+        root = Path(__file__).resolve().parent.parent
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            out = tmp / "existing"
+            out.mkdir()
+            code, errors = pkg.build_package_from_profile(
+                root / "examples" / "distilled_life_demo.json",
+                out,
+                "existing",
+                "Existing",
+                False,
+            )
+            self.assertEqual(code, 2)
+            self.assertTrue(any("already exists" in e for e in errors))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_build_from_profile_force_refuses_non_package_directory(self):
+        root = Path(__file__).resolve().parent.parent
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            out = tmp / "existing"
+            out.mkdir()
+            (out / "notes.md").write_text("do not delete", encoding="utf-8")
+            code, errors = pkg.build_package_from_profile(
+                root / "examples" / "distilled_life_demo.json",
+                out,
+                "existing",
+                "Existing",
+                True,
+            )
+            self.assertEqual(code, 2)
+            self.assertTrue(any("Refusing to overwrite" in e for e in errors))
+            self.assertTrue((out / "notes.md").exists())
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_generated_source_hash_matches(self):
+        root = Path(__file__).resolve().parent.parent
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            out = tmp / "decision_demo"
+            code, errors = pkg.build_package_from_profile(root / "examples" / "distilled_life_demo.json", out, "decision_demo", "Decision Demo", False)
+            self.assertEqual(code, 0, errors)
+            manifest = pkg.load_json(out / "manifest.json")
+            source = manifest["sources"][0]
+            self.assertEqual(source["sha256"], pkg.sha256_file(out / source["path"]))
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_package_manager_cli_build_from_profile(self):
+        root = Path(__file__).resolve().parent.parent
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            out = tmp / "cli_decision_demo"
+            code = subprocess.call([
+                sys.executable,
+                str(root / "scripts" / "package-manager.py"),
+                "build-from-profile",
+                str(root / "examples" / "distilled_life_demo.json"),
+                "--output",
+                str(out),
+                "--package-id",
+                "cli_decision_demo",
+                "--name",
+                "CLI Decision Demo",
+            ])
+            self.assertEqual(code, 0)
+            self.assertTrue((out / "manifest.json").exists())
+            self.assertTrue((out / "exports" / "system_prompt.md").exists())
+        finally:
+            shutil.rmtree(tmp)
+
 
 
 if __name__ == "__main__":

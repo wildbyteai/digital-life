@@ -1,7 +1,10 @@
 """Shared validation helpers for digital-life scripts."""
 from __future__ import annotations
 
+from pathlib import Path, PureWindowsPath
 from typing import Any
+import hashlib
+import re
 
 CONFIDENCE_VALUES = ("high", "medium", "low")
 SEVERITY_VALUES = ("high", "medium", "low")
@@ -15,6 +18,12 @@ PERMISSION_VALUES = (
 AUDIENCE_VALUES = ("owner_only", "trusted_private", "desensitized_public", "public")
 MARKDOWN_VISIBILITY_VALUES = ("private", "shareable_after_review", "public")
 PUBLIC_MARKDOWN_FORBIDDEN_PERMISSIONS = ("private_only", "user_review_required", "do_not_quote")
+PACKAGE_VISIBILITY_VALUES = ("private", "shareable_after_review", "public")
+PACKAGE_EXPORT_FORMATS = ("system_prompt", "markdown", "json")
+PACKAGE_EVIDENCE_STATUS_VALUES = ("human_confirmed", "demo_author_confirmed", "needs_review")
+PACKAGE_ID_RE = re.compile(r"^[a-z0-9_-]+$")
+SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
+SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
 
 PERSONA_LAYERS = (
     "layer0_rules",
@@ -51,6 +60,61 @@ def validate_list_of_strings(value: Any, path: str, errors: list[str], *, allow_
             errors.append(f"{path}[{index}] must be a string")
         elif not allow_empty_items and not item.strip():
             errors.append(f"{path}[{index}] must be a non-empty string")
+
+
+def _validate_relative_package_path(value: Any, path: str, errors: list[str]) -> None:
+    validate_non_empty_string(value, path, errors)
+    if not isinstance(value, str):
+        return
+    candidate = Path(value)
+    windows_candidate = PureWindowsPath(value)
+    if (
+        candidate.is_absolute()
+        or windows_candidate.is_absolute()
+        or windows_candidate.drive
+        or ".." in candidate.parts
+        or ".." in windows_candidate.parts
+        or "\\" in value
+    ):
+        errors.append(f"{path} must be a relative package path without '..', drive letters, or backslashes")
+
+
+def _validate_allowed_keys(obj: Any, allowed: set[str], path: str, errors: list[str]) -> None:
+    if not isinstance(obj, dict):
+        return
+    extra = sorted(set(obj) - allowed)
+    if extra:
+        errors.append(f"{path} contains unknown keys: {', '.join(extra)}")
+
+
+def _resolve_package_path(package_dir: Path, value: str, path: str, errors: list[str]) -> Path | None:
+    """Resolve a package-relative path and ensure it stays inside package_dir."""
+    try:
+        package_root = package_dir.resolve()
+        resolved = (package_dir / value).resolve()
+        resolved.relative_to(package_root)
+    except (OSError, ValueError):
+        errors.append(f"{path} must resolve inside the package directory")
+        return None
+    return resolved
+
+
+def _validate_id(value: Any, path: str, errors: list[str]) -> None:
+    validate_non_empty_string(value, path, errors)
+    if isinstance(value, str) and not PACKAGE_ID_RE.match(value):
+        errors.append(f"{path} must match {PACKAGE_ID_RE.pattern}, got: {value!r}")
+
+
+def _validate_semver(value: Any, path: str, errors: list[str]) -> None:
+    validate_non_empty_string(value, path, errors)
+    if isinstance(value, str) and not SEMVER_RE.match(value):
+        errors.append(f"{path} must be semver x.y.z, got: {value!r}")
+
+
+def _validate_sha256(value: Any, path: str, errors: list[str]) -> None:
+    validate_non_empty_string(value, path, errors)
+    if isinstance(value, str) and not SHA256_RE.match(value):
+        errors.append(f"{path} must be a lowercase sha256 hex digest")
 
 
 def validate_required_object_fields(
@@ -203,6 +267,229 @@ def validate_publication_policy(payload: dict[str, Any], context: str, errors: l
 def _validate_string_list_section(payload: dict[str, Any], field: str, context: str, errors: list[str]) -> None:
     if field in payload:
         validate_list_of_strings(payload[field], f"{context} {field}", errors)
+
+
+def validate_skill_package(
+    payload: dict[str, Any],
+    context: str,
+    errors: list[str],
+    *,
+    package_dir: Path | None = None,
+) -> None:
+    """Validate a portable distilled_life skill package manifest."""
+    if not isinstance(payload, dict):
+        errors.append(f"{context} must be an object")
+        return
+
+    _validate_allowed_keys(payload, {"schema_version", "package", "scope", "persona", "skills", "sources", "evidence", "exports", "tests"}, context, errors)
+
+    for field in ("schema_version", "package", "scope", "persona", "skills", "sources", "evidence", "exports", "tests"):
+        if field not in payload:
+            errors.append(f"{context}.{field} is required")
+
+    _validate_semver(payload.get("schema_version", ""), f"{context}.schema_version", errors)
+
+    package = payload.get("package")
+    package_visibility = None
+    if not isinstance(package, dict):
+        errors.append(f"{context}.package must be an object")
+    else:
+        _validate_allowed_keys(package, {"id", "name", "description", "version", "license", "visibility", "language"}, f"{context}.package", errors)
+        _validate_id(package.get("id", ""), f"{context}.package.id", errors)
+        for field in ("name", "description", "license", "language"):
+            validate_non_empty_string(package.get(field, ""), f"{context}.package.{field}", errors)
+        _validate_semver(package.get("version", ""), f"{context}.package.version", errors)
+        package_visibility = package.get("visibility")
+        validate_enum(package_visibility, PACKAGE_VISIBILITY_VALUES, f"{context}.package.visibility", errors)
+
+    scope = payload.get("scope")
+    if not isinstance(scope, dict):
+        errors.append(f"{context}.scope must be an object")
+    else:
+        _validate_allowed_keys(scope, {"domain", "use_cases", "limitations"}, f"{context}.scope", errors)
+        validate_non_empty_string(scope.get("domain", ""), f"{context}.scope.domain", errors)
+        for field in ("use_cases", "limitations"):
+            validate_list_of_strings(scope.get(field), f"{context}.scope.{field}", errors)
+
+    persona = payload.get("persona")
+    if not isinstance(persona, dict):
+        errors.append(f"{context}.persona must be an object")
+    else:
+        _validate_allowed_keys(persona, {"role", "tone", "preferences", "boundaries"}, f"{context}.persona", errors)
+        validate_non_empty_string(persona.get("role", ""), f"{context}.persona.role", errors)
+        for field in ("tone", "preferences", "boundaries"):
+            validate_list_of_strings(persona.get(field), f"{context}.persona.{field}", errors)
+
+    skill_ids: set[str] = set()
+    skills = payload.get("skills")
+    if not isinstance(skills, list) or not skills:
+        errors.append(f"{context}.skills must be a non-empty list")
+    else:
+        for index, item in enumerate(skills):
+            item_path = f"{context}.skills[{index}]"
+            if not isinstance(item, dict):
+                errors.append(f"{item_path} must be an object")
+                continue
+            _validate_allowed_keys(item, {"id", "name", "use_when", "method", "counterexamples", "eval_prompts"}, item_path, errors)
+            skill_id = item.get("id")
+            _validate_id(skill_id, f"{item_path}.id", errors)
+            if isinstance(skill_id, str):
+                if skill_id in skill_ids:
+                    errors.append(f"{item_path}.id duplicates skill id: {skill_id}")
+                skill_ids.add(skill_id)
+            validate_non_empty_string(item.get("name", ""), f"{item_path}.name", errors)
+            for field in ("use_when", "method", "counterexamples", "eval_prompts"):
+                validate_list_of_strings(item.get(field), f"{item_path}.{field}", errors)
+
+    source_ids: set[str] = set()
+    sources = payload.get("sources")
+    if not isinstance(sources, list) or not sources:
+        errors.append(f"{context}.sources must be a non-empty list")
+    else:
+        for index, item in enumerate(sources):
+            item_path = f"{context}.sources[{index}]"
+            if not isinstance(item, dict):
+                errors.append(f"{item_path} must be an object")
+                continue
+            _validate_allowed_keys(item, {"id", "type", "path", "sha256", "permission", "audience"}, item_path, errors)
+            source_id = item.get("id")
+            _validate_id(source_id, f"{item_path}.id", errors)
+            if isinstance(source_id, str):
+                if source_id in source_ids:
+                    errors.append(f"{item_path}.id duplicates source id: {source_id}")
+                source_ids.add(source_id)
+            validate_non_empty_string(item.get("type", ""), f"{item_path}.type", errors)
+            _validate_relative_package_path(item.get("path", ""), f"{item_path}.path", errors)
+            _validate_sha256(item.get("sha256", ""), f"{item_path}.sha256", errors)
+            validate_enum(item.get("permission"), PERMISSION_VALUES, f"{item_path}.permission", errors)
+            validate_enum(item.get("audience"), AUDIENCE_VALUES, f"{item_path}.audience", errors)
+            if package_visibility == "public" and item.get("permission") in PUBLIC_MARKDOWN_FORBIDDEN_PERMISSIONS:
+                errors.append(f"{item_path}.permission cannot be {item.get('permission')!r} when package.visibility is public")
+            if package_dir is not None and isinstance(item.get("path"), str) and isinstance(item.get("sha256"), str):
+                source_path = _resolve_package_path(package_dir, item["path"], f"{item_path}.path", errors)
+                if source_path is None:
+                    continue
+                if not source_path.exists():
+                    errors.append(f"{item_path}.path does not exist: {item['path']}")
+                elif source_path.is_file():
+                    actual_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
+                    if actual_hash != item["sha256"]:
+                        errors.append(f"{item_path}.sha256 mismatch for {item['path']}: expected {item['sha256']}, got {actual_hash}")
+
+    evidence_ids: set[str] = set()
+    evidence = payload.get("evidence")
+    if not isinstance(evidence, list) or not evidence:
+        errors.append(f"{context}.evidence must be a non-empty list")
+    else:
+        for index, item in enumerate(evidence):
+            item_path = f"{context}.evidence[{index}]"
+            if not isinstance(item, dict):
+                errors.append(f"{item_path} must be an object")
+                continue
+            _validate_allowed_keys(item, {"id", "claim", "source_ids", "confidence", "status", "permission"}, item_path, errors)
+            evidence_id = item.get("id")
+            _validate_id(evidence_id, f"{item_path}.id", errors)
+            if isinstance(evidence_id, str):
+                if evidence_id in evidence_ids:
+                    errors.append(f"{item_path}.id duplicates evidence id: {evidence_id}")
+                evidence_ids.add(evidence_id)
+            validate_non_empty_string(item.get("claim", ""), f"{item_path}.claim", errors)
+            validate_list_of_strings(item.get("source_ids"), f"{item_path}.source_ids", errors)
+            if isinstance(item.get("source_ids"), list):
+                for source_id in item["source_ids"]:
+                    if isinstance(source_id, str) and source_id not in source_ids:
+                        errors.append(f"{item_path}.source_ids references unknown source id: {source_id}")
+            validate_enum(item.get("confidence"), CONFIDENCE_VALUES, f"{item_path}.confidence", errors)
+            validate_enum(item.get("status"), PACKAGE_EVIDENCE_STATUS_VALUES, f"{item_path}.status", errors)
+            validate_enum(item.get("permission"), PERMISSION_VALUES, f"{item_path}.permission", errors)
+            if package_visibility == "public" and item.get("permission") in PUBLIC_MARKDOWN_FORBIDDEN_PERMISSIONS:
+                errors.append(f"{item_path}.permission cannot be {item.get('permission')!r} when package.visibility is public")
+
+    exports = payload.get("exports")
+    if not isinstance(exports, list) or not exports:
+        errors.append(f"{context}.exports must be a non-empty list")
+    else:
+        seen_formats: set[str] = set()
+        for index, item in enumerate(exports):
+            item_path = f"{context}.exports[{index}]"
+            if not isinstance(item, dict):
+                errors.append(f"{item_path} must be an object")
+                continue
+            _validate_allowed_keys(item, {"format", "path"}, item_path, errors)
+            export_format = item.get("format")
+            validate_enum(export_format, PACKAGE_EXPORT_FORMATS, f"{item_path}.format", errors)
+            if isinstance(export_format, str):
+                seen_formats.add(export_format)
+            _validate_relative_package_path(item.get("path", ""), f"{item_path}.path", errors)
+            if package_dir is not None and isinstance(item.get("path"), str):
+                export_path = _resolve_package_path(package_dir, item["path"], f"{item_path}.path", errors)
+                if export_path is None:
+                    continue
+                if not export_path.exists():
+                    errors.append(f"{item_path}.path does not exist: {item['path']}")
+        if "system_prompt" not in seen_formats:
+            errors.append(f"{context}.exports must include a system_prompt export")
+
+    tests = payload.get("tests")
+    if not isinstance(tests, dict):
+        errors.append(f"{context}.tests must be an object")
+    else:
+        _validate_allowed_keys(tests, {"path", "positive", "negative"}, f"{context}.tests", errors)
+        _validate_relative_package_path(tests.get("path", ""), f"{context}.tests.path", errors)
+        for field in ("positive", "negative"):
+            validate_list_of_strings(tests.get(field), f"{context}.tests.{field}", errors)
+        if package_dir is not None and isinstance(tests.get("path"), str):
+            tests_path = _resolve_package_path(package_dir, tests["path"], f"{context}.tests.path", errors)
+            if tests_path is None:
+                return
+            if not tests_path.exists():
+                errors.append(f"{context}.tests.path does not exist: {tests['path']}")
+
+
+def validate_skill_package_tests(payload: dict[str, Any], manifest: dict[str, Any], context: str, errors: list[str]) -> None:
+    """Validate static tests for a distilled_life skill package."""
+    if not isinstance(payload, dict):
+        errors.append(f"{context} must be an object")
+        return
+
+    manifest_tests = manifest.get("tests") if isinstance(manifest.get("tests"), dict) else {}
+    expected_positive = set(manifest_tests.get("positive", [])) if isinstance(manifest_tests.get("positive"), list) else set()
+    expected_negative = set(manifest_tests.get("negative", [])) if isinstance(manifest_tests.get("negative"), list) else set()
+
+    for section, expected_ids in (("positive", expected_positive), ("negative", expected_negative)):
+        cases = payload.get(section)
+        if not isinstance(cases, list) or not cases:
+            errors.append(f"{context}.{section} must be a non-empty list")
+            continue
+        seen_ids: set[str] = set()
+        for index, item in enumerate(cases):
+            item_path = f"{context}.{section}[{index}]"
+            if not isinstance(item, dict):
+                errors.append(f"{item_path} must be an object")
+                continue
+            if section == "positive":
+                _validate_allowed_keys(item, {"id", "input", "expected_traits", "forbidden_traits"}, item_path, errors)
+            else:
+                _validate_allowed_keys(item, {"id", "input", "expected_behavior", "forbidden_behavior"}, item_path, errors)
+            case_id = item.get("id")
+            _validate_id(case_id, f"{item_path}.id", errors)
+            if isinstance(case_id, str):
+                if case_id in seen_ids:
+                    errors.append(f"{item_path}.id duplicates test id: {case_id}")
+                seen_ids.add(case_id)
+            validate_non_empty_string(item.get("input", ""), f"{item_path}.input", errors)
+            if section == "positive":
+                validate_list_of_strings(item.get("expected_traits"), f"{item_path}.expected_traits", errors)
+                validate_list_of_strings(item.get("forbidden_traits"), f"{item_path}.forbidden_traits", errors)
+            else:
+                validate_non_empty_string(item.get("expected_behavior", ""), f"{item_path}.expected_behavior", errors)
+                validate_non_empty_string(item.get("forbidden_behavior", ""), f"{item_path}.forbidden_behavior", errors)
+        missing = sorted(expected_ids - seen_ids)
+        if missing:
+            errors.append(f"{context}.{section} missing manifest test ids: {', '.join(missing)}")
+        extra = sorted(seen_ids - expected_ids)
+        if extra:
+            errors.append(f"{context}.{section} contains test ids not listed in manifest: {', '.join(extra)}")
 
 
 def validate_distilled_life(
