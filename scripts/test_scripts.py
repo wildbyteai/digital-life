@@ -2,6 +2,7 @@
 """Tests for profile-manager.py and validate-skill.py."""
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -15,6 +16,8 @@ import importlib
 pm = importlib.import_module("profile-manager")
 vs = importlib.import_module("validate-skill")
 pkg = importlib.import_module("package-manager")
+pg = importlib.import_module("privacy-gate")
+vr = importlib.import_module("validation_rules")
 
 
 def setup_temp_repo(root: Path, skill_map: dict) -> tuple[Path, dict]:
@@ -4639,6 +4642,193 @@ class TestSkillPackageManager(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+
+
+class TestPrivacyGateValidationConstants(unittest.TestCase):
+    def test_risk_level_values_are_distinct_from_severity_values(self):
+        self.assertEqual(vr.RISK_LEVEL_VALUES, ("none", "low", "medium", "high", "critical"))
+        self.assertEqual(vr.SEVERITY_VALUES, ("high", "medium", "low"))
+
+
+class TestPrivacyGateDetectors(unittest.TestCase):
+    def test_detect_phone_numbers_supports_china_formats(self):
+        text = "手机号 13800138000，也可能写成 +86 139 0013 8000 或 137-0013-8000。"
+        self.assertEqual(
+            pg.detect_phone_numbers(text),
+            ["13800138000", "+86 139 0013 8000", "137-0013-8000"],
+        )
+
+    def test_detect_phone_numbers_avoids_plain_86_prefixed_order_id(self):
+        text = "订单号 8613800138000 不应直接当作手机号。"
+        self.assertEqual(pg.detect_phone_numbers(text), [])
+
+    def test_detect_id_cards_uses_checksum(self):
+        text = "有效测试身份证 11010519491231002X，无效长号 110105194912310021。"
+        self.assertEqual(pg.detect_id_cards(text), ["11010519491231002X"])
+
+    def test_detect_emails(self):
+        self.assertEqual(pg.detect_emails("联系 demo.person@example.invalid"), ["demo.person@example.invalid"])
+
+    def test_detect_api_tokens(self):
+        text = "不要泄露 sk-fictional-not-a-real-key-123456 或 ghp_fictionalToken123456。"
+        self.assertEqual(
+            pg.detect_api_tokens(text),
+            ["sk-fictional-not-a-real-key-123456", "ghp_fictionalToken123456"],
+        )
+
+    def test_detect_speaker_prefixes(self):
+        text = "[我]: 你好\n张三: 收到\nUser: ok\n普通句子没有前缀"
+        self.assertEqual(pg.detect_speaker_prefixes(text), ["[我]", "张三", "User"])
+
+    def test_detect_work_titles(self):
+        text = "王总和李经理请张工同步给陈老师。客户A 也要看。"
+        self.assertEqual(pg.detect_work_titles(text), ["王总", "李经理", "张工", "陈老师", "客户A"])
+
+    def test_detect_long_exact_quotes(self):
+        long_line = "这是一段" + "非常长" * 70
+        self.assertEqual(pg.detect_long_exact_quotes(long_line), [long_line])
+
+
+class TestPrivacyGateReports(unittest.TestCase):
+    def test_inspect_text_returns_privacy_report_without_raw_text(self):
+        text = "[朋友A]: 联系 demo.person@example.invalid，手机号 13800138000。"
+        result = pg.inspect_text(text, preset="chat", source_hint="inline_chat")
+        report = result["privacy_report"]
+        self.assertEqual(report["schema_version"], "0.1.0")
+        self.assertEqual(report["input"]["preset"], "chat")
+        self.assertEqual(report["input"]["path"], "inline_chat")
+        self.assertEqual(report["risk_counts"]["email"], 1)
+        self.assertEqual(report["risk_counts"]["phone"], 1)
+        self.assertEqual(report["risk_counts"]["speaker_prefix"], 1)
+        self.assertNotIn(text, json.dumps(result, ensure_ascii=False))
+
+    def test_inspect_file_hashes_utf8_bytes(self):
+        path = Path("examples/evidence_fixtures/generic/personal_journal_sample.md")
+        result = pg.inspect_file(path, preset="generic")
+        expected = hashlib.sha256(path.read_text(encoding="utf-8").encode("utf-8")).hexdigest()
+        self.assertEqual(result["privacy_report"]["input"]["sha256"], expected)
+        self.assertEqual(result["privacy_report"]["input"]["path"], str(path))
+
+    def test_risk_level_is_high_for_token(self):
+        result = pg.inspect_text("密钥 sk-fictional-not-a-real-key-123456", preset="work")
+        self.assertEqual(result["privacy_report"]["risk_level"], "high")
+        self.assertFalse(result["privacy_report"]["allowed_for_profile"])
+        self.assertFalse(result["privacy_report"]["allowed_for_public_demo"])
+
+    def test_medium_risks_include_actionable_warnings(self):
+        result = pg.inspect_text("手机号 13800138000，银行卡样式 6222021234567890123。", preset="generic")
+        warning_codes = {warning["code"] for warning in result["privacy_report"]["warnings"]}
+        self.assertIn("phone", warning_codes)
+        self.assertIn("bank_card", warning_codes)
+
+    def test_invalid_preset_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            pg.inspect_text("hello", preset="unknown")
+
+
+class TestPrivacyGateEvidenceBundle(unittest.TestCase):
+    def test_evidence_bundle_sources_use_id_and_type(self):
+        result = pg.inspect_text("[朋友A]: 这是一段聊天。", preset="chat", source_hint="inline_chat")
+        bundle = result["evidence_bundle"]
+        source = bundle["sources"][0]
+        self.assertIn("id", source)
+        self.assertIn("type", source)
+        self.assertNotIn("source_id", source)
+        self.assertNotIn("source_type", source)
+        self.assertIn(source["permission"], vr.PERMISSION_VALUES)
+        self.assertIn(source["audience"], vr.AUDIENCE_VALUES)
+        self.assertIn(source["confidence"], vr.CONFIDENCE_VALUES)
+
+    def test_evidence_bundle_has_evidence_linking_source_ids(self):
+        result = pg.inspect_text("sk-fictional-not-a-real-key-123456", preset="work", source_hint="inline_work")
+        bundle = result["evidence_bundle"]
+        self.assertEqual(bundle["evidence"][0]["source_ids"], [bundle["sources"][0]["id"]])
+        self.assertIn(bundle["evidence"][0]["status"], vr.PACKAGE_EVIDENCE_STATUS_VALUES)
+
+    def test_inspect_file_returns_bundle_without_raw_text(self):
+        path = Path("examples/evidence_fixtures/chat/wechat_redacted_sample.txt")
+        text = path.read_text(encoding="utf-8")
+        result = pg.inspect_file(path, preset="chat")
+        self.assertNotIn(text, json.dumps(result, ensure_ascii=False))
+        self.assertEqual(result["evidence_bundle"]["sources"][0]["path"], str(path))
+
+
+class TestPrivacyGateCli(unittest.TestCase):
+    def test_privacy_gate_version(self):
+        result = subprocess.run(
+            [sys.executable, "scripts/privacy-gate.py", "--version"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertIn(vs.package_version(), result.stdout)
+
+    def test_privacy_gate_inspect_json(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "scripts/privacy-gate.py",
+                "inspect",
+                "examples/evidence_fixtures/chat/wechat_redacted_sample.txt",
+                "--preset",
+                "chat",
+                "--json",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        payload = json.loads(result.stdout)
+        self.assertIn("privacy_report", payload)
+        self.assertIn("evidence_bundle", payload)
+
+    def test_privacy_gate_output_dir(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/privacy-gate.py",
+                    "inspect",
+                    "examples/evidence_fixtures/work/feishu_meeting_note_sample.md",
+                    "--preset",
+                    "work",
+                    "--output-dir",
+                    tmp,
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertTrue((Path(tmp) / "privacy_report.json").exists())
+            self.assertTrue((Path(tmp) / "evidence_bundle.json").exists())
+
+    def test_privacy_gate_fail_on_high(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "scripts/privacy-gate.py",
+                "inspect",
+                "examples/evidence_fixtures/work/feishu_meeting_note_sample.md",
+                "--preset",
+                "work",
+                "--json",
+                "--fail-on",
+                "high",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("privacy_report", result.stdout)
+
+    def test_privacy_gate_missing_file_fails(self):
+        result = subprocess.run(
+            [sys.executable, "scripts/privacy-gate.py", "inspect", "missing.txt", "--preset", "generic", "--json"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Input file not found", result.stderr)
 
 
 if __name__ == "__main__":
