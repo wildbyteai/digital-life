@@ -8,6 +8,7 @@ import re
 
 CONFIDENCE_VALUES = ("high", "medium", "low")
 SEVERITY_VALUES = ("high", "medium", "low")
+RISK_LEVEL_VALUES = ("none", "low", "medium", "high", "critical")
 PERMISSION_VALUES = (
     "private_only",
     "user_review_required",

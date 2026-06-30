@@ -88,6 +88,7 @@ allowed-tools: Read, Write, Edit, Bash, WebFetch
 6. **Layer 0 硬规则**：每个 skill 有独立的不可违背的行为准则（读取 `layer0/{skill}.md`）
 7. **不冒充本人**：尤其在蒸馏人生 / 决策分身中，只能生成复盘和草稿，不能替用户承诺、授权或对外发言
 8. **第三方隐私**：把他人默认转成角色（合作方、前同事、朋友），不推断第三方隐秘动机，不公开姓名、公司、联系方式或聊天原文
+9. **隐私硬门槛**：聊天记录、会议纪要、工作群文本、browser / WebFetch 获取的页面文本等高敏材料，在分析、总结或写入 profile 前，应先经过本地 privacy gate；未通过或风险过高时，不得引用原文、不得写入公开 demo、不得继续扩散
 
 ---
 
@@ -118,6 +119,8 @@ allowed-tools: Read, Write, Edit, Bash, WebFetch
 - 用户直接口述（最低门槛，3 句话启动）
 - 用户给 URL → 确认是本人后 `WebFetch` 抓取
 - 用户在浏览器登录 → 仅在运行环境提供 browser 工具时，按确认范围代操作
+
+高敏材料进入分析前，优先使用 `python3 scripts/privacy-gate.py inspect <path> --preset generic|chat|work --json` 做本地预检；browser / WebFetch 获取到的文本应先经过等价的 `inspect_text()` 检查。
 
 ### Step 3：读取规则
 
